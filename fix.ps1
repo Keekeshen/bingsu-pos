@@ -1,14 +1,35 @@
 $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
-$path = "src\proxy.ts"
-$bytes = [System.IO.File]::ReadAllBytes($path)
-if ($bytes[1] -eq 0x00 -and $bytes[3] -eq 0x00) {
-    $c = [System.Text.Encoding]::Unicode.GetString($bytes)
-} elseif ($bytes[0] -eq 0xFF -and $bytes[1] -eq 0xFE) {
-    $c = [System.Text.Encoding]::Unicode.GetString($bytes, 2, $bytes.Length - 2)
-} else {
-    $lenient = New-Object System.Text.UTF8Encoding($false, $false)
-    $c = $lenient.GetString($bytes)
+$content = @"
+import { createServerClient } from "@supabase/ssr";
+import { type NextRequest, NextResponse } from "next/server";
+
+export async function proxy(request: NextRequest) {
+  let supabaseResponse = NextResponse.next({ request });
+
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() { return request.cookies.getAll(); },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
+          supabaseResponse = NextResponse.next({ request });
+          cookiesToSet.forEach(({ name, value, options }) =>
+            supabaseResponse.cookies.set(name, value, options)
+          );
+        },
+      },
+    }
+  );
+
+  await supabase.auth.getUser();
+  return supabaseResponse;
 }
-$c = $c.Replace("export async function middleware(", "export async function proxy(")
-[System.IO.File]::WriteAllText($path, $c, $utf8NoBom)
+
+export const config = {
+  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
+};
+"@
+[System.IO.File]::WriteAllText("src\proxy.ts", $content, $utf8NoBom)
 Write-Host "Done"

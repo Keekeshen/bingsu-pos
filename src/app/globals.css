@@ -128,3 +128,14 @@
     @apply font-sans;
   }
 }
+
+/* QR scanner sweep line — used by CustomerScanner */
+@keyframes scan-line {
+  0%   { transform: translateY(0); }
+  50%  { transform: translateY(11rem); }
+  100% { transform: translateY(0); }
+}
+
+.animate-scan-line {
+  animation: scan-line 2s ease-in-out infinite;
+}

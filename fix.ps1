@@ -1,3 +1,5 @@
+$utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+$content = @"
 "use client";
 
 import { Suspense } from "react";
@@ -83,3 +85,6 @@ export default function LoginPage() {
     </Suspense>
   );
 }
+"@
+[System.IO.File]::WriteAllText("src\app\(auth)\login\page.tsx", $content, $utf8NoBom)
+Write-Host "Done"

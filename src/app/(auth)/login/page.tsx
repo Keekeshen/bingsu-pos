@@ -2,7 +2,7 @@
 
 import { Suspense } from "react";
 import { useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -11,9 +11,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 
 function LoginForm() {
-  const router = useRouter();
   const searchParams = useSearchParams();
-
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -21,26 +19,17 @@ function LoginForm() {
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setLoading(true);
-
     const supabase = createClient();
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-
-    if (error) {
-      toast.error(error.message);
-      setLoading(false);
-      return;
-    }
-
+    if (error) { toast.error(error.message); setLoading(false); return; }
     const { data: profile } = await supabase.from("profiles").select("role").eq("id", data.user.id).single();
     const next = searchParams.get("next") ?? "";
     const isAdmin = profile?.role === "admin";
-
     if (isAdmin) {
-      router.push(next.startsWith("/admin") ? next : "/admin/pos");
+      window.location.href = next.startsWith("/admin") ? next : "/admin/pos";
     } else {
-      router.push(next && !next.startsWith("/admin") ? next : "/dashboard");
+      window.location.href = next && !next.startsWith("/admin") ? next : "/dashboard";
     }
-    router.refresh();
   }
 
   return (
@@ -50,7 +39,6 @@ function LoginForm() {
           <h1 className="text-2xl font-bold tracking-tight text-zinc-900">Welcome back</h1>
           <p className="text-sm text-zinc-500">Sign in to your account</p>
         </div>
-
         <div className="rounded-2xl border border-zinc-200 bg-white px-6 py-8 shadow-sm">
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-1.5">
@@ -66,7 +54,6 @@ function LoginForm() {
             </Button>
           </form>
         </div>
-
         <p className="text-center text-sm text-zinc-500">
           Don&apos;t have an account?{" "}
           <Link href="/register" className="font-medium text-zinc-900 underline-offset-4 hover:underline">Create one</Link>
@@ -77,9 +64,5 @@ function LoginForm() {
 }
 
 export default function LoginPage() {
-  return (
-    <Suspense>
-      <LoginForm />
-    </Suspense>
-  );
+  return <Suspense><LoginForm /></Suspense>;
 }

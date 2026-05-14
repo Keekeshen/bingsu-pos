@@ -4,7 +4,8 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import OrderAccordion from "@/components/client/OrderAccordion";
 
-type Order = { id: string; order_number: string; created_at: string; total_amount: number; points_earned: number; status: string; order_items: { id: string; product_name: string; quantity: number; unit_price: number; subtotal: number }[] };
+type OrderItem = { id: string; product_name: string; quantity: number; unit_price: number; subtotal: number };
+type Order = { id: string; order_number: string; created_at: string; total_amount: number; points_earned: number; status: string; order_items: OrderItem[] };
 
 export default function HistoryPage() {
   const router = useRouter();
@@ -34,9 +35,19 @@ export default function HistoryPage() {
           <p className="font-medium text-zinc-700">No orders yet</p>
           <p className="text-sm text-zinc-500">Your order history will appear here</p>
         </div>
-      ) : (
-        orders.map(order => <OrderAccordion key={order.id} order={order} items={order.order_items} />)
-      )}
+      ) : orders.map(order => (
+        <OrderAccordion
+          key={order.id}
+          orderId={order.id}
+          orderNumber={order.order_number}
+          date={new Date(order.created_at).toLocaleString()}
+          totalAmount={order.total_amount}
+          pointsEarned={order.points_earned}
+          status={order.status}
+          statusVariant={order.status === "completed" ? "default" : order.status === "cancelled" ? "destructive" : "secondary"}
+          items={order.order_items}
+        />
+      ))}
     </div>
   );
 }

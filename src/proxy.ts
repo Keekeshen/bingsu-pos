@@ -4,7 +4,7 @@ import { type NextRequest, NextResponse } from "next/server";
 const PUBLIC_ROUTES = ["/login", "/register"];
 const ADMIN_PREFIX = "/admin";
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   let response = NextResponse.next({ request: { headers: request.headers } });

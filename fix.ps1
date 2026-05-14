@@ -1,22 +1,26 @@
 $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
-$clientTs = @"
-import { createClient as createSupabaseClient } from "@supabase/supabase-js";
-let _client: ReturnType<typeof createSupabaseClient> | null = null;
-export function createClient() {
-  if (typeof window === "undefined") {
-    return createSupabaseClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    );
-  }
-  if (!_client) {
-    _client = createSupabaseClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    );
-  }
-  return _client;
-}
-"@
-[System.IO.File]::WriteAllText("src\lib\supabase\client.ts", $clientTs, $utf8NoBom)
-Write-Host "Done"
+$path = "src\components\admin\CheckoutCart.tsx"
+$bytes = [System.IO.File]::ReadAllBytes($path)
+if ($bytes[1] -eq 0x00 -and $bytes[3] -eq 0x00) { $c = [System.Text.Encoding]::Unicode.GetString($bytes) }
+elseif ($bytes[0] -eq 0xFF -and $bytes[1] -eq 0xFE) { $c = [System.Text.Encoding]::Unicode.GetString($bytes, 2, $bytes.Length - 2) }
+else { $lenient = New-Object System.Text.UTF8Encoding($false, $false); $c = $lenient.GetString($bytes) }
+$c = $c.Replace(
+    '  async function handleCharge() {
+    if (items.length === 0) return;
+    setCharging(true);
+    const res = await fetch("/api/checkout", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },',
+    '  async function handleCharge() {
+    if (items.length === 0) return;
+    setCharging(true);
+    const { createClient } = await import("@/lib/supabase/client");
+    const supabase = createClient();
+    const { data: { session } } = await supabase.auth.getSession();
+    const token = session?.access_token ?? "";
+    const res = await fetch("/api/checkout", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },'
+)
+[System.IO.File]::WriteAllText($path, $c, $utf8NoBom)
+Write-Host "Fixed CheckoutCart"

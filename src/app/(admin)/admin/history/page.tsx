@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
-import { Search, Printer, ChevronDown, ChevronUp, Banknote, QrCode, CreditCard, Monitor, LayoutGrid } from "lucide-react";
+import { Search, Printer, ChevronDown, ChevronUp, Banknote, QrCode, CreditCard, Monitor, LayoutGrid, Ticket } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -30,6 +30,8 @@ type Order = {
   points_redeemed: number;
   points_earned?: number;
   payment_method: string | null;
+  voucher_code: string | null;
+  discount_amount: number;
   customer_name: string | null;
   order_items: OrderItem[];
 };
@@ -66,6 +68,7 @@ export default function SalesHistoryPage() {
       .select(`
         id, order_number, created_at, status, source, table_number,
         subtotal, total_amount, points_redeemed, payment_method,
+        voucher_code, discount_amount,
         profiles!customer_id(full_name),
         order_items(id, product_name, unit_price, quantity, subtotal)
       `)
@@ -76,13 +79,14 @@ export default function SalesHistoryPage() {
 
     if (error) { toast.error("Failed to load orders"); setLoading(false); return; }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const mapped = (data ?? []).map((o: any) => ({
       ...o,
       customer_name: Array.isArray(o.profiles)
         ? (o.profiles[0]?.full_name ?? null)
         : (o.profiles?.full_name ?? null),
       order_items: o.order_items ?? [],
+      discount_amount: o.discount_amount ?? 0,
     }));
 
     setOrders(mapped);
@@ -205,6 +209,13 @@ export default function SalesHistoryPage() {
                     {order.customer_name ?? <span className="italic">Walk-in</span>}
                   </span>
 
+                  {/* Voucher badge */}
+                  {order.voucher_code && (
+                    <span className="flex items-center gap-1 rounded-full bg-violet-100 px-2 py-0.5 text-xs font-medium text-violet-700 shrink-0">
+                      <Ticket className="h-3 w-3" />{order.voucher_code}
+                    </span>
+                  )}
+
                   {/* Payment */}
                   {order.payment_method && (
                     <span className="flex items-center gap-1 text-xs text-zinc-500 shrink-0">
@@ -235,6 +246,28 @@ export default function SalesHistoryPage() {
                         </div>
                       ))}
                     </div>
+
+                    {/* Voucher & discount summary */}
+                    <div className="space-y-1 border-t border-dashed border-zinc-200 pt-2 mb-3 text-sm">
+                      <div className="flex justify-between text-zinc-500">
+                        <span>Subtotal</span>
+                        <span>RM {order.subtotal.toFixed(2)}</span>
+                      </div>
+                      {order.voucher_code && (
+                        <div className="flex items-center justify-between text-violet-600">
+                          <span className="flex items-center gap-1">
+                            <Ticket className="h-3.5 w-3.5" />
+                            Voucher <span className="font-mono text-xs bg-violet-100 px-1.5 py-0.5 rounded">{order.voucher_code}</span>
+                          </span>
+                          <span className="font-medium">-RM {order.discount_amount.toFixed(2)}</span>
+                        </div>
+                      )}
+                      <div className="flex justify-between font-semibold text-zinc-900">
+                        <span>Total</span>
+                        <span>RM {order.total_amount.toFixed(2)}</span>
+                      </div>
+                    </div>
+
                     <div className="flex items-center justify-between border-t border-zinc-200 pt-2">
                       <div className="text-xs text-zinc-400">
                         {new Date(order.created_at).toLocaleString("en-MY", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit", hour12: true })}

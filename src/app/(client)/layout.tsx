@@ -32,7 +32,7 @@ export default function ClientLayout({ children }: { children: ReactNode }) {
         style={{ paddingTop: "env(safe-area-inset-top)" }}
       >
         <span className="text-base font-bold tracking-tight text-zinc-900">
-          Koori Loyalty
+          Koori Dessert
         </span>
         <Button variant="ghost" size="icon" onClick={handleSignOut} aria-label="Sign out" className="text-zinc-500 hover:bg-red-50 hover:text-red-600">
           <LogOut className="h-5 w-5" />

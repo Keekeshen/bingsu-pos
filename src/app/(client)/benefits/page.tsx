@@ -1,39 +1,8 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
-import { getTier, TIERS } from "@/lib/tiers";
-import { ChevronLeft, Gift, Cake, Star, Check } from "lucide-react";
-
-const TIER_BENEFITS = [
-  {
-    tier: "Bronze",
-    memberReward: "5% OFF all purchases",
-    birthday: ["1x Free Dessert Drink"],
-    memberDay: "10% OFF on Member's Day",
-    icon: "🥉",
-  },
-  {
-    tier: "Silver",
-    memberReward: "10% OFF all purchases",
-    birthday: ["1x Free Dessert Drink", "Small Birthday Gift"],
-    memberDay: "12% OFF on Member's Day",
-    icon: "🥈",
-  },
-  {
-    tier: "Gold",
-    memberReward: "15% OFF all purchases",
-    birthday: ["1x Free Dessert Drink", "Exclusive Merchandise"],
-    memberDay: "15% OFF on Member's Day",
-    icon: "🥇",
-  },
-  {
-    tier: "Platinum",
-    memberReward: "20% OFF all purchases",
-    birthday: ["1x Free Dessert Drink", "Premium Gift Set"],
-    memberDay: "20% OFF on Member's Day",
-    icon: "💎",
-  },
-];
+import { getTier, TIERS, TIER_BENEFITS } from "@/lib/tiers";
+import { ChevronLeft, Gift, Cake, Star, Check, Minus } from "lucide-react";
 
 export default async function BenefitsPage() {
   const supabase = await createClient();
@@ -56,8 +25,8 @@ export default async function BenefitsPage() {
         </span>
       </div>
 
-      {/* Tier cards - horizontal scroll */}
-      <div className="overflow-x-auto px-4 py-5" style={{ scrollSnapType: "x mandatory" }}>
+      {/* Horizontal scrollable tier cards */}
+      <div className="overflow-x-auto px-4 py-5">
         <div className="flex gap-3" style={{ width: "max-content" }}>
           {TIER_BENEFITS.map((b) => {
             const tierDef = TIERS.find(t => t.name === b.tier)!;
@@ -66,7 +35,7 @@ export default async function BenefitsPage() {
             return (
               <div
                 key={b.tier}
-                style={{ scrollSnapAlign: "start", width: "72vw", maxWidth: "280px" }}
+                style={{ width: "68vw", maxWidth: "260px" }}
                 className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${tierDef.gradient} p-5 shadow-lg flex-shrink-0 ${!isUnlocked ? "opacity-55" : ""}`}
               >
                 <div aria-hidden className="pointer-events-none absolute -right-8 -top-8 h-32 w-32 rounded-full bg-white/5" />
@@ -83,7 +52,9 @@ export default async function BenefitsPage() {
                     : `${tierDef.min.toLocaleString()} – ${tierDef.max.toLocaleString()} pts`}
                 </p>
                 <div className="mt-3 space-y-1 text-xs text-white/80">
-                  <p>✦ {b.memberReward}</p>
+                  {b.memberReward
+                    ? <p>✦ {b.memberReward} (member reward)</p>
+                    : <p className="text-white/40">✦ No member reward</p>}
                   {b.birthday.map((g, i) => <p key={i}>✦ {g} (birthday)</p>)}
                   <p>✦ {b.memberDay}</p>
                 </div>
@@ -113,8 +84,10 @@ export default async function BenefitsPage() {
                 <div key={b.tier} className={`flex flex-col items-center gap-2 rounded-2xl border p-4 text-center ${unlocked ? "border-amber-100 bg-amber-50" : "border-zinc-100 bg-zinc-50 opacity-50"}`}>
                   <span className="text-2xl">{b.icon}</span>
                   <p className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400">{b.tier}</p>
-                  <p className={`text-sm font-bold leading-tight ${unlocked ? "text-amber-700" : "text-zinc-400"}`}>{b.memberReward}</p>
-                  {unlocked && <Check className="h-4 w-4 text-emerald-500" />}
+                  {b.memberReward
+                    ? <p className={`text-sm font-bold leading-tight ${unlocked ? "text-amber-700" : "text-zinc-400"}`}>{b.memberReward}</p>
+                    : <span className="flex items-center gap-1 text-xs text-zinc-400"><Minus className="h-3 w-3" /> None</span>}
+                  {unlocked && b.memberReward && <Check className="h-4 w-4 text-emerald-500" />}
                 </div>
               );
             })}
@@ -136,17 +109,16 @@ export default async function BenefitsPage() {
                   <span className="text-2xl shrink-0">{b.icon}</span>
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-bold uppercase tracking-wider text-zinc-400">{b.tier}</p>
-                    <div className="mt-0.5 space-y-0.5">
-                      {b.birthday.map((g, i) => (
-                        <p key={i} className={`text-sm font-medium ${unlocked ? "text-pink-700" : "text-zinc-400"}`}>• {g}</p>
-                      ))}
-                    </div>
+                    {b.birthday.map((g, i) => (
+                      <p key={i} className={`text-sm font-medium mt-0.5 ${unlocked ? "text-pink-700" : "text-zinc-400"}`}>• {g}</p>
+                    ))}
                   </div>
                   {unlocked && <Check className="h-4 w-4 text-emerald-500 shrink-0" />}
                 </div>
               );
             })}
           </div>
+          <p className="mt-2 text-xs text-zinc-400 text-center">Show your member QR to cashier in your birthday month.</p>
         </section>
 
         {/* Member's Day */}
@@ -171,6 +143,17 @@ export default async function BenefitsPage() {
             })}
           </div>
           <p className="mt-3 text-center text-xs text-zinc-400">Present your member QR on the 15th of every month to enjoy the discount.</p>
+        </section>
+
+        {/* Welcome vouchers info */}
+        <section className="rounded-2xl border border-emerald-100 bg-emerald-50 p-4">
+          <p className="text-sm font-bold text-emerald-800 mb-1">🎁 Welcome Vouchers</p>
+          <p className="text-xs text-emerald-700">Every new member receives:</p>
+          <ul className="mt-2 space-y-1 text-xs text-emerald-700">
+            <li>• 1× Free Drink voucher</li>
+            <li>• 10× RM5 OFF discount vouchers</li>
+          </ul>
+          <p className="mt-2 text-xs text-emerald-600">Check your vouchers in the <strong>Vouchers</strong> tab.</p>
         </section>
       </div>
     </div>

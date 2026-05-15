@@ -28,7 +28,7 @@ type Order = {
   subtotal: number;
   total_amount: number;
   points_redeemed: number;
-  points_earned: number;
+  points_earned?: number;
   payment_method: string | null;
   customer_name: string | null;
   order_items: OrderItem[];
@@ -65,8 +65,8 @@ export default function SalesHistoryPage() {
       .from("orders")
       .select(`
         id, order_number, created_at, status, source, table_number,
-        subtotal, total_amount, points_redeemed, points_earned, payment_method,
-        profiles(full_name),
+        subtotal, total_amount, points_redeemed, payment_method,
+        profiles!customer_id(full_name),
         order_items(id, product_name, unit_price, quantity, subtotal)
       `)
       .eq("status", "completed")
@@ -106,7 +106,7 @@ export default function SalesHistoryPage() {
         subtotal: order.subtotal,
         total_amount: order.total_amount,
         points_redeemed: order.points_redeemed ?? 0,
-        points_earned: order.points_earned ?? 0,
+        points_earned: 0,
       },
       items: order.order_items.map(i => ({
         product_id: i.id,

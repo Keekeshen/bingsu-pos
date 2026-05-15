@@ -35,7 +35,7 @@ export default function LoyaltyCard({ fullName, loyaltyPoints }: Props) {
       <div aria-hidden className="pointer-events-none absolute -bottom-8 -left-8 h-32 w-32 rounded-full bg-white/5" />
 
       <div className="flex items-start justify-between">
-        <p className="text-sm font-medium text-white/70">{greeting()}, {firstName} 붿붿</p>
+        <p className="text-sm font-medium text-white/70">{greeting()}, {firstName}</p>
         <span className={`rounded-full px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider ${currentTier.badgeBg} ${currentTier.badgeText}`}>
           {currentTier.name}
         </span>
@@ -51,7 +51,7 @@ export default function LoyaltyCard({ fullName, loyaltyPoints }: Props) {
 
       <div className="mt-6 space-y-1.5">
         <div className="flex justify-between text-xs text-white/60">
-          <span>{nextTier ? `Progress to ${nextTier.name}` : "Maximum tier reached �붿"}</span>
+          <span>{nextTier ? `Progress to ${nextTier.name}` : "Maximum tier reached"}</span>
           {nextTier && <span className="tabular-nums">{pointsToNext.toLocaleString()} pts to go</span>}
         </div>
         <div className={`h-2 w-full overflow-hidden rounded-full ${currentTier.trackBg}`}>
@@ -64,7 +64,7 @@ export default function LoyaltyCard({ fullName, loyaltyPoints }: Props) {
 
       <div className="mt-5 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <span className="text-xl">❄붿</span>
+          <span className="text-base font-bold text-white/40 tracking-widest">*</span>
           <span className="text-xs font-semibold uppercase tracking-widest text-white/40">Koori Dessert</span>
         </div>
         <Link href="/benefits" className="flex items-center gap-0.5 rounded-full bg-white/15 px-3 py-1.5 text-xs font-semibold text-white/80 hover:bg-white/25 transition-colors">

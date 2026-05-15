@@ -1,1 +1,89 @@
-浩潰瑲笠丠硥剴煥敵瑳‬敎瑸敒灳湯敳素映潲⁭渢硥⽴敳癲牥㬢椊灭牯⁴⁻牣慥整摁業䍮楬湥⁴⁽牦浯∠⽀楬⽢畳慰慢敳猯牥敶≲਻浩潰瑲笠朠湥牥瑡佥摲牥畎扭牥素映潲⁭䀢氯扩漯摲牥渭浵敢≲਻昊湵瑣潩⁮牥⡲獭㩧猠牴湩Ⱨ猠慴畴㩳渠浵敢⥲笠 爠瑥牵⁮敎瑸敒灳湯敳樮潳⡮⁻牥潲㩲洠杳素‬⁻瑳瑡獵素㬩紊ਊ硥潰瑲愠祳据映湵瑣潩⁮佐呓爨煥敵瑳›敎瑸敒畱獥⥴笠 琠祲笠 †⼠ 獥楬瑮搭獩扡敬渭硥⵴楬敮䀠祴数捳楲瑰攭汳湩⽴潮攭灸楬楣⵴湡੹††敬⁴潢祤›湡㭹 †琠祲笠 ††戠摯⁹‽睡楡⁴敲畱獥⹴獪湯⤨਻††⁽慣捴⁨੻†††敲畴湲攠牲∨湉慶楬⁤半乏Ⱒ㐠〰㬩 †素ਊ††潣獮⁴慴汢乥浵敢⁲‽瑓楲杮戨摯⹹慴汢彥畮扭牥㼠‿∢⸩牴浩⤨਻††晩⠠琡扡敬畎扭牥 敲畴湲攠牲∨楍獳湩⁧慴汢彥畮扭牥Ⱒ㐠〰㬩ਊ††潣獮⁴慲䥷整獭㴠戠摯⹹瑩浥㭳 †椠⁦ℨ牁慲⹹獩牁慲⡹慲䥷整獭 籼爠睡瑉浥⹳敬杮桴㴠㴽〠 ੻†††敲畴湲攠牲∨楍獳湩⁧瑩浥≳‬〴⤰਻††੽ †琠灹⁥瑉浥㴠笠瀠潲畤瑣楟㩤猠牴湩㭧瀠潲畤瑣湟浡㩥猠牴湩㭧甠楮彴牰捩㩥渠浵敢㭲焠慵瑮瑩㩹渠浵敢㭲素਻††潣獮⁴瑩浥㩳䤠整孭⁝‽慲䥷整獭洮灡⠨㩩甠歮潮湷 㸽笠 ††挠湯瑳砠㴠椠愠⁳敒潣摲猼牴湩Ⱨ甠歮潮湷㬾 ††爠瑥牵⁮੻††††牰摯捵彴摩›瑓楲杮砨瀮潲畤瑣楟⁤㼿∠⤢ਬ††††牰摯捵彴慮敭›瑓楲杮砨瀮潲畤瑣湟浡⁥㼿∠湕湫睯≮Ⱙ †††甠楮彴牰捩㩥䴠瑡⹨慭⡸ⰰ丠浵敢⡲⹸湵瑩灟楲散 籼〠Ⱙ †††焠慵瑮瑩㩹䴠瑡⹨慭⡸ⰱ䴠瑡⹨潲湵⡤畎扭牥砨焮慵瑮瑩⥹簠⁼⤱Ⱙ ††素਻††⥽昮汩整⡲椨 㸽椠瀮潲畤瑣楟⁤☦椠甮楮彴牰捩⁥‾⤰਻ †椠⁦椨整獭氮湥瑧⁨㴽‽⤰爠瑥牵⁮牥⡲丢⁯慶楬⁤瑩浥≳‬〴⤰਻ †挠湯瑳挠獵潴敭䥲⁤‽潢祤挮獵潴敭彲摩㼠匠牴湩⡧潢祤挮獵潴敭彲摩 ›畮汬਻††潣獮⁴摡業⁮‽牣慥整摁業䍮楬湥⡴㬩 †挠湯瑳猠扵潴慴⁬‽椫整獭爮摥捵⡥猨‬⥩㴠‾⁳‫⹩湵瑩灟楲散⨠椠焮慵瑮瑩ⱹ〠⸩潴楆數⡤⤲਻††潣獮⁴牯敤乲浵敢⁲‽睡楡⁴敧敮慲整牏敤乲浵敢⡲㬩ਊ††潣獮⁴⁻慤慴›牯敤Ⱳ攠牲牯›牯敤䕲牲牯素㴠愠慷瑩愠浤湩 ††⸠牦浯∨牯敤獲⤢ ††⸠湩敳瑲笨 †††漠摲牥湟浵敢㩲漠摲牥畎扭牥ਬ††††慴汢彥畮扭牥›慴汢乥浵敢Ⱳ †††猠畯捲㩥∠慴汢≥ਬ††††瑳瑡獵›瀢湥楤杮Ⱒ †††猠扵潴慴ⱬ †††琠瑯污慟潭湵㩴猠扵潴慴ⱬ †††挠獵潴敭彲摩›畣瑳浯牥摉ਬ††††潰湩獴牟摥敥敭㩤〠ਬ†††⥽ ††⸠敳敬瑣∨摩‬牯敤彲畮扭牥⤢ ††⸠楳杮敬⤨਻ †椠⁦漨摲牥牅潲⁲籼℠牯敤⥲笠 ††挠湯潳敬攮牲牯∨瑛扡敬漭摲牥⁝湩敳瑲∺‬牯敤䕲牲牯㬩 ††爠瑥牵⁮牥⡲䘢楡敬⁤潴挠敲瑡⁥牯敤≲‬〵⤰਻††੽ †挠湯瑳漠摲牥瑉浥⁳‽瑩浥⹳慭⡰椨 㸽⠠੻†††牯敤彲摩›牯敤⹲摩ਬ†††牰摯捵彴摩›⹩牰摯捵彴摩ਬ†††牰摯捵彴慮敭›⹩牰摯捵彴慮敭ਬ†††湵瑩灟楲散›⹩湵瑩灟楲散ਬ†††畱湡楴祴›⹩畱湡楴祴ਬ†††畳瑢瑯污›⠫⹩湵瑩灟楲散⨠椠焮慵瑮瑩⥹琮䙯硩摥㈨Ⱙ †素⤩਻ †挠湯瑳笠攠牲牯›瑩浥䕳牲牯素㴠愠慷瑩愠浤湩昮潲⡭漢摲牥楟整獭⤢椮獮牥⡴牯敤䥲整獭㬩 †椠⁦椨整獭牅潲⥲笠 ††愠慷瑩愠浤湩昮潲⡭漢摲牥≳⸩敤敬整⤨攮⡱椢≤‬牯敤⹲摩㬩 ††挠湯潳敬攮牲牯∨瑛扡敬漭摲牥⁝瑩浥㩳Ⱒ椠整獭牅潲⥲਻†††敲畴湲攠牲∨慆汩摥琠⁯慳敶椠整獭Ⱒ㔠〰㬩 †素ਊ††敲畴湲丠硥剴獥潰獮⹥獪湯ਨ†††⁻牯敤彲摩›牯敤⹲摩‬牯敤彲畮扭牥›牯敤⹲牯敤彲畮扭牥素ਬ†††⁻瑳瑡獵›〲‱੽††㬩 素挠瑡档⠠⥥笠 †挠湯潳敬攮牲牯∨瑛扡敬漭摲牥⁝湵硥数瑣摥∺‬⥥਻††敲畴湲丠硥剴獥潰獮⹥獪湯笨攠牲牯›䤢瑮牥慮⁬敳癲牥攠牲牯•ⱽ笠猠慴畴㩳㔠〰素㬩 素紊
+import { NextRequest, NextResponse } from "next/server";
+import { createAdminClient } from "@/lib/supabase/server";
+import { generateOrderNumber } from "@/lib/order-number";
+
+function err(msg: string, status: number) {
+  return NextResponse.json({ error: msg }, { status });
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let body: any;
+    try {
+      body = await request.json();
+    } catch {
+      return err("Invalid JSON", 400);
+    }
+
+    const tableNumber = String(body.table_number ?? "").trim();
+    if (!tableNumber) return err("Missing table_number", 400);
+
+    const rawItems = body.items;
+    if (!Array.isArray(rawItems) || rawItems.length === 0) {
+      return err("Missing items", 400);
+    }
+
+    type Item = { product_id: string; product_name: string; unit_price: number; quantity: number; };
+    const items: Item[] = rawItems.map((i: unknown) => {
+      const x = i as Record<string, unknown>;
+      return {
+        product_id: String(x.product_id ?? ""),
+        product_name: String(x.product_name ?? "Unknown"),
+        unit_price: Math.max(0, Number(x.unit_price) || 0),
+        quantity: Math.max(1, Math.round(Number(x.quantity) || 1)),
+      };
+    }).filter((i) => i.product_id && i.unit_price > 0);
+
+    if (items.length === 0) return err("No valid items", 400);
+
+    const customerId = body.customer_id ? String(body.customer_id) : null;
+    const admin = createAdminClient();
+    const subtotal = +items.reduce((s, i) => s + i.unit_price * i.quantity, 0).toFixed(2);
+    const orderNumber = await generateOrderNumber();
+
+    const { data: order, error: orderError } = await admin
+      .from("orders")
+      .insert({
+        order_number: orderNumber,
+        table_number: tableNumber,
+        source: "table",
+        status: "pending",
+        subtotal,
+        total_amount: subtotal,
+        customer_id: customerId,
+        points_redeemed: 0,
+      })
+      .select("id, order_number")
+      .single();
+
+    if (orderError || !order) {
+      console.error("[table-order] insert:", orderError);
+      return err("Failed to create order", 500);
+    }
+
+    const orderItems = items.map((i) => ({
+      order_id: order.id,
+      product_id: i.product_id,
+      product_name: i.product_name,
+      unit_price: i.unit_price,
+      quantity: i.quantity,
+      subtotal: +(i.unit_price * i.quantity).toFixed(2),
+    }));
+
+    const { error: itemsError } = await admin.from("order_items").insert(orderItems);
+    if (itemsError) {
+      await admin.from("orders").delete().eq("id", order.id);
+      console.error("[table-order] items:", itemsError);
+      return err("Failed to save items", 500);
+    }
+
+    return NextResponse.json(
+      { order_id: order.id, order_number: order.order_number },
+      { status: 201 }
+    );
+  } catch (e) {
+    console.error("[table-order] unexpected:", e);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
+}

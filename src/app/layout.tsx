@@ -1,1 +1,40 @@
-浩潰瑲琠灹⁥⁻敍慴慤慴‬楖睥潰瑲素映潲⁭渢硥≴਻浩潰瑲笠䤠瑮牥素映潲⁭渢硥⽴潦瑮术潯汧≥਻浩潰瑲笠吠慯瑳牥素映潲⁭猢湯敮≲਻浩潰瑲∠⼮汧扯污⹳獣≳਻挊湯瑳椠瑮牥㴠䤠瑮牥笨 猠扵敳獴›≛慬楴≮ⱝ 瘠牡慩汢㩥∠ⴭ潦瑮椭瑮牥Ⱒ 搠獩汰祡›猢慷≰ਬ⥽਻攊灸牯⁴潣獮⁴敭慴慤慴›敍慴慤慴㴠笠 琠瑩敬›੻††敤慦汵㩴∠潋牯⁩敄獳牥⁴佐≓ਬ††整灭慬整›┢⁳⁼潋牯⁩敄獳牥≴ਬ†ⱽ 搠獥牣灩楴湯›倢楯瑮漠⁦慓敬愠摮䰠祯污祴匠獹整⁭潦⁲潋牯⁩敄獳牥≴ਬ†潲潢獴›⁻湩敤㩸映污敳‬潦汬睯›慦獬⁥ⱽ紊਻攊灸牯⁴潣獮⁴楶睥潰瑲›楖睥潰瑲㴠笠 眠摩桴›搢癥捩ⵥ楷瑤≨ਬ†湩瑩慩卬慣敬›ⰱ 瘠敩灷牯䙴瑩›挢癯牥Ⱒ紊਻攊灸牯⁴敤慦汵⁴畦据楴湯删潯䱴祡畯⡴੻†档汩牤湥ਬ㩽笠 挠楨摬敲㩮删慥瑣刮慥瑣潎敤਻⥽笠 爠瑥牵⁮ਨ††格浴⁬慬杮∽湥•汣獡乳浡㵥恻笤湩整⹲慶楲扡敬⁽⵨畦汬愠瑮慩楬獡摥絠猠灵牰獥䡳摹慲楴湯慗湲湩㹧 ††㰠潢祤挠慬獳慎敭∽汦硥洠湩栭昭汵⁬汦硥挭汯戠ⵧ楺据㔭‰潦瑮嬭慶⡲ⴭ潦瑮椭瑮牥崩㸢 †††笠档汩牤湥੽††††吼慯瑳牥瀠獯瑩潩㵮琢灯挭湥整≲爠捩䍨汯牯⁳汣獯䉥瑵潴⁮㸯 ††㰠戯摯㹹 †㰠栯浴㹬 ⤠਻੽
+import type { Metadata, Viewport } from "next";
+import { Inter } from "next/font/google";
+import { Toaster } from "sonner";
+import "./globals.css";
+
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+  display: "swap",
+});
+
+export const metadata: Metadata = {
+  title: {
+    default: "Koori Dessert POS",
+    template: "%s | Koori Dessert",
+  },
+  description: "Point of Sale and Loyalty System for Koori Dessert",
+  robots: { index: false, follow: false },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+};
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <html lang="en" className={`${inter.variable} h-full antialiased`} suppressHydrationWarning>
+      <body className="flex min-h-full flex-col bg-zinc-50 font-[var(--font-inter)]">
+        {children}
+        <Toaster position="top-center" richColors closeButton />
+      </body>
+    </html>
+  );
+}

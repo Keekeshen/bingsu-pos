@@ -1,1 +1,259 @@
-產敳挠楬湥≴਻椊灭牯⁴⁻獵剥晥‬潦睲牡剤晥素映潲⁭爢慥瑣㬢椊灭牯⁴⁻獵剥慥瑣潔牐湩⁴⁽牦浯∠敲捡⵴潴瀭楲瑮㬢椊灭牯⁴⁻剑潃敤噓⁇⁽牦浯∠牱潣敤爮慥瑣㬢椊灭牯⁴⁻牐湩整⁲⁽牦浯∠畬楣敤爭慥瑣㬢椊灭牯⁴⁻畂瑴湯素映潲⁭䀢振浯潰敮瑮⽳極戯瑵潴≮਻浩潰瑲笠䐠慩潬Ⱨ䐠慩潬䍧湯整瑮‬楄污杯效摡牥‬楄污杯楔汴⁥⁽牦浯∠⽀潣灭湯湥獴甯⽩楤污杯㬢ਊ⼯肔铢₀畂楳敮獳椠普⁯铢肔铢肔铢肔铢肔铢肔铢肔铢肔铢肔铢肔铢肔铢肔铢肔铢肔铢肔铢肔铢肔铢肔铢肔铢肔铢肔铢肔铢肔铢肔铢肔铢肔铢肔铢肔铢肔铢઀潣獮⁴䥂彚䅎䕍††††㴠∠潋牯⁩敄獳牥≴਻潣獮⁴䥂彚䑁剄卅当‱†㴠∠㜵‬慊慬⁮卓㈠⼱愱‬慄慭獮牡⁡瑕浡ⱡ㬢挊湯瑳䈠婉䅟䑄䕒卓㉟††‽㐢㐷〰倠瑥污湩⁧慊慹‬敓慬杮牯‬慍慬獹慩㬢挊湯瑳䈠婉偟佈䕎††††‽∢※†⼯攠朮‮⬢〶ㄱ㌲㔴㜶∸挊湯瑳䈠婉䕟䅍䱉††††‽∢※†⼯攠朮‮栢汥潬所湩獧摵汥杩瑨挮浯ਢ潣獮⁴䕓噒䍉彅䡃剁䕇†㴠ㄠ㬰†⼠ 数捲湥⁴胢ₔ敳⁴‰潴搠獩扡敬⼊ 敒汰捡⁥楷桴愠猠潨瑲唠䱒映牯戠獥⁴剑猠慣慮楢楬祴⠠獵⁥楢⹴祬漠⁲⹧慰敧爯ⸯ⸮਩潣獮⁴䕒䥖坅啟䱒†††㴠∠瑨灴㩳⼯睷⹷潧杯敬挮浯洯灡⽳敳牡档㼯㵱楂杮畳䐫汥杩瑨䐫浡湡慳慲唫慴慭氣摲〽㍸挱㑣愹户㈴つ㕥㨵砰攵搳㈴㑤㈴攰挸捡㌬ⰬⰬ㬢⼊ 铢肔铢肔铢肔铢肔铢肔铢肔铢肔铢肔铢肔铢肔铢肔铢肔铢肔铢肔铢肔铢肔铢肔铢肔铢肔铢肔铢肔铢肔铢肔铢肔铢肔铢肔铢肔铢肔铢肔铢肔铢肔铢肔铢肔铢肔铢肔铢肔铢઀攊灸牯⁴祴数删捥楥瑰牏敤⁲‽੻†牯敤彲畮扭牥›瑳楲杮਻†牣慥整彤瑡›瑳楲杮਻†畳瑢瑯污›畮扭牥਻†潴慴彬浡畯瑮›畮扭牥਻†潰湩獴牟摥敥敭㩤渠浵敢㭲 瀠楯瑮彳慥湲摥›畮扭牥਻†慴汢彥畮扭牥㨿猠牴湩㭧 瀠祡敭瑮浟瑥潨㽤›瑳楲杮਻†慣桳敩㽲›瑳楲杮਻㭽ਊ硥潰瑲琠灹⁥敒散灩䱴湩䥥整⁭‽੻†牰摯捵彴摩›瑳楲杮਻†慮敭›瑳楲杮਻†湵瑩灟楲散›畮扭牥਻†畱湡楴祴›畮扭牥਻†畳瑢瑯污›畮扭牥਻㭽ਊ祴数倠潲獰㴠笠 漠数㩮戠潯敬湡਻†湯汃獯㩥⠠ 㸽瘠楯㭤 漠摲牥›敒散灩佴摲牥਻†瑩浥㩳删捥楥瑰楌敮瑉浥嵛਻†畣瑳浯牥慎敭㨿猠牴湩㭧紊਻挊湯瑳倠䝁彅呓䱙⁅‽੠†灀条⁥⁻慭杲湩›㬰猠穩㩥㔠洸⁭畡潴※੽†潢祤笠洠牡楧㩮〠※慰摤湩㩧㌠浭※慢正牧畯摮›昣晦※潦瑮昭浡汩㩹✠潃牵敩⁲敎❷‬潃牵敩Ⱳ洠湯獯慰散※潦瑮猭穩㩥ㄠ瀰㭸挠汯牯›〣〰※੽†‪⁻潢⵸楳楺杮›潢摲牥戭硯※੽㭠ਊ硥潰瑲搠晥畡瑬映湵瑣潩⁮敒散灩側楲瑮笨漠数Ɱ漠䍮潬敳‬牯敤Ⱳ椠整獭‬畣瑳浯牥慎敭素›牐灯⥳笠 挠湯瑳爠捥楥瑰敒⁦‽獵剥晥䠼䵔䑌癩汅浥湥㹴渨汵⥬਻†潣獮⁴慨摮敬牐湩⁴‽獵剥慥瑣潔牐湩⡴੻††潣瑮湥剴晥›敲散灩剴晥ਬ††慰敧瑓汹㩥倠䝁彅呓䱙ⱅ †搠捯浵湥呴瑩敬›剠捥楥瑰␭潻摲牥漮摲牥湟浵敢絲Ⱡ 素㬩ਊ†潣獮⁴癳⁣†㴠⬠漨摲牥献扵潴慴⁬‪䕓噒䍉彅䡃剁䕇⼠ㄠ〰⸩潴楆數⡤⤲਻†潣獮⁴慲⁷†㴠漠摲牥献扵潴慴⁬‫癳㭣 挠湯瑳爠畯摮摥㴠⬠䴨瑡⹨潲湵⡤慲⁷‪〲  〲ⴠ爠睡⸩潴楆數⡤⤲਻†潣獮⁴瑰楄捳†‽⠫牯敤⹲畳瑢瑯污ⴠ漠摲牥琮瑯污慟潭湵⥴琮䙯硩摥㈨㬩ਊ†敲畴湲⠠ †㰠楄污杯漠数㵮潻数絮漠佮数䍮慨杮㵥⡻⥯㴠‾漡☠…湯汃獯⡥紩ਾ†††䐼慩潬䍧湯整瑮挠慬獳慎敭∽慭⵸⵷浳朠灡〭漠敶晲潬⵷楨摤湥瀠〭㸢 †††㰠楄污杯效摡牥挠慬獳慎敭∽潢摲牥戭戠牯敤⵲楺据ㄭ〰瀠⵸‶扰㐭瀠⵴∶ਾ†††††䐼慩潬呧瑩敬挠慬獳慎敭∽汦硥椠整獭挭湥整⁲慧⵰′整瑸戭獡≥ਾ††††††猼慰⁮牡慩栭摩敤㹮鳢㲅猯慰㹮传摲牥䌠浯汰瑥੥†††††⼼楄污杯楔汴㹥 †††㰠䐯慩潬䡧慥敤㹲 †††㰠楤⁶汣獡乳浡㵥洢硡栭嬭〶桶⁝癯牥汦睯礭愭瑵⁯杢稭湩ⵣ〵瀠⵸‴祰㐭㸢 ††††㰠敒散灩䍴湯整瑮 †††††爠晥笽敲散灩剴晥੽††††††牯敤㵲潻摲牥੽††††††瑩浥㵳楻整獭੽††††††畣瑳浯牥慎敭笽畣瑳浯牥慎敭੽††††††癳㵣獻捶੽††††††潲湵敤㵤牻畯摮摥੽††††††瑰楄捳笽瑰楄捳੽†††††㸯 †††㰠搯癩ਾ††††搼癩挠慬獳慎敭∽汦硥朠灡㈭戠牯敤⵲⁴潢摲牥稭湩ⵣ〱‰硰㘭瀠⵹∴ਾ†††††䈼瑵潴⁮慶楲湡㵴漢瑵楬敮•汣獡乳浡㵥昢敬⵸‱慧⵰∲漠䍮楬正笽⤨㴠‾慨摮敬牐湩⡴紩ਾ††††††值楲瑮牥挠慬獳慎敭∽⵨‴⵷∴⼠‾牐湩⁴敒散灩ੴ†††††⼼畂瑴湯ਾ†††††䈼瑵潴⁮汣獡乳浡㵥昢敬⵸∱漠䍮楬正笽湯汃獯絥举睥传摲牥⼼畂瑴湯ਾ††††⼼楤㹶 ††㰠䐯慩潬䍧湯整瑮ਾ††⼼楄污杯ਾ†㬩紊ਊ祴数䌠⁐‽੻†牯敤㩲删捥楥瑰牏敤㭲 椠整獭›敒散灩䱴湩䥥整孭㭝 挠獵潴敭乲浡㽥›瑳楲杮਻†癳㩣渠浵敢㭲 爠畯摮摥›畮扭牥਻†瑰楄捳›畮扭牥਻㭽ਊ潣獮⁴敒散灩䍴湯整瑮㴠映牯慷摲敒㱦呈䱍楄䕶敬敭瑮‬偃⠾ 映湵瑣潩⁮敒散灩䍴湯整瑮笨漠摲牥‬瑩浥ⱳ挠獵潴敭乲浡ⱥ猠捶‬潲湵敤Ɽ瀠䑴獩⁣ⱽ爠晥 ੻††潣獮⁴⁤‽敮⁷慄整漨摲牥挮敲瑡摥慟⥴਻††潣獮⁴摤†㴠匠牴湩⡧⹤敧䑴瑡⡥⤩瀮摡瑓牡⡴ⰲ∠∰㬩 †挠湯瑳洠⁭†‽瑓楲杮搨朮瑥潍瑮⡨ ‫⤱瀮摡瑓牡⡴ⰲ∠∰㬩 †挠湯瑳礠祹⁹‽⹤敧䙴汵奬慥⡲㬩 †挠湯瑳栠⁨†‽瑓楲杮搨朮瑥潈牵⡳⤩瀮摡瑓牡⡴ⰲ∠∰㬩 †挠湯瑳洠湩†‽瑓楲杮搨朮瑥楍畮整⡳⤩瀮摡瑓牡⡴ⰲ∠∰㬩 †挠湯瑳搠瑡卥牴㴠怠笤摤⽽笤浭⽽笤祹祹⁽笤桨㩽笤業絮㭠ਊ††潣獮⁴潴慴公祴†㴠椠整獭爮摥捵⡥猨‬⥩㴠‾⁳‫⹩畱湡楴祴‬⤰਻††潣獮⁴牧湡呤瑯污㴠⬠漨摲牥献扵潴慴⁬‫癳⁣‫潲湵敤⁤‭瑰楄捳⸩潴楆數⡤⤲਻††潣獮⁴慰浹湥⁴†㴠漠摲牥瀮祡敭瑮浟瑥潨⁤籼∠䅃䡓㬢 †挠湯瑳椠癮楯散潎†‽牯敤⹲牯敤彲畮扭牥爮灥慬散⼨䑜术‬∢⸩汳捩⡥㐭⸩慰卤慴瑲㐨‬〢⤢਻††潣獮⁴牯敤乲浵†㴠漠摲牥漮摲牥湟浵敢⹲敲汰捡⡥尯⽄Ⱨ∠⤢献楬散⴨⤲簠⁼ㄢ㬢ਊ††敲畴湲⠠ ††㰠ਾ††††猼祴敬笾䁠敭楤⁡牰湩筴爮筲楷瑤㩨㠵浭活硡眭摩桴㔺洸㭭潦瑮昭浡汩㩹䌧畯楲牥丠睥Ⱗ潭潮灳捡㭥潦瑮猭穩㩥〱硰挻汯牯⌺〰㬰慢正牧畯摮⌺晦㭦絽絠⼼瑳汹㹥 †††㰠楤⁶敲㵦牻晥⁽汣獡乳浡㵥爢⁲硭愭瑵⁯⵷㉛〳硰⁝杢眭楨整映湯⵴潭潮琠硥⵴ㅛ瀰嵸琠硥⵴汢捡≫ਾ ††††笠⨯肔铢₀效摡牥肔铢₀⼪੽†††††搼癩挠慬獳慎敭∽整瑸挭湥整⁲敬摡湩ⵧ湳杵㸢 †††††㰠⁰汣獡乳浡㵥昢湯⵴潢摬琠硥⵴ㅛ瀳嵸㸢䉻婉也䵁絅⼼㹰 †††††㰠⁰汣獡乳浡㵥琢硥⵴㥛硰≝笾䥂彚䑁剄卅当紱⼼㹰 †††††㰠⁰汣獡乳浡㵥琢硥⵴㥛硰≝笾䥂彚䑁剄卅当紲⼼㹰 †††††笠䥂彚䡐乏⁅☦㰠⁰汣獡乳浡㵥琢硥⵴㥛硰≝笾䥂彚䡐乏絅⼼㹰੽††††††䉻婉䕟䅍䱉☠…瀼挠慬獳慎敭∽整瑸嬭瀹嵸㸢䉻婉䕟䅍䱉㱽瀯紾 ††††㰠搯癩ਾ ††††㰠⁄㸯ਊ†††††⽻‪铢肔䤠癮楯散⬠戠杩传䑒剅渠浵敢⁲铢肔⨠累 ††††㰠楤⁶汣獡乳浡㵥昢敬⁸瑩浥⵳瑳牡⁴番瑳晩⵹敢睴敥≮ਾ††††††搼癩挠慬獳慎敭∽整瑸嬭瀹嵸猠慰散礭瀭≸ਾ†††††††瀼䤾癮楯散渠㩯笠湩潶捩乥絯⼼㹰 ††††††㰠㹰慄整›摻瑡卥牴㱽瀯ਾ†††††††瀼䌾獡楨牥›潻摲牥挮獡楨牥簠⁼䌢獡楨牥索⼼㹰 ††††††笠牯敤⹲慴汢彥畮扭牥☠…瀼吾扡敬丠㩯笠牯敤⹲慴汢彥畮扭牥㱽瀯紾 ††††††笠畣瑳浯牥慎敭☠…瀼䌾獵潴敭㩲笠畣瑳浯牥慎敭㱽瀯紾 ††††††㰠㹰慔汢⁥慐㩸ㄠ⼼㹰 †††††㰠搯癩ਾ††††††搼癩挠慬獳慎敭∽整瑸爭杩瑨㸢 ††††††㰠⁰汣獡乳浡㵥琢硥⵴㥛硰⁝潦瑮戭汯⁤牴捡楫杮眭摩獥≴伾䑒剅⼼㹰 ††††††㰠⁰汣獡乳浡㵥琢硥⵴㍛瀴嵸映湯⵴潢摬氠慥楤杮渭湯⁥慴畢慬⵲畮獭㸢潻摲牥畎絭⼼㹰 †††††㰠搯癩ਾ†††††⼼楤㹶ਊ†††††䐼⼠ਾ ††††笠⨯肔铢₀潃畬湭栠慥敤獲肔铢₀⼪੽†††††搼癩挠慬獳慎敭∽汦硥樠獵楴祦戭瑥敷湥琠硥⵴㥛硰⁝潦瑮戭汯⁤潢摲牥戭戠牯敤⵲汢捡⁫扰〭㔮㸢 †††††㰠灳湡儾祴†瑉浥⼼灳湡ਾ††††††猼慰㹮牐捩⁥䴨剙㰩猯慰㹮 ††††㰠搯癩ਾ ††††笠⨯肔铢₀楌敮椠整獭肔铢₀⼪੽†††††搼癩挠慬獳慎敭∽灳捡ⵥ⵹‱祰ㄭ㸢 †††††笠瑩浥⹳慭⡰椨整⥭㴠‾ਨ†††††††搼癩欠祥笽瑩浥瀮潲畤瑣楟絤挠慬獳慎敭∽汦硥樠獵楴祦戭瑥敷湥朠灡ㄭ㸢 †††††††㰠灳湡挠慬獳慎敭∽汦硥ㄭ氠慥楤杮琭杩瑨戠敲歡眭牯獤瀠⵲∱ਾ†††††††††楻整⹭畱湡楴祴⁽笠瑩浥渮浡絥⠠楻整⹭湵瑩灟楲散琮䙯硩摥㈨紩支⥡ †††††††㰠猯慰㹮 †††††††㰠灳湡挠慬獳慎敭∽慴畢慬⵲畮獭映敬⵸桳楲歮〭㸢楻整⹭畳瑢瑯污琮䙯硩摥㈨紩⼼灳湡ਾ†††††††⼼楤㹶 †††††⤠紩 ††††㰠搯癩ਾ ††††㰠楤⁶汣獡乳浡㵥戢牯敤⵲⁴潢摲牥戭慬正瀠⵴‱灳捡ⵥ⵹硰㸢 †††††㰠㹰瑻瑯污瑑絹†瑑㱹瀯ਾ††††††刼氠∽畓瑢瑯污•㵶潻摲牥献扵潴慴⹬潴楆數⡤⤲⁽㸯 †††††笠䕓噒䍉彅䡃剁䕇㸠〠☠…刼氠笽占剅䥖䕃䌠䅈䝒⁅␨卻剅䥖䕃䍟䅈䝒絅⤥絠瘠笽癳⹣潴楆數⡤⤲⁽㸯੽††††††灻䑴獩⁣‾‰☦㰠⁒㵬恻潐湩獴⠠笤牯敤⹲潰湩獴牟摥敥敭絤瀠獴怩⁽㵶恻␭灻䑴獩⹣潴楆數⡤⤲恽⁽㸯੽††††††牻畯摮摥℠㴽〠☠…刼氠∽楂汬爠畯摮湩≧瘠笽潲湵敤⹤潴楆數⡤⤲⁽㸯੽†††††⼼楤㹶ਊ†††††䐼⼠ਾ ††††笠⨯肔铢₀潔慴⁬铢肔⨠累 ††††㰠楤⁶汣獡乳浡㵥昢敬⁸番瑳晩⵹敢睴敥⁮潦瑮戭汯⁤整瑸嬭㌱硰≝ਾ††††††猼慰㹮潔慴⁬䴨剙㰩猯慰㹮 †††††㰠灳湡挠慬獳慎敭∽慴畢慬⵲畮獭㸢杻慲摮潔慴⹬潴楆數⡤⤲㱽猯慰㹮 ††††㰠搯癩ਾ†††††搼癩挠慬獳慎敭∽灳捡ⵥ⵹硰洠⵴⸰∵ਾ††††††刼氠笽慰浹湥絴瘠笽牧湡呤瑯污琮䙯硩摥㈨紩⼠ਾ††††††刼氠∽桃湡敧•㵶〢〮∰⼠ਾ†††††⼼楤㹶ਊ†††††潻摲牥瀮楯瑮彳慥湲摥㸠〠☠…ਨ††††††㸼 ††††††㰠⁄㸯 ††††††㰠⁰汣獡乳浡㵥琢硥⵴散瑮牥琠硥⵴㥛硰≝⬾潻摲牥瀮楯瑮彳慥湲摥⁽潬慹瑬⁹潰湩獴攠牡敮Ⅴ⼼㹰 †††††㰠㸯 ††††⤠੽ ††††笠⨯肔铢₀慔⁸畳浭牡⁹漨汮⁹桷湥猠牥楶散挠慨杲⁥湥扡敬⥤肔铢₀⼪੽†††††卻剅䥖䕃䍟䅈䝒⁅‾‰☦⠠ †††††㰠ਾ†††††††䐼⼠ਾ†††††††搼癩挠慬獳慎敭∽整瑸嬭瀹嵸㸢 †††††††㰠楤⁶汣獡乳浡㵥昢敬⁸番瑳晩⵹敢睴敥⁮潦瑮戭汯≤ਾ†††††††††猼慰㹮慔⁸愦灭※桃牡敧⁳畳浭牡㱹猯慰㹮 ††††††††㰠灳湡挠慬獳慎敭∽汦硥朠灡㈭㸢猼慰㹮慔慸汢㱥猯慰㹮猼慰㹮流畯瑮⼼灳湡㰾猯慰㹮 †††††††㰠搯癩ਾ††††††††搼癩挠慬獳慎敭∽汦硥樠獵楴祦戭瑥敷湥㸢 ††††††††㰠灳湡匾剅䥖䕃䌠䅈䝒⁅卻剅䥖䕃䍟䅈䝒絅㰥猯慰㹮 ††††††††㰠灳湡挠慬獳慎敭∽汦硥朠灡㈭琠扡汵牡渭浵≳ਾ††††††††††猼慰㹮潻摲牥献扵潴慴⹬潴楆數⡤⤲㱽猯慰㹮 †††††††††㰠灳湡笾癳⹣潴楆數⡤⤲㱽猯慰㹮 ††††††††㰠猯慰㹮 †††††††㰠搯癩ਾ†††††††⼼楤㹶 †††††㰠㸯 ††††⤠੽ ††††㰠⁄㸯ਊ†††††⽻‪铢肔䘠潯整⁲铢肔⨠累 ††††㰠楤⁶汣獡乳浡㵥琢硥⵴散瑮牥琠硥⵴㥛硰⁝灳捡ⵥ⵹⸰∵ਾ††††††瀼䐾湯愦潰㭳⁴潦杲瑥琠⁯慲整甠ⅳ⼼㹰 †††††㰠㹰捓湡儠⁒潣敤琠⁯敬⁴獵欠潮⁷潨⁷潹㱵瀯ਾ††††††瀼放橮祯摥眠瑩⁨獵㰮瀯ਾ††††††瀼挠慬獳慎敭∽瑭〭㔮㸢桔湡⁫潹⁵潦⁲楶楳楴杮甠㱳瀯ਾ††††††瀼圾⁥潨数琠⁯敳⁥潹⁵条楡⁮潳湯㰡瀯ਾ†††††⼼楤㹶ਊ†††††⽻‪铢肔删癥敩⁷剑肔铢₀⼪੽†††††搼癩挠慬獳慎敭∽汦硥樠獵楴祦挭湥整⁲瑭㈭洠ⵢ∱ਾ††††††儼䍒摯卥䝖瘠污敵笽䕒䥖坅啟䱒⁽楳敺笽〸⁽敬敶㵬䰢•㸯 ††††㰠搯癩ਾ ††††㰠楤⁶汣獡乳浡㵥琢硥⵴散瑮牥琠硥⵴㡛硰⁝整瑸稭湩ⵣ〴‰灳捡ⵥ⵹⸰∵ਾ††††††瀼吾楨⁳獩愠⁮景楦楣污爠捥楥瑰⼼㹰 †††††㰠㹰佐䕗䕒⁄奂䈠义升⁕䕄䥌䡇⁔佐㱓瀯ਾ†††††⼼楤㹶ਊ††††⼼楤㹶 ††㰠㸯 †⤠਻†੽㬩ਊ畦据楴湯䐠⤨笠 爠瑥牵⁮格⁲汣獡乳浡㵥洢⵹‱潢摲牥琭戠牯敤⵲慤桳摥戠牯敤⵲楺据㐭〰•㸯਻੽畦据楴湯删笨氠‬⁶㩽笠氠›瑳楲杮※㩶猠牴湩⁧⥽笠 爠瑥牵⁮ਨ††搼癩挠慬獳慎敭∽汦硥樠獵楴祦戭瑥敷湥朠灡ㄭ㸢 ††㰠灳湡笾絬⼼灳湡ਾ†††猼慰⁮汣獡乳浡㵥琢扡汵牡渭浵⁳汦硥猭牨湩⵫∰笾絶⼼灳湡ਾ††⼼楤㹶 ⤠਻੽
+"use client";
+
+import { useRef, forwardRef } from "react";
+import { useReactToPrint } from "react-to-print";
+import { QRCodeSVG } from "qrcode.react";
+import { Printer } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+
+// ── Business info ─────────────────────────────────────────────────────────
+const BIZ_NAME         = "Koori Dessert";
+const BIZ_ADDRESS_1    = "57, Jalan SS 21/1a, Damansara Utama,";
+const BIZ_ADDRESS_2    = "47400 Petaling Jaya, Selangor, Malaysia";
+const BIZ_PHONE        = "";   // e.g. "+60112345678"
+const BIZ_EMAIL        = "";   // e.g. "hello@bingsudelight.com"
+const SERVICE_CHARGE   = 10;   // percent — set 0 to disable
+// Replace with a short URL for best QR scanability (use bit.ly or g.page/r/...)
+const REVIEW_URL       = "https://www.google.com/maps/search/?q=Bingsu+Delight+Damansara+Utama#lrd=0x31cc49a7b42d0e55:0x5e3d42d4420e8cac,3,,,,";
+// ─────────────────────────────────────────────────────────────────────────
+
+export type ReceiptOrder = {
+  order_number: string;
+  created_at: string;
+  subtotal: number;
+  total_amount: number;
+  points_redeemed: number;
+  points_earned: number;
+  table_number?: string;
+  payment_method?: string;
+  cashier?: string;
+};
+
+export type ReceiptLineItem = {
+  product_id: string;
+  name: string;
+  unit_price: number;
+  quantity: number;
+  subtotal: number;
+};
+
+type Props = {
+  open: boolean;
+  onClose: () => void;
+  order: ReceiptOrder;
+  items: ReceiptLineItem[];
+  customerName?: string;
+};
+
+const PAGE_STYLE = `
+  @page { margin: 0; size: 58mm auto; }
+  body { margin: 0; padding: 3mm; background: #fff; font-family: 'Courier New', Courier, monospace; font-size: 10px; color: #000; }
+  * { box-sizing: border-box; }
+`;
+
+export default function ReceiptPrint({ open, onClose, order, items, customerName }: Props) {
+  const receiptRef = useRef<HTMLDivElement>(null);
+  const handlePrint = useReactToPrint({
+    contentRef: receiptRef,
+    pageStyle: PAGE_STYLE,
+    documentTitle: `Receipt-${order.order_number}`,
+  });
+
+  const svc    = +(order.subtotal * SERVICE_CHARGE / 100).toFixed(2);
+  const raw    = order.subtotal + svc;
+  const rounded = +(Math.round(raw * 20) / 20 - raw).toFixed(2);
+  const ptDisc  = +(order.subtotal - order.total_amount).toFixed(2);
+
+  return (
+    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-w-sm gap-0 overflow-hidden p-0">
+        <DialogHeader className="border-b border-zinc-100 px-6 pb-4 pt-6">
+          <DialogTitle className="flex items-center gap-2 text-base">
+            <span aria-hidden>✅</span> Order Complete
+          </DialogTitle>
+        </DialogHeader>
+        <div className="max-h-[60vh] overflow-y-auto bg-zinc-50 px-4 py-4">
+          <ReceiptContent
+            ref={receiptRef}
+            order={order}
+            items={items}
+            customerName={customerName}
+            svc={svc}
+            rounded={rounded}
+            ptDisc={ptDisc}
+          />
+        </div>
+        <div className="flex gap-2 border-t border-zinc-100 px-6 py-4">
+          <Button variant="outline" className="flex-1 gap-2" onClick={() => handlePrint()}>
+            <Printer className="h-4 w-4" /> Print Receipt
+          </Button>
+          <Button className="flex-1" onClick={onClose}>New Order</Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+type CP = {
+  order: ReceiptOrder;
+  items: ReceiptLineItem[];
+  customerName?: string;
+  svc: number;
+  rounded: number;
+  ptDisc: number;
+};
+
+const ReceiptContent = forwardRef<HTMLDivElement, CP>(
+  function ReceiptContent({ order, items, customerName, svc, rounded, ptDisc }, ref) {
+    const d = new Date(order.created_at);
+    const dd   = String(d.getDate()).padStart(2, "0");
+    const mm   = String(d.getMonth() + 1).padStart(2, "0");
+    const yyyy = d.getFullYear();
+    const hh   = String(d.getHours()).padStart(2, "0");
+    const min  = String(d.getMinutes()).padStart(2, "0");
+    const dateStr = `${dd}/${mm}/${yyyy} ${hh}:${min}`;
+
+    const totalQty   = items.reduce((s, i) => s + i.quantity, 0);
+    const grandTotal = +(order.subtotal + svc + rounded - ptDisc).toFixed(2);
+    const payment    = order.payment_method || "CASH";
+    const invoiceNo  = order.order_number.replace(/\D/g, "").slice(-4).padStart(4, "0");
+    const orderNum   = order.order_number.replace(/\D/g, "").slice(-2) || "1";
+
+    return (
+      <>
+        <style>{`@media print{.rr{width:58mm;max-width:58mm;font-family:'Courier New',monospace;font-size:10px;color:#000;background:#fff;}}`}</style>
+        <div ref={ref} className="rr mx-auto w-[230px] bg-white font-mono text-[10px] text-black">
+
+          {/* ── Header ── */}
+          <div className="text-center leading-snug">
+            <p className="font-bold text-[13px]">{BIZ_NAME}</p>
+            <p className="text-[9px]">{BIZ_ADDRESS_1}</p>
+            <p className="text-[9px]">{BIZ_ADDRESS_2}</p>
+            {BIZ_PHONE && <p className="text-[9px]">{BIZ_PHONE}</p>}
+            {BIZ_EMAIL && <p className="text-[9px]">{BIZ_EMAIL}</p>}
+          </div>
+
+          <D />
+
+          {/* ── Invoice + big ORDER number ── */}
+          <div className="flex items-start justify-between">
+            <div className="text-[9px] space-y-px">
+              <p>Invoice no: {invoiceNo}</p>
+              <p>Date: {dateStr}</p>
+              <p>Cashier: {order.cashier || "Cashier"}</p>
+              {order.table_number && <p>Table No: {order.table_number}</p>}
+              {customerName && <p>Customer: {customerName}</p>}
+              <p>Table Pax: 1</p>
+            </div>
+            <div className="text-right">
+              <p className="text-[9px] font-bold tracking-widest">ORDER</p>
+              <p className="text-[34px] font-bold leading-none tabular-nums">{orderNum}</p>
+            </div>
+          </div>
+
+          <D />
+
+          {/* ── Column headers ── */}
+          <div className="flex justify-between text-[9px] font-bold border-b border-black pb-0.5">
+            <span>Qty  Item</span>
+            <span>Price (MYR)</span>
+          </div>
+
+          {/* ── Line items ── */}
+          <div className="space-y-1 py-1">
+            {items.map((item) => (
+              <div key={item.product_id} className="flex justify-between gap-1">
+                <span className="flex-1 leading-tight break-words pr-1">
+                  {item.quantity}  {item.name} ({item.unit_price.toFixed(2)}/ea)
+                </span>
+                <span className="tabular-nums flex-shrink-0">{item.subtotal.toFixed(2)}</span>
+              </div>
+            ))}
+          </div>
+
+          <div className="border-t border-black pt-1 space-y-px">
+            <p>{totalQty}  Qty</p>
+            <R l="Subtotal" v={order.subtotal.toFixed(2)} />
+            {SERVICE_CHARGE > 0 && <R l={`SERVICE CHARGE (${SERVICE_CHARGE}%)`} v={svc.toFixed(2)} />}
+            {ptDisc > 0 && <R l={`Points (${order.points_redeemed} pts)`} v={`-${ptDisc.toFixed(2)}`} />}
+            {rounded !== 0 && <R l="Bill rounding" v={rounded.toFixed(2)} />}
+          </div>
+
+          <D />
+
+          {/* ── Total ── */}
+          <div className="flex justify-between font-bold text-[13px]">
+            <span>Total (MYR)</span>
+            <span className="tabular-nums">{grandTotal.toFixed(2)}</span>
+          </div>
+          <div className="space-y-px mt-0.5">
+            <R l={payment} v={grandTotal.toFixed(2)} />
+            <R l="Change" v="0.00" />
+          </div>
+
+          {order.points_earned > 0 && (
+            <>
+              <D />
+              <p className="text-center text-[9px]">+{order.points_earned} loyalty points earned!</p>
+            </>
+          )}
+
+          {/* ── Tax summary (only when service charge enabled) ── */}
+          {SERVICE_CHARGE > 0 && (
+            <>
+              <D />
+              <div className="text-[9px]">
+                <div className="flex justify-between font-bold">
+                  <span>Tax &amp; Charges summary</span>
+                  <span className="flex gap-2"><span>Taxable</span><span>Amount</span></span>
+                </div>
+                <div className="flex justify-between">
+                  <span>SERVICE CHARGE {SERVICE_CHARGE}%</span>
+                  <span className="flex gap-2 tabular-nums">
+                    <span>{order.subtotal.toFixed(2)}</span>
+                    <span>{svc.toFixed(2)}</span>
+                  </span>
+                </div>
+              </div>
+            </>
+          )}
+
+          <D />
+
+          {/* ── Footer ── */}
+          <div className="text-center text-[9px] space-y-0.5">
+            <p>Don&apos;t forget to rate us!</p>
+            <p>Scan QR code to let us know how you</p>
+            <p>enjoyed with us.</p>
+            <p className="mt-0.5">Thank you for visiting us</p>
+            <p>We hope to see you again soon!</p>
+          </div>
+
+          {/* ── Review QR ── */}
+          <div className="flex justify-center mt-2 mb-1">
+            <QRCodeSVG value={REVIEW_URL} size={80} level="L" />
+          </div>
+
+          <div className="text-center text-[8px] text-zinc-400 space-y-0.5">
+            <p>This is an official receipt</p>
+            <p>POWERED BY BINGSU DELIGHT POS</p>
+          </div>
+
+        </div>
+      </>
+    );
+  }
+);
+
+function D() {
+  return <hr className="my-1 border-t border-dashed border-zinc-400" />;
+}
+function R({ l, v }: { l: string; v: string }) {
+  return (
+    <div className="flex justify-between gap-1">
+      <span>{l}</span>
+      <span className="tabular-nums flex-shrink-0">{v}</span>
+    </div>
+  );
+}

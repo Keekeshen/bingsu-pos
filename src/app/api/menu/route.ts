@@ -16,7 +16,7 @@ export async function GET() {
       return NextResponse.json({ error: "Failed to load menu" }, { status: 500 });
     }
 
-    return NextResponse.json({ products: (products ?? []).map(p => ({ ...p, price: parseFloat(String(p.price)) })), {
+    return NextResponse.json({ products: (products ?? []).map(p => ({ ...p, price: parseFloat(String(p.price)) })) }, {
       headers: { "Cache-Control": "no-store" },
     });
   } catch (e) {

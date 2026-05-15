@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { Minus, Plus, Trash2, UserSearch, X } from "lucide-react";
+import { Minus, Plus, Trash2, UserSearch, X, Banknote, QrCode, CreditCard } from "lucide-react";
 import { toast } from "sonner";
 import type { CartItem } from "@/lib/hooks/useCart";
 import { createClient } from "@/lib/supabase/client";
@@ -24,6 +24,8 @@ type PendingReceipt = {
   order: ReceiptOrder;
   items: ReceiptLineItem[];
   customerName?: string;
+  paymentMethod: string;
+  amountPaid: number;
 };
 
 type Props = {
@@ -36,11 +38,18 @@ type Props = {
   onClearCart: () => void;
 };
 
+const PAYMENT_OPTIONS = [
+  { id: "cash" as const, label: "Cash", icon: Banknote },
+  { id: "qr" as const, label: "QR Code", icon: QrCode },
+  { id: "card" as const, label: "Card", icon: CreditCard },
+];
+
 export default function CheckoutCart({ items, subtotal, total, onUpdateQuantity, onRemoveItem, onClearCart }: Props) {
   const [phone, setPhone] = useState("");
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [lookingUp, setLookingUp] = useState(false);
   const [charging, setCharging] = useState(false);
+  const [paymentType, setPaymentType] = useState<"cash" | "qr" | "card" | null>(null);
   const [pending, setPending] = useState<PendingReceipt | null>(null);
   const phoneRef = useRef<HTMLInputElement>(null);
 
@@ -49,14 +58,12 @@ export default function CheckoutCart({ items, subtotal, total, onUpdateQuantity,
     if (!query) return;
     setLookingUp(true);
     setCustomer(null);
-
     const supabase = createClient();
     const { data, error } = await supabase
       .from("profiles")
       .select("id, full_name, phone, loyalty_points")
       .or(`phone.eq.${query},id.eq.${query}`)
       .single();
-
     setLookingUp(false);
     if (error || !data) { toast.error("Customer not found"); return; }
     setCustomer(data);
@@ -69,7 +76,7 @@ export default function CheckoutCart({ items, subtotal, total, onUpdateQuantity,
   }
 
   async function handleCharge() {
-    if (items.length === 0) return;
+    if (items.length === 0 || !paymentType) return;
     setCharging(true);
 
     const supabase = createClient();
@@ -85,6 +92,7 @@ export default function CheckoutCart({ items, subtotal, total, onUpdateQuantity,
         items: items.map(({ product_id, name, price, quantity }) => ({ product_id, product_name: name, unit_price: price, quantity })),
         customer_id: customer?.id ?? null,
         points_redeemed: 0,
+        payment_method: paymentType,
       }),
     });
 
@@ -102,11 +110,14 @@ export default function CheckoutCart({ items, subtotal, total, onUpdateQuantity,
       order: { order_number: data.order_number, created_at: data.created_at, subtotal: data.subtotal, total_amount: data.total_amount, points_redeemed: data.points_redeemed, points_earned: data.points_earned },
       items: items.map((item) => ({ product_id: item.product_id, name: item.name, unit_price: item.price, quantity: item.quantity, subtotal: +(item.price * item.quantity).toFixed(2) })),
       customerName: customer?.full_name,
+      paymentMethod: paymentType === "cash" ? "Cash" : paymentType === "qr" ? "QR Code" : "Card",
+      amountPaid: total,
     });
 
     onClearCart();
     setCustomer(null);
     setPhone("");
+    setPaymentType(null);
   }
 
   return (
@@ -147,7 +158,7 @@ export default function CheckoutCart({ items, subtotal, total, onUpdateQuantity,
             <div className="flex items-center justify-between rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2">
               <div>
                 <p className="text-sm font-medium leading-tight text-zinc-900">{customer.full_name}</p>
-                <p className="text-xs text-zinc-400">{customer.loyalty_points.toLocaleString()} pts{customer.phone && ` - ${customer.phone}`}</p>
+                <p className="text-xs text-zinc-400">{customer.loyalty_points.toLocaleString()} pts{customer.phone && ` · ${customer.phone}`}</p>
               </div>
               <button onClick={clearCustomer} className="text-zinc-400 hover:text-zinc-700" aria-label="Remove customer">
                 <X className="h-4 w-4" />
@@ -165,6 +176,30 @@ export default function CheckoutCart({ items, subtotal, total, onUpdateQuantity,
         </div>
 
         <div className="space-y-3 border-t border-zinc-200 px-4 py-4">
+          {/* Payment type selector */}
+          {items.length > 0 && (
+            <div className="space-y-1.5">
+              <p className="text-xs font-medium text-zinc-500">Payment Method</p>
+              <div className="grid grid-cols-3 gap-1.5">
+                {PAYMENT_OPTIONS.map(({ id, label, icon: Icon }) => (
+                  <button
+                    key={id}
+                    onClick={() => setPaymentType(id)}
+                    className={cn(
+                      "flex flex-col items-center gap-1 rounded-lg border-2 py-2 text-xs font-medium transition-all",
+                      paymentType === id
+                        ? "border-zinc-900 bg-zinc-900 text-white"
+                        : "border-zinc-200 text-zinc-600 hover:border-zinc-400"
+                    )}
+                  >
+                    <Icon className="h-4 w-4" />
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div className="space-y-1 text-sm">
             <div className="flex justify-between text-zinc-500">
               <span>Subtotal</span>
@@ -177,16 +212,27 @@ export default function CheckoutCart({ items, subtotal, total, onUpdateQuantity,
             </div>
           </div>
           <Button
-            className={cn("h-12 w-full text-base font-semibold", items.length === 0 && "opacity-50")}
-            disabled={items.length === 0 || charging}
+            className={cn("h-12 w-full text-base font-semibold", (items.length === 0 || !paymentType) && "opacity-50")}
+            disabled={items.length === 0 || !paymentType || charging}
             onClick={handleCharge}
           >
-            {charging ? "Processing..." : `Charge RM ${total.toFixed(2)}`}
+            {charging ? "Processing…" : `Charge RM ${total.toFixed(2)}`}
           </Button>
         </div>
       </div>
 
-      {pending && <ReceiptPrint open={!!pending} onClose={() => setPending(null)} order={pending.order} items={pending.items} customerName={pending.customerName} />}
+      {pending && (
+        <ReceiptPrint
+          open={!!pending}
+          onClose={() => setPending(null)}
+          order={pending.order}
+          items={pending.items}
+          customerName={pending.customerName}
+          paymentMethod={pending.paymentMethod}
+          amountPaid={pending.amountPaid}
+          change={0}
+        />
+      )}
     </>
   );
 }

@@ -3,6 +3,7 @@
 import { useRef, forwardRef } from "react";
 import { useReactToPrint } from "react-to-print";
 import { Printer } from "lucide-react";
+import { QRCodeSVG } from "qrcode.react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
@@ -36,6 +37,8 @@ type Props = {
   serviceCharge?: number;
   rounding?: number;
 };
+
+const REVIEW_URL = "http://bit.ly/4fms7qj";
 
 const PAGE_STYLE = `
   @page { margin: 0; size: 58mm auto; }
@@ -120,12 +123,15 @@ const ReceiptContent = forwardRef<HTMLDivElement, ContentProps>(
           }
         `}</style>
         <div ref={ref} className="receipt-root mx-auto w-[220px] bg-white font-mono text-[10px] text-black">
+          {/* Header */}
           <div className="receipt-center mb-1 text-center">
-            <p className="receipt-bold text-[13px] font-bold">Koori Dessert</p>
+            <p className="receipt-bold font-bold" style={{ fontSize: "16px" }}>Koori Dessert</p>
             <p className="receipt-small text-[9px] text-zinc-500">57, Jalan SS 21/1a, Damansara Utama</p>
             <p className="receipt-small text-[9px] text-zinc-500">47400 Petaling Jaya, Selangor</p>
           </div>
           <Dashes />
+
+          {/* Invoice info */}
           <div className="space-y-0.5">
             <Row label="Invoice" value={order.order_number} />
             <Row label="Date" value={dateStr} />
@@ -133,6 +139,8 @@ const ReceiptContent = forwardRef<HTMLDivElement, ContentProps>(
             {customerName && <Row label="Customer" value={customerName} />}
           </div>
           <Dashes />
+
+          {/* Items */}
           <div className="space-y-1">
             {items.map((item) => (
               <div key={item.product_id}>
@@ -145,6 +153,8 @@ const ReceiptContent = forwardRef<HTMLDivElement, ContentProps>(
             ))}
           </div>
           <Dashes />
+
+          {/* Totals */}
           <div className="space-y-0.5">
             <Row label="Subtotal" value={`RM ${order.subtotal.toFixed(2)}`} />
             {(serviceCharge ?? 0) > 0 && <Row label="Service Charge (10%)" value={`RM ${(serviceCharge ?? 0).toFixed(2)}`} />}
@@ -155,6 +165,8 @@ const ReceiptContent = forwardRef<HTMLDivElement, ContentProps>(
               <span className="tabular-nums">RM {order.total_amount.toFixed(2)}</span>
             </div>
           </div>
+
+          {/* Payment */}
           {(paymentMethod || amountPaid !== undefined) && (
             <>
               <Dashes />
@@ -165,16 +177,22 @@ const ReceiptContent = forwardRef<HTMLDivElement, ContentProps>(
               </div>
             </>
           )}
+
+          {/* Loyalty points */}
           {order.points_earned > 0 && (
             <>
               <Dashes />
               <div className="receipt-center text-center"><p>+{order.points_earned} loyalty points earned!</p></div>
             </>
           )}
+
+          {/* Footer with QR code */}
           <Dashes />
-          <div className="receipt-center receipt-small mt-1 text-center text-[9px] text-zinc-400">
-            <p>Thank you for visiting Koori Dessert!</p>
-            <p>Please come again ❄️</p>
+          <div className="receipt-center mt-1 flex flex-col items-center text-center">
+            <p className="text-[9px] text-zinc-500 mb-1">Thank you for visiting Koori Dessert!</p>
+            <p className="text-[9px] text-zinc-500 mb-2">Leave us a Google review ❄️</p>
+            <QRCodeSVG value={REVIEW_URL} size={64} level="M" />
+            <p className="text-[8px] text-zinc-400 mt-1">bit.ly/4fms7qj</p>
           </div>
         </div>
       </>

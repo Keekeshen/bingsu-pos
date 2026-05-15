@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
     try { body = await request.json(); } catch { return err("Invalid JSON body", 400); }
     if (!validateBody(body)) return err("Invalid request body", 400);
 
-    const { items, customer_id = null, points_redeemed = 0 } = body;
+    const { items, customer_id = null, points_redeemed = 0, payment_method = null } = body;
 
     const authHeader = request.headers.get("Authorization");
     const token = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null;
@@ -80,7 +80,7 @@ export async function POST(request: NextRequest) {
     const orderNumber = await generateOrderNumber();
     const { data: order, error: orderError } = await admin
       .from("orders")
-      .insert({ order_number: orderNumber, admin_id: user.id, customer_id, subtotal, points_redeemed, total_amount: totalAmount, status: "completed" })
+      .insert({ order_number: orderNumber, admin_id: user.id, customer_id, subtotal, points_redeemed, total_amount: totalAmount, status: "completed", payment_method: payment_method ? String(payment_method) : null })
       .select("id, order_number, created_at")
       .single();
 

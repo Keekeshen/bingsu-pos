@@ -1,25 +1,1 @@
-$utf8 = [System.Text.UTF8Encoding]::new($false)
-$enc  = [System.Text.Encoding]::Unicode
-$base = "C:\Users\keeke\bingsu-pos"
-$tf   = "$base\tf"
-
-function Write-Ts($src, $rel) {
-  $dest = "$base\$rel"
-  $dir  = Split-Path $dest -Parent
-  if (!(Test-Path $dir)) { New-Item -ItemType Directory -Path $dir -Force | Out-Null }
-  $content = [System.IO.File]::ReadAllText("$tf\$src", $enc)
-  [System.IO.File]::WriteAllText($dest, $content, $utf8)
-  Write-Host "OK: $rel"
-}
-
-Write-Ts "menu-api.txt"           "src\app\api\menu\route.ts"
-Write-Ts "table-order-api.txt"    "src\app\api\table-order\route.ts"
-Write-Ts "order-page.txt"         "src\app\order\[tableNumber]\page.tsx"
-Write-Ts "tables-admin.txt"       "src\app\(admin)\admin\tables\page.tsx"
-Write-Ts "table-grid.txt"         "src\components\admin\TableGrid.tsx"
-Write-Ts "table-order-view.txt"   "src\components\admin\TableOrderView.tsx"
-Write-Ts "pos-new.txt"            "src\app\(admin)\admin\pos\page.tsx"
-Write-Ts "admin-layout-new.txt"   "src\app\(admin)\layout.tsx"
-
-Remove-Item "$tf" -Recurse -Force
-Write-Host "Done - all files written as UTF-8"
+甤晴‸‽卛獹整⹭敔瑸售䙔䔸据摯湩嵧㨺敮⡷昤污敳਩攤据†‽卛獹整⹭敔瑸䔮据摯湩嵧㨺湕捩摯੥戤獡⁥‽䌢尺獕牥屳敫步履楢杮畳瀭獯ਢ琤⁦†‽␢慢敳瑜≦ਊ畦据楴湯圠楲整吭⡳猤捲‬爤汥 ੻†搤獥⁴‽␢慢敳⑜敲≬ ␠楤⁲㴠匠汰瑩倭瑡⁨搤獥⁴倭牡湥ੴ†晩⠠⠡敔瑳倭瑡⁨搤物⤩笠丠睥䤭整⁭䤭整呭灹⁥楄敲瑣牯⁹倭瑡⁨搤物ⴠ潆捲⁥⁼畏⵴畎汬素 ␠潣瑮湥⁴‽卛獹整⹭佉䘮汩嵥㨺敒摡汁呬硥⡴␢晴⑜牳≣‬攤据਩†卛獹整⹭佉䘮汩嵥㨺牗瑩䅥汬敔瑸␨敤瑳‬挤湯整瑮‬甤晴⤸ 圠楲整䠭獯⁴伢㩋␠敲≬紊ਊ牗瑩ⵥ獔∠敭畮愭楰琮瑸•†††††猢捲慜灰慜楰浜湥屵潲瑵⹥獴ਢ牗瑩ⵥ獔∠慴汢ⵥ牯敤⵲灡⹩硴≴††猢捲慜灰慜楰瑜扡敬漭摲牥牜畯整琮≳圊楲整吭⁳漢摲牥瀭条⹥硴≴††††∠牳屣灡屰牯敤屲瑛扡敬畎扭牥屝慰敧琮硳ਢ牗瑩ⵥ獔∠慴汢獥愭浤湩琮瑸•†††猢捲慜灰⡜摡業⥮慜浤湩瑜扡敬屳慰敧琮硳ਢ牗瑩ⵥ獔∠慴汢ⵥ牧摩琮瑸•††††猢捲捜浯潰敮瑮屳摡業屮慔汢䝥楲⹤獴≸圊楲整吭⁳琢扡敬漭摲牥瘭敩⹷硴≴†∠牳屣潣灭湯湥獴慜浤湩呜扡敬牏敤噲敩⹷獴≸圊楲整吭⁳瀢獯渭睥琮瑸•†††††∠牳屣灡屰愨浤湩尩摡業屮潰屳慰敧琮硳ਢ牗瑩ⵥ獔∠摡業⵮慬潹瑵渭睥琮瑸•†猢捲慜灰⡜摡業⥮汜祡畯⹴獴≸ਊ敒潭敶䤭整⁭␢晴•刭捥牵敳ⴠ潆捲੥牗瑩ⵥ潈瑳∠潄敮ⴠ愠汬映汩獥眠楲瑴湥愠⁳呕ⵆ∸

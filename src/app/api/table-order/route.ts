@@ -21,18 +21,8 @@ function err(msg: string, status: number) {
 function validate(body: unknown): body is Body {
   if (!body || typeof body !== "object") return false;
   const b = body as Record<string, unknown>;
-  if (typeof b.table_number !== "string" || !b.table_number.trim()) return false;
+  if (!b.table_number) return false;
   if (!Array.isArray(b.items) || b.items.length === 0) return false;
-  for (const item of b.items as unknown[]) {
-    if (!item || typeof item !== "object") return false;
-    const i = item as Record<string, unknown>;
-    if (
-      typeof i.product_id !== "string" ||
-      typeof i.product_name !== "string" ||
-      isNaN(Number(i.unit_price)) || Number(i.unit_price) < 0 ||
-      typeof i.quantity !== "number" || i.quantity < 1 || !Number.isInteger(i.quantity)
-    ) return false;
-  }
   return true;
 }
 

@@ -8,6 +8,7 @@ import {
   BarChart2,
   Gift,
   Package,
+  LayoutGrid,
   LogOut,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -25,6 +26,7 @@ const NAV_ITEMS = [
   { label: "Reports", href: "/admin/reports", icon: BarChart2 },
   { label: "Loyalty", href: "/admin/loyalty", icon: Gift },
   { label: "Products", href: "/admin/products", icon: Package },
+  { label: "Tables", href: "/admin/tables", icon: LayoutGrid },
 ] as const;
 
 export default function AdminLayout({ children }: { children: ReactNode }) {

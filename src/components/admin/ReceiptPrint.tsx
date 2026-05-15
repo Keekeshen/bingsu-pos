@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 // ── Business info ─────────────────────────────────────────────────────────
-const BIZ_NAME         = "Bingsu Delight";
+const BIZ_NAME         = "Koori Dessert";
 const BIZ_ADDRESS_1    = "57, Jalan SS 21/1a, Damansara Utama,";
 const BIZ_ADDRESS_2    = "47400 Petaling Jaya, Selangor, Malaysia";
 const BIZ_PHONE        = "";   // e.g. "+60112345678"

@@ -11,10 +11,10 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: {
-    default: "Bingsu Delight POS",
-    template: "%s | Bingsu Delight",
+    default: "Koori Dessert POS",
+    template: "%s | Koori Dessert",
   },
-  description: "Point of Sale and Loyalty System for Bingsu Delight",
+  description: "Point of Sale and Loyalty System for Koori Dessert",
   robots: { index: false, follow: false },
 };
 

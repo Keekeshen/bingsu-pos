@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/server";
+import { generateOrderNumber } from "@/lib/order-number";
 
 function err(msg: string, status: number) {
   return NextResponse.json({ error: msg }, { status });
@@ -39,7 +40,7 @@ export async function POST(request: NextRequest) {
     const customerId = body.customer_id ? String(body.customer_id) : null;
     const admin = createAdminClient();
     const subtotal = +items.reduce((s, i) => s + i.unit_price * i.quantity, 0).toFixed(2);
-    const orderNumber = `T${tableNumber}-${Date.now()}`;
+    const orderNumber = await generateOrderNumber();
 
     const { data: order, error: orderError } = await admin
       .from("orders")

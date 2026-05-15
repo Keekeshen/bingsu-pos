@@ -128,7 +128,7 @@ export default function TableOrderPage({
           <div>
             <div className="flex items-center gap-2">
               <ChefHat className="h-5 w-5 text-zinc-700" />
-              <span className="font-bold text-zinc-900">Bingsu Delight</span>
+              <span className="font-bold text-zinc-900">Koori Dessert</span>
             </div>
             <p className="text-xs text-zinc-500 mt-0.5">Table {tableNumber}</p>
           </div>

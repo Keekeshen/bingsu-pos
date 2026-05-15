@@ -58,7 +58,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
               const active = pathname === href || pathname.startsWith(`${href}/`);
               return (
                 <Tooltip key={href}>
-                  <TooltipTrigger asChild>
+                  <TooltipTrigger>
                     <Link
                       href={href}
                       className={cn(
@@ -82,7 +82,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
 
           <div className="border-t border-zinc-200 p-2">
             <Tooltip>
-              <TooltipTrigger asChild>
+              <TooltipTrigger>
                 <Button
                   variant="ghost"
                   onClick={handleSignOut}

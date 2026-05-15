@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { Minus, Plus, Trash2, UserSearch, X, Banknote, QrCode, CreditCard, Ticket, ScanLine } from "lucide-react";
+import { Minus, Plus, Trash2, UserSearch, X, Banknote, QrCode, CreditCard, Ticket } from "lucide-react";
 import { toast } from "sonner";
 import type { CartItem } from "@/lib/hooks/useCart";
 import { createClient } from "@/lib/supabase/client";
@@ -12,6 +12,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import ReceiptPrint, { type ReceiptOrder, type ReceiptLineItem } from "@/components/admin/ReceiptPrint";
 import CustomerScanner, { type ScannedCustomer } from "@/components/admin/CustomerScanner";
+import VoucherScanner from "@/components/admin/VoucherScanner";
 
 type Customer = { id: string; full_name: string; phone: string | null; loyalty_points: number };
 type VoucherData = { id: string; code: string; label: string; discount_type: string; discount_value: number; description: string | null; type: string };
@@ -84,20 +85,23 @@ export default function CheckoutCart({ items, subtotal, total, onUpdateQuantity,
     setCustomer(data);
   }
 
-  async function applyVoucher() {
-    const code = voucherCode.trim().toUpperCase();
-    if (!code) return;
+  async function applyVoucherCode(code: string) {
+    const trimmed = code.trim().toUpperCase();
+    if (!trimmed) return;
     setLookingUpVoucher(true);
     try {
-      const res = await fetch(`/api/voucher?code=${encodeURIComponent(code)}`);
+      const res = await fetch(`/api/voucher?code=${encodeURIComponent(trimmed)}`);
       const data = await res.json();
       if (!res.ok) { toast.error(data.error ?? "Invalid voucher"); return; }
       setVoucher(data.voucher);
+      setVoucherCode(trimmed);
       toast.success(`Voucher applied: ${data.voucher.label}`);
     } finally {
       setLookingUpVoucher(false);
     }
   }
+
+  function applyVoucher() { applyVoucherCode(voucherCode); }
 
   function removeVoucher() { setVoucher(null); setVoucherCode(""); }
 
@@ -204,7 +208,7 @@ export default function CheckoutCart({ items, subtotal, total, onUpdateQuantity,
             <div className="flex items-center justify-between rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2">
               <div>
                 <p className="text-sm font-medium leading-tight text-zinc-900">{customer.full_name}</p>
-                <p className="text-xs text-zinc-400">{customer.loyalty_points.toLocaleString()} pts{customer.phone && ` 뿯½ ${customer.phone}`}</p>
+                <p className="text-xs text-zinc-400">{customer.loyalty_points.toLocaleString()} pts{customer.phone && ` · ${customer.phone}`}</p>
               </div>
               <button onClick={() => { setCustomer(null); setPhone(""); phoneRef.current?.focus(); }} className="text-zinc-400 hover:text-zinc-700">
                 <X className="h-4 w-4" />
@@ -249,10 +253,11 @@ export default function CheckoutCart({ items, subtotal, total, onUpdateQuantity,
                 variant="outline"
                 onClick={applyVoucher}
                 disabled={lookingUpVoucher || !voucherCode.trim()}
-                className="h-9 shrink-0 px-2 gap-1 text-xs"
+                className="h-9 shrink-0 px-2 text-xs"
               >
-                {lookingUpVoucher ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-zinc-300 border-t-zinc-700" /> : <><ScanLine className="h-3.5 w-3.5" />Apply</>}
+                {lookingUpVoucher ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-zinc-300 border-t-zinc-700" /> : "Apply"}
               </Button>
+              <VoucherScanner onCodeScanned={(code) => applyVoucherCode(code)} />
             </div>
           )}
         </div>
@@ -316,7 +321,7 @@ export default function CheckoutCart({ items, subtotal, total, onUpdateQuantity,
               </div>
             )}
             {isFreeItem && (
-              <div className="text-xs text-pink-600 font-medium">�붿 Free item — confirm with customer</div>
+              <div className="text-xs text-pink-600 font-medium">🎁 Free item — confirm with customer</div>
             )}
             <Separator />
             <div className="flex justify-between pt-1 text-base font-bold text-zinc-900">

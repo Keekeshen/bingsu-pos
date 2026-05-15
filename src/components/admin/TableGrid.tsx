@@ -15,6 +15,7 @@ type TableRow = {
 type TableStatus = {
   table_number: string;
   pending: number;
+  served: number;
   completed: number;
 };
 
@@ -45,8 +46,9 @@ export default function TableGrid({ onSelectTable, selectedTable, refreshKey }: 
     const map: Record<string, TableStatus> = {};
     for (const order of orderData ?? []) {
       const tn = order.table_number as string;
-      if (!map[tn]) map[tn] = { table_number: tn, pending: 0, completed: 0 };
+      if (!map[tn]) map[tn] = { table_number: tn, pending: 0, served: 0, completed: 0 };
       if (order.status === "pending") map[tn].pending++;
+      else if (order.status === "served") map[tn].served++;
       else if (order.status === "completed") map[tn].completed++;
     }
     setStatuses(map);
@@ -99,6 +101,7 @@ export default function TableGrid({ onSelectTable, selectedTable, refreshKey }: 
         {tables.map((table) => {
           const status = statuses[table.table_number];
           const hasPending = (status?.pending ?? 0) > 0;
+          const hasServed = (status?.served ?? 0) > 0 && (status?.pending ?? 0) === 0;
           const isSelected = selectedTable === table.table_number;
 
           return (
@@ -115,6 +118,8 @@ export default function TableGrid({ onSelectTable, selectedTable, refreshKey }: 
                   ? "border-zinc-900 bg-zinc-900 text-white"
                   : hasPending
                   ? "border-amber-300 bg-amber-50 hover:border-amber-400"
+                  : hasServed
+                  ? "border-emerald-400 bg-emerald-50 hover:border-emerald-500"
                   : "border-zinc-200 bg-white hover:border-zinc-300"
               )}
             >
@@ -142,13 +147,13 @@ export default function TableGrid({ onSelectTable, selectedTable, refreshKey }: 
                     <Clock className="h-3 w-3" />
                     {status.pending} pending
                   </span>
+                ) : hasServed ? (
+                  <span className="flex items-center gap-1 text-xs font-medium text-emerald-600">
+                    <CheckCircle2 className="h-3 w-3" />
+                    Pay now
+                  </span>
                 ) : (
-                  <span
-                    className={cn(
-                      "flex items-center gap-1 text-xs",
-                      isSelected ? "text-zinc-400" : "text-zinc-400"
-                    )}
-                  >
+                  <span className={cn("flex items-center gap-1 text-xs", isSelected ? "text-zinc-400" : "text-zinc-400")}>
                     <CheckCircle2 className="h-3 w-3" />
                     Available
                   </span>

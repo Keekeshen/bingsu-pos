@@ -125,7 +125,7 @@ const ReceiptContent = forwardRef<HTMLDivElement, ContentProps>(
         <div ref={ref} className="receipt-root mx-auto w-[220px] bg-white font-mono text-[10px] text-black">
           {/* Header */}
           <div className="receipt-center mb-1 text-center">
-            <p className="receipt-bold font-bold" style={{ fontSize: "16px" }}>Koori Dessert</p>
+            <p className="receipt-bold font-bold" style={{ fontSize: "20px" }}>Koori Dessert</p>
             <p className="receipt-small text-[9px] text-zinc-500">57, Jalan SS 21/1a, Damansara Utama</p>
             <p className="receipt-small text-[9px] text-zinc-500">47400 Petaling Jaya, Selangor</p>
           </div>

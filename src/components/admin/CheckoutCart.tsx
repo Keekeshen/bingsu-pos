@@ -26,6 +26,7 @@ type PendingReceipt = {
   customerName?: string;
   paymentMethod: string;
   amountPaid: number;
+  change: number;
 };
 
 type Props = {
@@ -50,8 +51,16 @@ export default function CheckoutCart({ items, subtotal, total, onUpdateQuantity,
   const [lookingUp, setLookingUp] = useState(false);
   const [charging, setCharging] = useState(false);
   const [paymentType, setPaymentType] = useState<"cash" | "qr" | "card" | null>(null);
+  const [amountReceived, setAmountReceived] = useState("");
   const [pending, setPending] = useState<PendingReceipt | null>(null);
   const phoneRef = useRef<HTMLInputElement>(null);
+
+  const receivedNum = parseFloat(amountReceived);
+  const change = paymentType === "cash" && !isNaN(receivedNum) && receivedNum >= total
+    ? +(receivedNum - total).toFixed(2)
+    : null;
+  const canCharge = !!paymentType && items.length > 0 &&
+    (paymentType !== "cash" || (!isNaN(receivedNum) && receivedNum >= total));
 
   async function lookupCustomer() {
     const query = phone.trim();
@@ -76,7 +85,7 @@ export default function CheckoutCart({ items, subtotal, total, onUpdateQuantity,
   }
 
   async function handleCharge() {
-    if (items.length === 0 || !paymentType) return;
+    if (!canCharge) return;
     setCharging(true);
 
     const supabase = createClient();
@@ -106,18 +115,23 @@ export default function CheckoutCart({ items, subtotal, total, onUpdateQuantity,
 
     const data: { order_id: string; order_number: string; created_at: string; subtotal: number; points_redeemed: number; total_amount: number; points_earned: number; } = await res.json();
 
+    const paid = paymentType === "cash" ? receivedNum : total;
+    const changeAmt = paymentType === "cash" ? +(paid - total).toFixed(2) : 0;
+
     setPending({
       order: { order_number: data.order_number, created_at: data.created_at, subtotal: data.subtotal, total_amount: data.total_amount, points_redeemed: data.points_redeemed, points_earned: data.points_earned },
       items: items.map((item) => ({ product_id: item.product_id, name: item.name, unit_price: item.price, quantity: item.quantity, subtotal: +(item.price * item.quantity).toFixed(2) })),
       customerName: customer?.full_name,
       paymentMethod: paymentType === "cash" ? "Cash" : paymentType === "qr" ? "QR Code" : "Card",
-      amountPaid: total,
+      amountPaid: paid,
+      change: changeAmt,
     });
 
     onClearCart();
     setCustomer(null);
     setPhone("");
     setPaymentType(null);
+    setAmountReceived("");
   }
 
   return (
@@ -160,14 +174,12 @@ export default function CheckoutCart({ items, subtotal, total, onUpdateQuantity,
                 <p className="text-sm font-medium leading-tight text-zinc-900">{customer.full_name}</p>
                 <p className="text-xs text-zinc-400">{customer.loyalty_points.toLocaleString()} pts{customer.phone && ` · ${customer.phone}`}</p>
               </div>
-              <button onClick={clearCustomer} className="text-zinc-400 hover:text-zinc-700" aria-label="Remove customer">
-                <X className="h-4 w-4" />
-              </button>
+              <button onClick={clearCustomer} className="text-zinc-400 hover:text-zinc-700"><X className="h-4 w-4" /></button>
             </div>
           ) : (
             <div className="flex gap-2">
               <Input ref={phoneRef} placeholder="Phone or customer ID" value={phone} onChange={(e) => setPhone(e.target.value)} onKeyDown={(e) => e.key === "Enter" && lookupCustomer()} className="h-9 text-sm" />
-              <Button size="sm" variant="outline" onClick={lookupCustomer} disabled={lookingUp || !phone.trim()} className="h-9 shrink-0 px-3" aria-label="Look up customer">
+              <Button size="sm" variant="outline" onClick={lookupCustomer} disabled={lookingUp || !phone.trim()} className="h-9 shrink-0 px-3">
                 {lookingUp ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-zinc-300 border-t-zinc-700" /> : <UserSearch className="h-4 w-4" />}
               </Button>
               <CustomerScanner onCustomerFound={(c: ScannedCustomer) => setCustomer({ id: c.id, full_name: c.full_name, phone: c.phone, loyalty_points: c.loyalty_points })} />
@@ -176,7 +188,7 @@ export default function CheckoutCart({ items, subtotal, total, onUpdateQuantity,
         </div>
 
         <div className="space-y-3 border-t border-zinc-200 px-4 py-4">
-          {/* Payment type selector */}
+          {/* Payment type */}
           {items.length > 0 && (
             <div className="space-y-1.5">
               <p className="text-xs font-medium text-zinc-500">Payment Method</p>
@@ -184,12 +196,10 @@ export default function CheckoutCart({ items, subtotal, total, onUpdateQuantity,
                 {PAYMENT_OPTIONS.map(({ id, label, icon: Icon }) => (
                   <button
                     key={id}
-                    onClick={() => setPaymentType(id)}
+                    onClick={() => { setPaymentType(id); setAmountReceived(""); }}
                     className={cn(
                       "flex flex-col items-center gap-1 rounded-lg border-2 py-2 text-xs font-medium transition-all",
-                      paymentType === id
-                        ? "border-zinc-900 bg-zinc-900 text-white"
-                        : "border-zinc-200 text-zinc-600 hover:border-zinc-400"
+                      paymentType === id ? "border-zinc-900 bg-zinc-900 text-white" : "border-zinc-200 text-zinc-600 hover:border-zinc-400"
                     )}
                   >
                     <Icon className="h-4 w-4" />
@@ -200,20 +210,42 @@ export default function CheckoutCart({ items, subtotal, total, onUpdateQuantity,
             </div>
           )}
 
+          {/* Cash amount received */}
+          {paymentType === "cash" && (
+            <div className="space-y-2">
+              <p className="text-xs font-medium text-zinc-500">Amount Received (RM)</p>
+              <input
+                type="number"
+                min={total}
+                step="0.10"
+                value={amountReceived}
+                onChange={e => setAmountReceived(e.target.value)}
+                placeholder={total.toFixed(2)}
+                className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-xl font-bold focus:outline-none focus:ring-2 focus:ring-zinc-900"
+                autoFocus
+              />
+              {change !== null && (
+                <div className="flex items-center justify-between rounded-lg bg-emerald-50 border border-emerald-200 px-3 py-2">
+                  <span className="text-sm font-semibold text-emerald-700">Change</span>
+                  <span className="text-lg font-bold text-emerald-700">RM {change.toFixed(2)}</span>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Totals */}
           <div className="space-y-1 text-sm">
             <div className="flex justify-between text-zinc-500">
-              <span>Subtotal</span>
-              <span>RM {subtotal.toFixed(2)}</span>
+              <span>Subtotal</span><span>RM {subtotal.toFixed(2)}</span>
             </div>
             <Separator />
             <div className="flex justify-between pt-1 text-base font-bold text-zinc-900">
-              <span>Total</span>
-              <span>RM {total.toFixed(2)}</span>
+              <span>Total</span><span>RM {total.toFixed(2)}</span>
             </div>
           </div>
           <Button
-            className={cn("h-12 w-full text-base font-semibold", (items.length === 0 || !paymentType) && "opacity-50")}
-            disabled={items.length === 0 || !paymentType || charging}
+            className={cn("h-12 w-full text-base font-semibold")}
+            disabled={!canCharge || charging}
             onClick={handleCharge}
           >
             {charging ? "Processing…" : `Charge RM ${total.toFixed(2)}`}
@@ -230,7 +262,7 @@ export default function CheckoutCart({ items, subtotal, total, onUpdateQuantity,
           customerName={pending.customerName}
           paymentMethod={pending.paymentMethod}
           amountPaid={pending.amountPaid}
-          change={0}
+          change={pending.change}
         />
       )}
     </>
@@ -245,16 +277,16 @@ function CartRow({ item, onUpdate, onRemove }: { item: CartItem; onUpdate: (qty:
         <p className="text-xs text-zinc-400">RM {item.price.toFixed(2)} each</p>
       </div>
       <div className="flex items-center gap-1">
-        <button onClick={() => onUpdate(item.quantity - 1)} className="flex h-6 w-6 items-center justify-center rounded-md border border-zinc-200 text-zinc-600 transition-colors hover:border-zinc-400 hover:bg-zinc-50" aria-label="Decrease quantity">
+        <button onClick={() => onUpdate(item.quantity - 1)} className="flex h-6 w-6 items-center justify-center rounded-md border border-zinc-200 text-zinc-600 hover:border-zinc-400 hover:bg-zinc-50">
           <Minus className="h-3 w-3" />
         </button>
         <span className="w-6 text-center text-sm font-medium tabular-nums">{item.quantity}</span>
-        <button onClick={() => onUpdate(item.quantity + 1)} className="flex h-6 w-6 items-center justify-center rounded-md border border-zinc-200 text-zinc-600 transition-colors hover:border-zinc-400 hover:bg-zinc-50" aria-label="Increase quantity">
+        <button onClick={() => onUpdate(item.quantity + 1)} className="flex h-6 w-6 items-center justify-center rounded-md border border-zinc-200 text-zinc-600 hover:border-zinc-400 hover:bg-zinc-50">
           <Plus className="h-3 w-3" />
         </button>
       </div>
       <span className="w-16 text-right text-sm font-semibold tabular-nums text-zinc-900">RM {(item.price * item.quantity).toFixed(2)}</span>
-      <button onClick={onRemove} className="text-zinc-300 transition-colors hover:text-red-500" aria-label={`Remove ${item.name}`}>
+      <button onClick={onRemove} className="text-zinc-300 hover:text-red-500">
         <Trash2 className="h-4 w-4" />
       </button>
     </li>

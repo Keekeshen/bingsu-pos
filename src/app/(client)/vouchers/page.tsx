@@ -30,9 +30,12 @@ export default function VouchersPage() {
   useEffect(() => {
     async function load() {
       const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { setLoading(false); return; }
       const { data, error } = await supabase
         .from("vouchers")
         .select("*")
+        .eq("customer_id", user.id)
         .order("created_at", { ascending: false });
       if (error) { toast.error("Failed to load vouchers"); setLoading(false); return; }
       setVouchers(data ?? []);

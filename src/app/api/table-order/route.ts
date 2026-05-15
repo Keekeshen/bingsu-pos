@@ -29,7 +29,7 @@ function validate(body: unknown): body is Body {
     if (
       typeof i.product_id !== "string" ||
       typeof i.product_name !== "string" ||
-      typeof i.unit_price !== "number" || i.unit_price < 0 ||
+      isNaN(Number(i.unit_price)) || Number(i.unit_price) < 0 ||
       typeof i.quantity !== "number" || i.quantity < 1 || !Number.isInteger(i.quantity)
     ) return false;
   }
@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
 
     const { table_number, items, note } = body;
     const admin = createAdminClient();
-    const subtotal = items.reduce((s, i) => s + i.unit_price * i.quantity, 0);
+    const subtotal = items.reduce((s, i) => s + Number(i.unit_price) * i.quantity, 0);
     const orderNumber = `T${table_number.trim()}-${Date.now()}`;
 
     const { data: order, error: orderError } = await admin

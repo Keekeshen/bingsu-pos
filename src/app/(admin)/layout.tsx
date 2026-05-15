@@ -41,7 +41,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   }
 
   return (
-    <TooltipProvider delayDuration={200}>
+    <TooltipProvider>
       <div className="flex h-screen overflow-hidden bg-zinc-100">
         <aside className="flex w-16 flex-shrink-0 flex-col border-r border-zinc-200 bg-white md:w-52">
           <div className="flex h-16 items-center justify-center border-b border-zinc-200 md:justify-start md:px-5">

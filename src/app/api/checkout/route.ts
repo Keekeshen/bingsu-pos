@@ -13,6 +13,7 @@ type CheckoutBody = {
   items: OrderItemInput[];
   customer_id?: string | null;
   points_redeemed?: number;
+  payment_method?: string | null;
 };
 
 function err(message: string, status: number) {

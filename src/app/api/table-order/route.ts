@@ -1,54 +1,56 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/server";
 
-type OrderItem = {
-  product_id: string;
-  product_name: string;
-  unit_price: number;
-  quantity: number;
-};
-
-type Body = {
-  table_number: string;
-  items: OrderItem[];
-  note?: string;
-};
-
 function err(msg: string, status: number) {
   return NextResponse.json({ error: msg }, { status });
 }
 
-function validate(body: unknown): body is Body {
-  if (!body || typeof body !== "object") return false;
-  const b = body as Record<string, unknown>;
-  if (!b.table_number) return false;
-  if (!Array.isArray(b.items) || b.items.length === 0) return false;
-  return true;
-}
-
 export async function POST(request: NextRequest) {
   try {
-    let body: unknown;
-    try { body = await request.json(); } catch { return err("Invalid JSON", 400); }
-    if (!validate(body)) return err("Invalid request body", 400);
+    let body: Record<string, unknown>;
+    try {
+      body = await request.json();
+    } catch {
+      return err("Invalid JSON", 400);
+    }
 
-    const { table_number, items, note } = body;
+    const tableNumber = String(body.table_number ?? "").trim();
+    if (!tableNumber) return err("Missing table_number", 400);
+
+    const rawItems = body.items;
+    if (!Array.isArray(rawItems) || rawItems.length === 0) {
+      return err("Missing items", 400);
+    }
+
+    type Item = { product_id: string; product_name: string; unit_price: number; quantity: number; };
+    const items: Item[] = rawItems.map((i: unknown) => {
+      const x = i as Record<string, unknown>;
+      return {
+        product_id: String(x.product_id ?? ""),
+        product_name: String(x.product_name ?? "Unknown"),
+        unit_price: Math.max(0, Number(x.unit_price) || 0),
+        quantity: Math.max(1, Math.round(Number(x.quantity) || 1)),
+      };
+    }).filter((i) => i.product_id && i.unit_price > 0);
+
+    if (items.length === 0) return err("No valid items", 400);
+
+    const customerId = body.customer_id ? String(body.customer_id) : null;
     const admin = createAdminClient();
-    const subtotal = items.reduce((s, i) => s + Number(i.unit_price) * i.quantity, 0);
-    const orderNumber = `T${table_number.trim()}-${Date.now()}`;
+    const subtotal = +items.reduce((s, i) => s + i.unit_price * i.quantity, 0).toFixed(2);
+    const orderNumber = `T${tableNumber}-${Date.now()}`;
 
     const { data: order, error: orderError } = await admin
       .from("orders")
       .insert({
         order_number: orderNumber,
-        table_number: table_number.trim(),
+        table_number: tableNumber,
         source: "table",
         status: "pending",
-        subtotal: +subtotal.toFixed(2),
-        total_amount: +subtotal.toFixed(2),
-        customer_id: null,
+        subtotal,
+        total_amount: subtotal,
+        customer_id: customerId,
         points_redeemed: 0,
-        note: note?.trim() || null,
       })
       .select("id, order_number")
       .single();

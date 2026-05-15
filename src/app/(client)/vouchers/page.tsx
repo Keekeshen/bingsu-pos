@@ -15,6 +15,8 @@ type Voucher = {
   discount_type: string;
   discount_value: number;
   is_used: boolean;
+  max_uses: number;
+  uses_remaining: number;
   expires_at: string | null;
   created_at: string;
 };
@@ -39,8 +41,8 @@ export default function VouchersPage() {
     load();
   }, []);
 
-  const available = vouchers.filter(v => !v.is_used);
-  const used = vouchers.filter(v => v.is_used);
+  const available = vouchers.filter(v => !v.is_used && v.uses_remaining > 0);
+  const used = vouchers.filter(v => v.is_used || v.uses_remaining <= 0);
   const displayed = tab === "available" ? available : used;
 
   function discountLabel(v: Voucher) {
@@ -56,14 +58,15 @@ export default function VouchersPage() {
     return "from-emerald-500 to-teal-600";
   }
 
+  const isFullyUsed = (v: Voucher) => v.is_used || v.uses_remaining <= 0;
+
   return (
     <div className="flex flex-col min-h-screen bg-zinc-50">
       <div className="bg-white border-b border-zinc-100 px-4 pt-5 pb-4">
         <h1 className="text-lg font-black text-zinc-900">My Vouchers</h1>
-        <p className="text-xs text-zinc-400 mt-0.5">{available.length} available 뿯½ {used.length} used</p>
+        <p className="text-xs text-zinc-400 mt-0.5">{available.length} available · {used.length} used</p>
       </div>
 
-      {/* Tabs */}
       <div className="flex border-b border-zinc-200 bg-white px-4">
         {(["available", "used"] as const).map(t => (
           <button
@@ -88,26 +91,44 @@ export default function VouchersPage() {
         ) : (
           displayed.map(v => {
             const isOpen = expanded === v.id;
+            const fullyUsed = isFullyUsed(v);
+            const isMultiUse = v.max_uses > 1;
+
             return (
-              <div key={v.id} className={`overflow-hidden rounded-2xl border shadow-sm ${v.is_used ? "border-zinc-100 bg-zinc-50" : "border-zinc-200 bg-white"}`}>
-                <button
-                  className="w-full text-left"
-                  onClick={() => setExpanded(isOpen ? null : v.id)}
-                >
+              <div key={v.id} className={`overflow-hidden rounded-2xl border shadow-sm ${fullyUsed ? "border-zinc-100 bg-zinc-50" : "border-zinc-200 bg-white"}`}>
+                <button className="w-full text-left" onClick={() => setExpanded(isOpen ? null : v.id)}>
                   <div className="flex items-stretch">
-                    <div className={`w-2 shrink-0 bg-gradient-to-b ${v.is_used ? "from-zinc-300 to-zinc-400" : discountColor(v)}`} />
+                    <div className={`w-2 shrink-0 bg-gradient-to-b ${fullyUsed ? "from-zinc-300 to-zinc-400" : discountColor(v)}`} />
                     <div className="flex flex-1 items-center gap-3 px-4 py-4">
-                      <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${v.is_used ? "from-zinc-200 to-zinc-300" : discountColor(v)}`}>
+                      <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${fullyUsed ? "from-zinc-200 to-zinc-300" : discountColor(v)}`}>
                         {v.type === "free_drink"
-                          ? <span className="text-lg">붿붿</span>
-                          : <Gift className={`h-5 w-5 ${v.is_used ? "text-zinc-500" : "text-white"}`} />}
+                          ? <span className="text-lg">🥤</span>
+                          : <Gift className={`h-5 w-5 ${fullyUsed ? "text-zinc-500" : "text-white"}`} />}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className={`text-sm font-bold ${v.is_used ? "text-zinc-400" : "text-zinc-900"}`}>{v.label}</p>
-                        <p className={`text-xs mt-0.5 ${v.is_used ? "text-zinc-400" : "text-zinc-500"}`}>{v.description ?? discountLabel(v)}</p>
+                        <p className={`text-sm font-bold ${fullyUsed ? "text-zinc-400" : "text-zinc-900"}`}>{v.label}</p>
+                        <p className={`text-xs mt-0.5 ${fullyUsed ? "text-zinc-400" : "text-zinc-500"}`}>
+                          {v.description ?? discountLabel(v)}
+                        </p>
+                        {isMultiUse && !fullyUsed && (
+                          <div className="mt-1.5">
+                            <div className="flex items-center justify-between mb-0.5">
+                              <span className="text-[10px] text-zinc-400">{v.uses_remaining}/{v.max_uses} uses left</span>
+                            </div>
+                            <div className="h-1 w-full rounded-full bg-zinc-100 overflow-hidden">
+                              <div
+                                className={`h-full rounded-full bg-gradient-to-r ${discountColor(v)}`}
+                                style={{ width: `${(v.uses_remaining / v.max_uses) * 100}%` }}
+                              />
+                            </div>
+                          </div>
+                        )}
+                        {isMultiUse && fullyUsed && (
+                          <p className="text-[10px] text-zinc-400 mt-0.5">All {v.max_uses} uses redeemed</p>
+                        )}
                       </div>
                       <div className="flex flex-col items-end gap-1 shrink-0">
-                        {v.is_used
+                        {fullyUsed
                           ? <CheckCircle2 className="h-5 w-5 text-zinc-400" />
                           : <span className={`rounded-full bg-gradient-to-r px-2.5 py-1 text-xs font-bold text-white ${discountColor(v)}`}>{discountLabel(v)}</span>}
                         {isOpen ? <ChevronUp className="h-4 w-4 text-zinc-400" /> : <ChevronDown className="h-4 w-4 text-zinc-400" />}
@@ -116,23 +137,28 @@ export default function VouchersPage() {
                   </div>
                 </button>
 
-                {isOpen && !v.is_used && (
+                {isOpen && !fullyUsed && (
                   <div className="border-t border-dashed border-zinc-200 px-4 py-5 flex flex-col items-center gap-3 bg-zinc-50">
                     <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">Show to cashier to redeem</p>
                     <div className="rounded-2xl bg-white p-4 shadow-sm">
                       <QRCodeSVG value={v.code} size={160} level="M" />
                     </div>
                     <p className="font-mono text-sm font-bold tracking-widest text-zinc-700">{v.code}</p>
+                    {isMultiUse && (
+                      <p className="text-xs text-zinc-500">
+                        <span className="font-semibold text-zinc-700">{v.uses_remaining}</span> of {v.max_uses} uses remaining
+                      </p>
+                    )}
                     {v.expires_at && (
                       <p className="text-xs text-zinc-400">Expires: {new Date(v.expires_at).toLocaleDateString("en-MY")}</p>
                     )}
                   </div>
                 )}
 
-                {isOpen && v.is_used && (
+                {isOpen && fullyUsed && (
                   <div className="border-t border-dashed border-zinc-100 px-4 py-4 flex items-center justify-center gap-2 text-zinc-400">
                     <CheckCircle2 className="h-4 w-4" />
-                    <p className="text-sm">This voucher has been redeemed</p>
+                    <p className="text-sm">All uses have been redeemed</p>
                   </div>
                 )}
               </div>

@@ -8,12 +8,14 @@ export async function GET(request: NextRequest) {
   const admin = createAdminClient();
   const { data: voucher, error } = await admin
     .from("vouchers")
-    .select("id, code, label, discount_type, discount_value, description, is_used, type")
+    .select("id, code, label, discount_type, discount_value, description, is_used, type, max_uses, uses_remaining")
     .eq("code", code)
     .single();
 
   if (error || !voucher) return NextResponse.json({ error: "Voucher not found" }, { status: 404 });
-  if (voucher.is_used) return NextResponse.json({ error: "Voucher already used" }, { status: 400 });
+  if (voucher.is_used || voucher.uses_remaining <= 0) {
+    return NextResponse.json({ error: "Voucher fully used" }, { status: 400 });
+  }
 
   return NextResponse.json({ voucher });
 }
@@ -29,20 +31,30 @@ export async function POST(request: NextRequest) {
     const admin = createAdminClient();
     const { data: voucher, error: fetchErr } = await admin
       .from("vouchers")
-      .select("id, is_used")
+      .select("id, is_used, uses_remaining")
       .eq("code", String(body.code).toUpperCase())
       .single();
 
     if (fetchErr || !voucher) return NextResponse.json({ error: "Voucher not found" }, { status: 404 });
-    if (voucher.is_used) return NextResponse.json({ error: "Already used" }, { status: 400 });
+    if (voucher.is_used || voucher.uses_remaining <= 0) {
+      return NextResponse.json({ error: "Voucher fully used" }, { status: 400 });
+    }
+
+    const newUsesRemaining = voucher.uses_remaining - 1;
+    const nowFullyUsed = newUsesRemaining <= 0;
 
     const { error: updateErr } = await admin
       .from("vouchers")
-      .update({ is_used: true, used_at: new Date().toISOString(), used_in_order: String(body.order_number) })
+      .update({
+        uses_remaining: newUsesRemaining,
+        is_used: nowFullyUsed,
+        ...(nowFullyUsed ? { used_at: new Date().toISOString() } : {}),
+        used_in_order: String(body.order_number),
+      })
       .eq("id", voucher.id);
 
-    if (updateErr) return NextResponse.json({ error: "Failed to mark voucher" }, { status: 500 });
-    return NextResponse.json({ success: true });
+    if (updateErr) return NextResponse.json({ error: "Failed to update voucher" }, { status: 500 });
+    return NextResponse.json({ success: true, uses_remaining: newUsesRemaining });
   } catch {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }

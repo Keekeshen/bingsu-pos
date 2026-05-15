@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, use } from "react";
 import { Plus, Minus, ShoppingCart, CheckCircle, ChefHat, X, Star, LogIn } from "lucide-react";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
@@ -24,9 +24,9 @@ type CartItem = {
 export default function TableOrderPage({
   params,
 }: {
-  params: { tableNumber: string };
+  params: Promise<{ tableNumber: string }>;
 }) {
-  const tableNumber = params.tableNumber;
+  const { tableNumber } = use(params);
   const [products, setProducts] = useState<Product[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(true);

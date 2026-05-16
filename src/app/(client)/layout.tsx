@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { LayoutDashboard, History, Gift, LogOut, Ticket, UserCircle } from "lucide-react";
+import TableQRScanner from "@/components/client/TableQRScanner";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -36,6 +37,7 @@ export default function ClientLayout({ children }: { children: ReactNode }) {
           Koori Dessert
         </span>
         <div className="flex items-center gap-1">
+          <TableQRScanner />
           <Link href="/profile" className="rounded-lg p-2 text-zinc-500 hover:bg-zinc-100">
             <UserCircle className="h-5 w-5" />
           </Link>

@@ -8,8 +8,6 @@ import {
   BarChart2,
   Gift,
   Package,
-  LayoutGrid,
-  History,
   LogOut,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -27,8 +25,6 @@ const NAV_ITEMS = [
   { label: "Reports", href: "/admin/reports", icon: BarChart2 },
   { label: "Loyalty", href: "/admin/loyalty", icon: Gift },
   { label: "Products", href: "/admin/products", icon: Package },
-  { label: "Tables", href: "/admin/tables", icon: LayoutGrid },
-  { label: "History", href: "/admin/history", icon: History },
 ] as const;
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
@@ -43,7 +39,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   }
 
   return (
-    <TooltipProvider>
+    <TooltipProvider delayDuration={200}>
       <div className="flex h-screen overflow-hidden bg-zinc-100">
         <aside className="flex w-16 flex-shrink-0 flex-col border-r border-zinc-200 bg-white md:w-52">
           <div className="flex h-16 items-center justify-center border-b border-zinc-200 md:justify-start md:px-5">
@@ -51,7 +47,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
               Koori POS
             </span>
             <span className="block text-lg font-bold text-zinc-900 md:hidden">
-              ❄️
+              K
             </span>
           </div>
 
@@ -60,7 +56,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
               const active = pathname === href || pathname.startsWith(`${href}/`);
               return (
                 <Tooltip key={href}>
-                  <TooltipTrigger>
+                  <TooltipTrigger asChild>
                     <Link
                       href={href}
                       className={cn(
@@ -84,7 +80,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
 
           <div className="border-t border-zinc-200 p-2">
             <Tooltip>
-              <TooltipTrigger>
+              <TooltipTrigger asChild>
                 <Button
                   variant="ghost"
                   onClick={handleSignOut}

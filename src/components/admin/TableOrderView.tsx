@@ -339,7 +339,7 @@ export default function TableOrderView({ tableNumber, onClose, onOrdersUpdated }
             <CheckCheck className="mr-2 h-4 w-4" /> Mark All as Served
           </Button>
         )}
-        {served.length > 0 && (
+        {orders.length > 0 && (
           <Button className="w-full h-11 text-sm font-semibold bg-emerald-600 hover:bg-emerald-700 text-white" onClick={() => setView("checkout")}>
             Process Payment · RM {total.toFixed(2)}
           </Button>

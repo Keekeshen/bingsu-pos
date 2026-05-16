@@ -110,7 +110,7 @@ export default function RedeemClient({ initialPoints, rewards }: Props) {
           {/* Sheet */}
           <div className="relative z-10 flex max-h-[90dvh] flex-col overflow-hidden rounded-t-3xl bg-white">
             {/* Hero image */}
-            <div className="relative h-56 w-full shrink-0 bg-zinc-100">
+            <div className="relative h-72 w-full shrink-0 bg-zinc-100">
               {detail.image_url ? (
                 <Image src={detail.image_url} alt={detail.name} fill className="object-cover" />
               ) : (

@@ -33,6 +33,7 @@ export default function TableOrderPage({
   const [submitting, setSubmitting] = useState(false);
   const [orderCount, setOrderCount] = useState(0);
   const [showCart, setShowCart] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
   const [showLoyalty, setShowLoyalty] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const [userName, setUserName] = useState<string | null>(null);
@@ -104,8 +105,7 @@ export default function TableOrderPage({
       setOrderCount((c) => c + 1);
       setCart([]);
       setShowCart(false);
-      toast.success("Order sent to kitchen!");
-      if (!userId) setShowLoyalty(true);
+      setShowSuccess(true);
     } catch {
       toast.error("Network error, please try again.");
     } finally {
@@ -262,6 +262,47 @@ export default function TableOrderPage({
               className="w-full rounded-xl bg-zinc-900 py-3 text-sm font-bold text-white disabled:opacity-60 hover:bg-zinc-700 transition-colors active:scale-95"
             >
               {submitting ? "Sending to kitchen..." : "Send to Kitchen"}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Order success screen */}
+      {showSuccess && (
+        <div className="fixed inset-0 z-30 flex flex-col items-center justify-center bg-white px-6 text-center">
+          <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-emerald-100">
+            <CheckCircle className="h-10 w-10 text-emerald-500" />
+          </div>
+          <h2 className="text-2xl font-black text-zinc-900">Order Sent!</h2>
+          <p className="mt-2 text-base text-zinc-500">Your order has been sent to the kitchen.</p>
+
+          <div className="mt-6 w-full rounded-2xl bg-amber-50 border border-amber-200 px-5 py-4">
+            <p className="text-sm font-bold text-amber-800">Please pay at the counter</p>
+            <p className="mt-1 text-xs text-amber-700">When you are ready, head to the counter to settle your bill.</p>
+          </div>
+
+          {!userId && (
+            <div className="mt-4 w-full rounded-2xl bg-zinc-50 border border-zinc-200 px-5 py-4">
+              <div className="flex items-center gap-2 mb-2">
+                <Star className="h-4 w-4 text-amber-500 fill-amber-500" />
+                <p className="text-sm font-bold text-zinc-800">Earn loyalty points!</p>
+              </div>
+              <p className="text-xs text-zinc-500 mb-3">Sign in to collect points on this order and redeem rewards.</p>
+              <button
+                onClick={() => { window.location.href = `/login?next=/order/${tableNumber}`; }}
+                className="w-full rounded-xl bg-zinc-900 py-2.5 text-sm font-bold text-white hover:bg-zinc-700"
+              >
+                Sign In / Register
+              </button>
+            </div>
+          )}
+
+          <div className="mt-6 flex w-full gap-3">
+            <button
+              onClick={() => setShowSuccess(false)}
+              className="flex-1 rounded-xl border border-zinc-200 py-3 text-sm font-semibold text-zinc-700 hover:bg-zinc-50"
+            >
+              Order More
             </button>
           </div>
         </div>

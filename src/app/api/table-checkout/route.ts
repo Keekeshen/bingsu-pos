@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
       .select("id, order_number")
       .eq("table_number", tableNumber)
       .eq("source", "table")
-      .eq("status", "served");
+      .in("status", ["pending", "served"]);
 
     if (fetchError) {
       console.error("[table-checkout] fetch:", fetchError);
@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (!orders || orders.length === 0) {
-      return NextResponse.json({ error: "No served orders for this table" }, { status: 404 });
+      return NextResponse.json({ error: "No active orders for this table" }, { status: 404 });
     }
 
     const ids = orders.map((o: { id: string }) => o.id);

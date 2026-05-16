@@ -38,7 +38,8 @@ export default function TableGrid({ onSelectTable, selectedTable, refreshKey }: 
         .from("orders")
         .select("table_number, status")
         .eq("source", "table")
-        .not("table_number", "is", null),
+        .not("table_number", "is", null)
+        .in("status", ["pending", "served"]),
     ]);
 
     setTables(tableData ?? []);

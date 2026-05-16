@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { LayoutDashboard, History, Gift, LogOut, Ticket } from "lucide-react";
+import { LayoutDashboard, History, Gift, LogOut, Ticket, UserCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -35,9 +35,14 @@ export default function ClientLayout({ children }: { children: ReactNode }) {
         <span className="text-base font-bold tracking-tight text-zinc-900">
           Koori Dessert
         </span>
-        <Button variant="ghost" size="icon" onClick={handleSignOut} aria-label="Sign out" className="text-zinc-500 hover:bg-red-50 hover:text-red-600">
-          <LogOut className="h-5 w-5" />
-        </Button>
+        <div className="flex items-center gap-1">
+          <Link href="/profile" className="rounded-lg p-2 text-zinc-500 hover:bg-zinc-100">
+            <UserCircle className="h-5 w-5" />
+          </Link>
+          <Button variant="ghost" size="icon" onClick={handleSignOut} aria-label="Sign out" className="text-zinc-500 hover:bg-red-50 hover:text-red-600">
+            <LogOut className="h-5 w-5" />
+          </Button>
+        </div>
       </header>
 
       <main className="flex-1 overflow-y-auto" style={{ paddingBottom: "calc(4rem + env(safe-area-inset-bottom))" }}>

@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import { getTier, TIERS, TIER_BENEFITS } from "@/lib/tiers";
-import { ChevronLeft, Gift, Cake, Star, Check, Minus } from "lucide-react";
+import { ChevronLeft, Cake, Star, Check, Minus } from "lucide-react";
 
 export default async function BenefitsPage() {
   const supabase = await createClient();
@@ -56,7 +56,6 @@ export default async function BenefitsPage() {
                     ? <p>✦ {b.memberReward} (member reward)</p>
                     : <p className="text-white/40">✦ No member reward</p>}
                   {b.birthday.map((g, i) => <p key={i}>✦ {g} (birthday)</p>)}
-                  <p>✦ {b.memberDay}</p>
                 </div>
                 {!isUnlocked && (
                   <div className="mt-3 rounded-xl bg-white/10 px-3 py-1.5 text-center">
@@ -121,39 +120,25 @@ export default async function BenefitsPage() {
           <p className="mt-2 text-xs text-zinc-400 text-center">Show your member QR to cashier in your birthday month.</p>
         </section>
 
-        {/* Member's Day */}
-        <section>
-          <div className="flex items-center gap-2 mb-3">
-            <Gift className="h-4 w-4 text-violet-500" />
-            <h2 className="text-base font-black text-zinc-900">Member&apos;s Day</h2>
-            <span className="rounded-full bg-violet-100 px-2 py-0.5 text-[10px] font-bold text-violet-600">Every 15th</span>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            {TIER_BENEFITS.map(b => {
-              const tierDef = TIERS.find(t => t.name === b.tier)!;
-              const unlocked = loyaltyPoints >= tierDef.min;
-              return (
-                <div key={b.tier} className={`flex flex-col items-center gap-2 rounded-2xl border p-4 text-center ${unlocked ? "border-violet-100 bg-violet-50" : "border-zinc-100 bg-zinc-50 opacity-50"}`}>
-                  <span className="text-2xl">{b.icon}</span>
-                  <p className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400">{b.tier}</p>
-                  <p className={`text-sm font-bold leading-tight ${unlocked ? "text-violet-700" : "text-zinc-400"}`}>{b.memberDay}</p>
-                  {unlocked && <Check className="h-4 w-4 text-emerald-500" />}
-                </div>
-              );
-            })}
-          </div>
-          <p className="mt-3 text-center text-xs text-zinc-400">Present your member QR on the 15th of every month to enjoy the discount.</p>
-        </section>
-
         {/* Welcome vouchers info */}
         <section className="rounded-2xl border border-emerald-100 bg-emerald-50 p-4">
-          <p className="text-sm font-bold text-emerald-800 mb-1">🎁 Welcome Vouchers</p>
+          <p className="text-sm font-bold text-emerald-800 mb-1">Welcome Vouchers</p>
           <p className="text-xs text-emerald-700">Every new member receives:</p>
           <ul className="mt-2 space-y-1 text-xs text-emerald-700">
-            <li>• 1× Free Drink voucher</li>
-            <li>• 10× RM5 OFF discount vouchers</li>
+            <li>• 1x Free Drink voucher (no expiry)</li>
+            <li>• 1x RM5 OFF voucher with 10 uses (valid 3 months)</li>
           </ul>
           <p className="mt-2 text-xs text-emerald-600">Check your vouchers in the <strong>Vouchers</strong> tab.</p>
+        </section>
+
+        {/* Birthday voucher info */}
+        <section className="rounded-2xl border border-pink-100 bg-pink-50 p-4 mb-6">
+          <p className="text-sm font-bold text-pink-800 mb-1">Birthday Gift</p>
+          <p className="text-xs text-pink-700">On your birthday, you automatically receive:</p>
+          <ul className="mt-2 space-y-1 text-xs text-pink-700">
+            <li>• 1x Free Drink voucher (valid your birthday only)</li>
+          </ul>
+          <p className="mt-2 text-xs text-pink-600">Make sure your birthday is set in your <strong>Profile</strong>.</p>
         </section>
       </div>
     </div>

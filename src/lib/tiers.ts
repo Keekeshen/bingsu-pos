@@ -24,36 +24,11 @@ export type TierBenefit = {
   icon: string;
   memberReward: string | null;
   birthday: string[];
-  memberDay: string;
 };
 
 export const TIER_BENEFITS: TierBenefit[] = [
-  {
-    tier: "Bronze",
-    icon: "B",
-    memberReward: null,
-    birthday: ["1x Free Drink"],
-    memberDay: "10% OFF on Member's Day",
-  },
-  {
-    tier: "Silver",
-    icon: "S",
-    memberReward: "50% OFF Bingsu x1",
-    birthday: ["1x Free Drink"],
-    memberDay: "12% OFF on Member's Day",
-  },
-  {
-    tier: "Gold",
-    icon: "G",
-    memberReward: "80% OFF Bingsu x1",
-    birthday: ["1x Free Drink"],
-    memberDay: "15% OFF on Member's Day",
-  },
-  {
-    tier: "Platinum",
-    icon: "P",
-    memberReward: "Free Bingsu x1",
-    birthday: ["1x Free Drink"],
-    memberDay: "20% OFF on Member's Day",
-  },
+  { tier: "Bronze",   icon: "B", memberReward: null,              birthday: ["1x Free Drink"] },
+  { tier: "Silver",   icon: "S", memberReward: "50% OFF Bingsu x1", birthday: ["1x Free Drink"] },
+  { tier: "Gold",     icon: "G", memberReward: "80% OFF Bingsu x1", birthday: ["1x Free Drink"] },
+  { tier: "Platinum", icon: "P", memberReward: "Free Bingsu x1",    birthday: ["1x Free Drink"] },
 ];

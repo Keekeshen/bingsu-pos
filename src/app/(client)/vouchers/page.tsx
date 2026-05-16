@@ -32,6 +32,10 @@ export default function VouchersPage() {
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { setLoading(false); return; }
+
+      // Silently try to issue a birthday voucher if today is the user's birthday
+      fetch("/api/birthday-voucher", { method: "POST" }).catch(() => {});
+
       const { data, error } = await supabase
         .from("vouchers")
         .select("*")
@@ -44,8 +48,12 @@ export default function VouchersPage() {
     load();
   }, []);
 
-  const available = vouchers.filter(v => !v.is_used && v.uses_remaining > 0);
-  const used = vouchers.filter(v => v.is_used || v.uses_remaining <= 0);
+  function isExpired(v: Voucher) {
+    if (!v.expires_at) return false;
+    return new Date(v.expires_at) < new Date();
+  }
+  const available = vouchers.filter(v => !v.is_used && v.uses_remaining > 0 && !isExpired(v));
+  const used = vouchers.filter(v => v.is_used || v.uses_remaining <= 0 || isExpired(v));
   const displayed = tab === "available" ? available : used;
 
   function discountLabel(v: Voucher) {
@@ -61,7 +69,7 @@ export default function VouchersPage() {
     return "from-emerald-500 to-teal-600";
   }
 
-  const isFullyUsed = (v: Voucher) => v.is_used || v.uses_remaining <= 0;
+  const isFullyUsed = (v: Voucher) => v.is_used || v.uses_remaining <= 0 || isExpired(v);
 
   return (
     <div className="flex flex-col min-h-screen bg-zinc-50">
@@ -113,6 +121,14 @@ export default function VouchersPage() {
                         <p className={`text-xs mt-0.5 ${fullyUsed ? "text-zinc-400" : "text-zinc-500"}`}>
                           {v.description ?? discountLabel(v)}
                         </p>
+                        {v.expires_at && !isExpired(v) && (
+                          <p className="text-[10px] text-amber-500 mt-0.5 font-medium">
+                            Expires {new Date(v.expires_at).toLocaleDateString("en-MY", { day: "numeric", month: "short", year: "numeric" })}
+                          </p>
+                        )}
+                        {isExpired(v) && (
+                          <p className="text-[10px] text-red-400 mt-0.5 font-semibold">Expired</p>
+                        )}
                         {isMultiUse && !fullyUsed && (
                           <div className="mt-1.5">
                             <div className="flex items-center justify-between mb-0.5">

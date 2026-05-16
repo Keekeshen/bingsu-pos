@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
-import { Search, Plus, Pencil, Check, X, Loader2 } from "lucide-react";
+import { Search, Plus, Pencil, Check, X, Loader2, ImageIcon } from "lucide-react";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
@@ -40,6 +41,7 @@ type Reward = {
   points_cost: number;
   discount_rm: number;
   is_active: boolean;
+  image_url: string | null;
 };
 
 export default function LoyaltyPage() {
@@ -231,8 +233,8 @@ function CustomerPointsSection() {
   );
 }
 
-type RewardFormState = { name: string; description: string; points_cost: string; discount_rm: string; };
-const EMPTY_FORM: RewardFormState = { name: "", description: "", points_cost: "", discount_rm: "" };
+type RewardFormState = { name: string; description: string; points_cost: string; discount_rm: string; image_url: string; };
+const EMPTY_FORM: RewardFormState = { name: "", description: "", points_cost: "", discount_rm: "", image_url: "" };
 
 function RewardsCatalogueSection() {
   const [rewards, setRewards] = useState<Reward[]>([]);
@@ -246,13 +248,13 @@ function RewardsCatalogueSection() {
 
   async function fetchRewards() {
     const supabase = createClient();
-    const { data } = await supabase.from("rewards").select("id, name, description, points_cost, discount_rm, is_active").order("points_cost", { ascending: true });
+    const { data } = await supabase.from("rewards").select("id, name, description, points_cost, discount_rm, is_active, image_url").order("points_cost", { ascending: true });
     setRewards(data ?? []);
     setLoading(false);
   }
 
   function openAdd() { setEditTarget(null); setForm(EMPTY_FORM); setDialogOpen(true); }
-  function openEdit(reward: Reward) { setEditTarget(reward); setForm({ name: reward.name, description: reward.description ?? "", points_cost: String(reward.points_cost), discount_rm: String(reward.discount_rm) }); setDialogOpen(true); }
+  function openEdit(reward: Reward) { setEditTarget(reward); setForm({ name: reward.name, description: reward.description ?? "", points_cost: String(reward.points_cost), discount_rm: String(reward.discount_rm), image_url: reward.image_url ?? "" }); setDialogOpen(true); }
   function closeDialog() { setDialogOpen(false); setEditTarget(null); setForm(EMPTY_FORM); }
 
   async function handleSaveReward() {
@@ -264,7 +266,7 @@ function RewardsCatalogueSection() {
 
     setSaving(true);
     const supabase = createClient();
-    const payload = { name: form.name.trim(), description: form.description.trim() || null, points_cost: pointsCost, discount_rm: discountRm };
+    const payload = { name: form.name.trim(), description: form.description.trim() || null, points_cost: pointsCost, discount_rm: discountRm, image_url: form.image_url.trim() || null };
 
     if (editTarget) {
       const { error } = await supabase.from("rewards").update(payload).eq("id", editTarget.id);
@@ -299,6 +301,11 @@ function RewardsCatalogueSection() {
         <div className="rounded-lg border border-zinc-200 overflow-hidden divide-y divide-zinc-100">
           {rewards.map((reward) => (
             <div key={reward.id} className="flex items-center gap-4 px-4 py-3">
+              <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-zinc-100">
+                {reward.image_url
+                  ? <Image src={reward.image_url} alt={reward.name} fill className="object-cover" unoptimized />
+                  : <div className="flex h-full items-center justify-center"><ImageIcon className="h-4 w-4 text-zinc-300" /></div>}
+              </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-medium text-zinc-900 truncate">{reward.name}</span>
@@ -324,6 +331,21 @@ function RewardsCatalogueSection() {
         <DialogContent className="max-w-md">
           <DialogHeader><DialogTitle>{editTarget ? "Edit Reward" : "Add New Reward"}</DialogTitle></DialogHeader>
           <div className="space-y-4 py-1">
+            {/* Image preview */}
+            <div className="space-y-1.5">
+              <Label htmlFor="rImage">Photo URL <span className="font-normal text-zinc-400">(optional)</span></Label>
+              <Input id="rImage" placeholder="https://..." value={form.image_url} onChange={(e) => setForm((f) => ({ ...f, image_url: e.target.value }))} />
+              {form.image_url.trim() ? (
+                <div className="relative h-36 w-full overflow-hidden rounded-xl bg-zinc-100">
+                  <Image src={form.image_url.trim()} alt="Preview" fill className="object-cover" onError={() => {}} unoptimized />
+                </div>
+              ) : (
+                <div className="flex h-20 w-full items-center justify-center gap-2 rounded-xl border border-dashed border-zinc-200 bg-zinc-50 text-zinc-400">
+                  <ImageIcon className="h-5 w-5" />
+                  <span className="text-xs">Paste an image URL to preview</span>
+                </div>
+              )}
+            </div>
             <div className="space-y-1.5">
               <Label htmlFor="rName">Name</Label>
               <Input id="rName" placeholder="Free Bingsu" value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} />

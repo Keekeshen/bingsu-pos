@@ -7,6 +7,7 @@ import type { CartItem } from "@/lib/hooks/useCart";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
+import { ImageIcon } from "lucide-react";
 
 type Product = {
   id: string;
@@ -98,7 +99,9 @@ function ProductCard({ product, onAdd }: { product: Product; onAdd: () => void; 
         {product.image_url ? (
           <Image src={product.image_url} alt={product.name} fill sizes="(max-width: 768px) 33vw, 25vw" className="object-cover transition-transform duration-200 group-hover:scale-105" />
         ) : (
-          <div className="flex h-full items-center justify-center text-3xl">붿붿</div>
+          <div className="flex h-full items-center justify-center">
+            <ImageIcon className="h-8 w-8 text-zinc-300" />
+          </div>
         )}
       </div>
       <div className="flex flex-col gap-0.5 p-2.5">

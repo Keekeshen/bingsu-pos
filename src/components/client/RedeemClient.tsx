@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { Gift, CheckCircle2, Loader2, Lock, ImageIcon } from "lucide-react";
+import { Gift, CheckCircle2, Loader2, Lock, ImageIcon, X, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import Image from "next/image";
@@ -13,6 +13,7 @@ type Props = { initialPoints: number; rewards: Reward[] };
 
 export default function RedeemClient({ initialPoints, rewards }: Props) {
   const [points, setPoints] = useState(initialPoints);
+  const [detail, setDetail] = useState<Reward | null>(null);
   const [confirming, setConfirming] = useState<Reward | null>(null);
   const [redeeming, setRedeeming] = useState(false);
   const [success, setSuccess] = useState<RedemptionSuccess | null>(null);
@@ -26,6 +27,7 @@ export default function RedeemClient({ initialPoints, rewards }: Props) {
     const data: RedemptionSuccess = await res.json();
     setPoints(p => Math.max(0, p - confirming.points_cost));
     setConfirming(null);
+    setDetail(null);
     setSuccess(data);
   }
 
@@ -55,9 +57,10 @@ export default function RedeemClient({ initialPoints, rewards }: Props) {
             const affordable = points >= reward.points_cost;
             const ptsNeeded = reward.points_cost - points;
             return (
-              <div
+              <button
                 key={reward.id}
-                className={`relative flex items-center gap-3 rounded-xl border bg-white px-3 py-2.5 shadow-sm transition-all ${affordable ? "border-zinc-200" : "border-zinc-100 opacity-60"}`}
+                className={`relative flex w-full items-center gap-3 rounded-xl border bg-white px-3 py-2.5 shadow-sm transition-all text-left ${affordable ? "border-zinc-200 active:bg-zinc-50" : "border-zinc-100 opacity-60"}`}
+                onClick={() => setDetail(reward)}
               >
                 {/* Thumbnail */}
                 <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-zinc-100">
@@ -91,18 +94,91 @@ export default function RedeemClient({ initialPoints, rewards }: Props) {
                   )}
                 </div>
 
-                {/* Action */}
-                <Button
-                  size="sm"
-                  className="shrink-0 h-8 px-3 text-xs"
-                  disabled={!affordable}
-                  onClick={() => setConfirming(reward)}
-                >
-                  {affordable ? "Redeem" : "Locked"}
-                </Button>
-              </div>
+                <ChevronRight className="h-4 w-4 text-zinc-300 shrink-0" />
+              </button>
             );
           })}
+        </div>
+      )}
+
+      {/* Detail bottom sheet */}
+      {detail && (
+        <div className="fixed inset-0 z-50 flex flex-col justify-end">
+          {/* Backdrop */}
+          <div className="absolute inset-0 bg-black/50" onClick={() => setDetail(null)} />
+
+          {/* Sheet */}
+          <div className="relative z-10 flex max-h-[90dvh] flex-col overflow-hidden rounded-t-3xl bg-white">
+            {/* Hero image */}
+            <div className="relative h-56 w-full shrink-0 bg-zinc-100">
+              {detail.image_url ? (
+                <Image src={detail.image_url} alt={detail.name} fill className="object-cover" />
+              ) : (
+                <div className="flex h-full items-center justify-center">
+                  <ImageIcon className="h-16 w-16 text-zinc-300" />
+                </div>
+              )}
+              {/* Close button */}
+              <button
+                onClick={() => setDetail(null)}
+                className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-sm"
+              >
+                <X className="h-4 w-4" />
+              </button>
+              {/* Points badge */}
+              <div className="absolute bottom-3 left-4 rounded-full bg-zinc-900/80 backdrop-blur-sm px-3 py-1.5 text-xs font-bold text-white tabular-nums">
+                {detail.points_cost.toLocaleString()} pts
+              </div>
+            </div>
+
+            {/* Content */}
+            <div className="flex flex-col gap-4 overflow-y-auto p-5">
+              <div>
+                <h2 className="text-xl font-black text-zinc-900">{detail.name}</h2>
+                {detail.description && (
+                  <p className="mt-1.5 text-sm text-zinc-500 leading-relaxed">{detail.description}</p>
+                )}
+              </div>
+
+              {/* Value row */}
+              <div className="flex items-center gap-3 rounded-2xl bg-zinc-50 px-4 py-3">
+                <div className="flex-1">
+                  <p className="text-xs text-zinc-400">Points required</p>
+                  <p className="text-lg font-black tabular-nums text-zinc-900">{detail.points_cost.toLocaleString()} <span className="text-sm font-semibold text-zinc-400">pts</span></p>
+                </div>
+                <div className="h-8 w-px bg-zinc-200" />
+                <div className="flex-1">
+                  <p className="text-xs text-zinc-400">Discount value</p>
+                  <p className="text-lg font-black text-emerald-600">RM {detail.discount_rm.toFixed(2)}</p>
+                </div>
+                <div className="h-8 w-px bg-zinc-200" />
+                <div className="flex-1">
+                  <p className="text-xs text-zinc-400">Your balance</p>
+                  <p className={`text-lg font-black tabular-nums ${points >= detail.points_cost ? "text-zinc-900" : "text-red-500"}`}>{points.toLocaleString()}</p>
+                </div>
+              </div>
+
+              {points < detail.points_cost && (
+                <div className="rounded-xl bg-red-50 border border-red-100 px-4 py-3 flex items-center gap-2">
+                  <Lock className="h-4 w-4 text-red-400 shrink-0" />
+                  <p className="text-sm text-red-600">
+                    You need <span className="font-bold">{(detail.points_cost - points).toLocaleString()} more pts</span> to unlock this reward.
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Action */}
+            <div className="shrink-0 border-t border-zinc-100 px-5 py-4" style={{ paddingBottom: "calc(1rem + env(safe-area-inset-bottom))" }}>
+              <Button
+                className="w-full h-12 text-base font-bold"
+                disabled={points < detail.points_cost}
+                onClick={() => { setConfirming(detail); }}
+              >
+                {points >= detail.points_cost ? "Redeem Now" : "Not Enough Points"}
+              </Button>
+            </div>
+          </div>
         </div>
       )}
 
@@ -110,11 +186,6 @@ export default function RedeemClient({ initialPoints, rewards }: Props) {
       <Dialog open={!!confirming} onOpenChange={o => !o && !redeeming && setConfirming(null)}>
         {confirming && (
           <DialogContent className="max-w-sm">
-            {confirming.image_url && (
-              <div className="relative h-40 w-full overflow-hidden rounded-xl bg-zinc-100 -mt-2 mb-2">
-                <Image src={confirming.image_url} alt={confirming.name} fill className="object-cover" />
-              </div>
-            )}
             <DialogHeader>
               <DialogTitle>Confirm Redemption</DialogTitle>
               <DialogDescription>

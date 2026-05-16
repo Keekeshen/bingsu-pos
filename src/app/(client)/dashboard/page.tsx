@@ -2,6 +2,8 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import LoyaltyCard from "@/components/client/LoyaltyCard";
 import QRDisplay from "@/components/client/QRDisplay";
+import { ShoppingBag, Star } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 
 
 export default async function DashboardPage() {
@@ -31,19 +33,19 @@ export default async function DashboardPage() {
       </section>
 
       <section className="grid grid-cols-2 gap-3">
-        <StatCard label="Total Orders" value={totalOrders.toLocaleString()} emoji="붿뿯붿" />
-        <StatCard label="Points Earned" value={totalPointsEarned.toLocaleString()} emoji="⭐" sub="all time" />
+        <StatCard label="Total Orders" value={totalOrders.toLocaleString()} icon={ShoppingBag} />
+        <StatCard label="Points Earned" value={totalPointsEarned.toLocaleString()} icon={Star} sub="all time" />
       </section>
     </div>
   );
 }
 
-function StatCard({ label, value, emoji, sub }: { label: string; value: string; emoji: string; sub?: string; }) {
+function StatCard({ label, value, icon: Icon, sub }: { label: string; value: string; icon: LucideIcon; sub?: string; }) {
   return (
     <div className="flex flex-col gap-1 rounded-2xl border border-zinc-200 bg-white px-4 py-4 shadow-sm">
       <div className="flex items-center justify-between">
         <p className="text-xs text-zinc-500">{label}</p>
-        <span className="text-lg">{emoji}</span>
+        <Icon className="h-4 w-4 text-zinc-400" />
       </div>
       <p className="text-2xl font-bold tabular-nums text-zinc-900">{value}</p>
       {sub && <p className="text-[10px] text-zinc-400">{sub}</p>}

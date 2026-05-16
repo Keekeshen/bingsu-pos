@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { QRCodeSVG } from "qrcode.react";
-import { Gift, Ticket, CheckCircle2, ChevronDown, ChevronUp } from "lucide-react";
+import { Gift, Ticket, CheckCircle2, ChevronDown, ChevronUp, CupSoda } from "lucide-react";
 
 type Voucher = {
   id: string;
@@ -112,8 +112,8 @@ export default function VouchersPage() {
                     <div className={`w-2 shrink-0 bg-gradient-to-b ${fullyUsed ? "from-zinc-300 to-zinc-400" : discountColor(v)}`} />
                     <div className="flex flex-1 items-center gap-3 px-4 py-4">
                       <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${fullyUsed ? "from-zinc-200 to-zinc-300" : discountColor(v)}`}>
-                        {v.type === "free_drink"
-                          ? <span className="text-lg">🥤</span>
+                        {v.type === "free_drink" || v.type === "birthday_drink"
+                          ? <CupSoda className={`h-5 w-5 ${fullyUsed ? "text-zinc-500" : "text-white"}`} />
                           : <Gift className={`h-5 w-5 ${fullyUsed ? "text-zinc-500" : "text-white"}`} />}
                       </div>
                       <div className="flex-1 min-w-0">

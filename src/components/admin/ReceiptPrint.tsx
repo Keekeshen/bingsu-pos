@@ -2,10 +2,13 @@
 
 import { useRef, forwardRef } from "react";
 import { useReactToPrint } from "react-to-print";
-import { Printer } from "lucide-react";
+import { Printer, Zap } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { usePrinter } from "@/components/admin/PrinterProvider";
+import { buildReceiptBytes } from "@/lib/thermal-print";
 
 export type ReceiptOrder = {
   order_number: string;
@@ -51,11 +54,40 @@ const FEEDBACK_URL = "https://bit.ly/4eNKmF7";
 
 export default function ReceiptPrint({ open, onClose, order, items, customerName, paymentMethod, amountPaid, tableNumber, tableBreakdown }: Props) {
   const receiptRef = useRef<HTMLDivElement>(null);
+  const { connected, print } = usePrinter();
+
   const handlePrint = useReactToPrint({
     contentRef: receiptRef,
     pageStyle: PAGE_STYLE,
     documentTitle: `Receipt-${order.order_number}`,
   });
+
+  async function handleThermalPrint() {
+    const total = tableBreakdown ? tableBreakdown.payableTotal : order.total_amount;
+    const dateStr = new Date(order.created_at).toLocaleString("en-MY", {
+      day: "2-digit", month: "2-digit", year: "numeric",
+      hour: "2-digit", minute: "2-digit", hour12: false,
+      timeZone: "Asia/Kuala_Lumpur",
+    });
+    const bytes = buildReceiptBytes({
+      orderNumber: order.order_number,
+      date: dateStr,
+      tableNumber,
+      customerName,
+      items: items.map(i => ({ name: i.name, qty: i.quantity, unitPrice: i.unit_price, subtotal: i.subtotal })),
+      subtotal: order.subtotal,
+      voucherDiscount: tableBreakdown?.voucherDiscount,
+      serviceCharge: tableBreakdown?.serviceCharge,
+      rounding: tableBreakdown?.rounding,
+      total,
+      paymentMethod,
+      amountPaid,
+      pointsEarned: order.points_earned,
+    });
+    const ok = await print(bytes);
+    if (ok) toast.success("Printed to thermal printer!");
+    else toast.error("Print failed — check printer connection");
+  }
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
@@ -63,10 +95,15 @@ export default function ReceiptPrint({ open, onClose, order, items, customerName
         <DialogHeader className="border-b border-zinc-100 px-6 pb-4 pt-6">
           <DialogTitle className="text-base">OK - Order Complete</DialogTitle>
         </DialogHeader>
-        <div className="max-h-[60vh] overflow-y-auto bg-zinc-50 px-6 py-4">
+        <div className="max-h-[58vh] overflow-y-auto bg-zinc-50 px-6 py-4">
           <ReceiptContent ref={receiptRef} order={order} items={items} customerName={customerName} paymentMethod={paymentMethod} amountPaid={amountPaid} tableNumber={tableNumber} tableBreakdown={tableBreakdown} />
         </div>
         <div className="flex gap-2 border-t border-zinc-100 px-6 py-4">
+          {connected && (
+            <Button variant="outline" className="flex-1 gap-2 border-emerald-300 text-emerald-700 hover:bg-emerald-50" onClick={handleThermalPrint}>
+              <Zap className="h-4 w-4" />Thermal Print
+            </Button>
+          )}
           <Button variant="outline" className="flex-1 gap-2" onClick={() => handlePrint()}>
             <Printer className="h-4 w-4" />Print Receipt
           </Button>
@@ -92,6 +129,7 @@ const ReceiptContent = forwardRef<HTMLDivElement, ContentProps>(
     const dateStr = new Date(order.created_at).toLocaleString("en-MY", {
       day: "2-digit", month: "2-digit", year: "numeric",
       hour: "2-digit", minute: "2-digit", hour12: false,
+      timeZone: "Asia/Kuala_Lumpur",
     });
     const total = tableBreakdown ? tableBreakdown.payableTotal : order.total_amount;
     const paid = amountPaid ?? total;
@@ -110,7 +148,6 @@ const ReceiptContent = forwardRef<HTMLDivElement, ContentProps>(
           <p className="text-[9px] text-zinc-500">47400 Petaling Jaya, Selangor, Malaysia</p>
         </div>
         <Dashes />
-
         <div className="flex justify-between items-start mb-1">
           <div className="space-y-0.5">
             <p><span className="text-zinc-500">Invoice no:</span> {order.order_number}</p>
@@ -125,7 +162,6 @@ const ReceiptContent = forwardRef<HTMLDivElement, ContentProps>(
           </div>
         </div>
         <Dashes />
-
         <div className="flex justify-between font-bold text-[9px] mb-0.5">
           <span>Qty  Item</span><span>Price (MYR)</span>
         </div>
@@ -142,7 +178,6 @@ const ReceiptContent = forwardRef<HTMLDivElement, ContentProps>(
           ))}
         </div>
         <Dashes />
-
         <div className="space-y-0.5">
           <Row label="Subtotal" value={order.subtotal.toFixed(2)} />
           {tableBreakdown ? (
@@ -162,7 +197,6 @@ const ReceiptContent = forwardRef<HTMLDivElement, ContentProps>(
             <span className="tabular-nums">{total.toFixed(2)}</span>
           </div>
         </div>
-
         {paymentMethod && (
           <>
             <div className="mt-1 space-y-0.5">
@@ -172,7 +206,6 @@ const ReceiptContent = forwardRef<HTMLDivElement, ContentProps>(
             <Dashes />
           </>
         )}
-
         {tableBreakdown && tableBreakdown.serviceCharge > 0 && (
           <>
             <div className="flex justify-between font-bold text-[9px] mb-0.5">
@@ -185,14 +218,12 @@ const ReceiptContent = forwardRef<HTMLDivElement, ContentProps>(
             <Dashes />
           </>
         )}
-
         {order.points_earned > 0 && (
           <>
             <div className="text-center"><p>[+] {order.points_earned} loyalty points earned</p></div>
             <Dashes />
           </>
         )}
-
         <div className="mt-1 text-center text-[9px] leading-snug text-zinc-500">
           <p>Scan QR to rate us and let us know</p>
           <p>how you enjoyed your visit!</p>

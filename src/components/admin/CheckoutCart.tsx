@@ -347,9 +347,6 @@ export default function CheckoutCart({ items, subtotal, total, onUpdateQuantity,
           order={pending.order}
           items={pending.items}
           customerName={pending.customerName}
-          paymentMethod={pending.paymentMethod}
-          amountPaid={pending.amountPaid}
-          change={pending.change}
         />
       )}
     </>

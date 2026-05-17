@@ -36,6 +36,7 @@ type Props = {
   tableNumber?: string;
   tierDiscount?: number;
   tierLabel?: string;
+  serviceCharge?: number;
   tableBreakdown?: {
     voucherDiscount: number;
     serviceCharge: number;
@@ -50,7 +51,7 @@ const PAGE_STYLE = `
   * { box-sizing: border-box; }
 `;
 
-export default function ReceiptPrint({ open, onClose, order, items, customerName, paymentMethod, amountPaid, tableNumber, tierDiscount, tierLabel, tableBreakdown }: Props) {
+export default function ReceiptPrint({ open, onClose, order, items, customerName, paymentMethod, amountPaid, tableNumber, tierDiscount, tierLabel, serviceCharge, tableBreakdown }: Props) {
   const receiptRef = useRef<HTMLDivElement>(null);
   const { counter, kitchen } = usePrinter();
 
@@ -119,6 +120,7 @@ export default function ReceiptPrint({ open, onClose, order, items, customerName
             tableNumber={tableNumber}
             tierDiscount={tierDiscount}
             tierLabel={tierLabel}
+            serviceCharge={serviceCharge}
             tableBreakdown={tableBreakdown}
           />
         </div>
@@ -155,11 +157,12 @@ type ContentProps = {
   tableNumber?: string;
   tierDiscount?: number;
   tierLabel?: string;
+  serviceCharge?: number;
   tableBreakdown?: Props["tableBreakdown"];
 };
 
 const ReceiptContent = forwardRef<HTMLDivElement, ContentProps>(
-  function ReceiptContent({ order, items, customerName, paymentMethod, amountPaid, tableNumber, tierDiscount, tierLabel, tableBreakdown }, ref) {
+  function ReceiptContent({ order, items, customerName, paymentMethod, amountPaid, tableNumber, tierDiscount, tierLabel, serviceCharge, tableBreakdown }, ref) {
     const dateStr = new Date(order.created_at).toLocaleString("en-MY", {
       day: "2-digit", month: "2-digit", year: "numeric",
       hour: "2-digit", minute: "2-digit", hour12: false,
@@ -251,6 +254,9 @@ const ReceiptContent = forwardRef<HTMLDivElement, ContentProps>(
                 )}
                 {order.points_redeemed > 0 && (
                   <Row label={"Points redeemed (" + order.points_redeemed + " pts)"} value={"-" + (order.subtotal - order.total_amount).toFixed(2)} />
+                )}
+                {serviceCharge && serviceCharge > 0 && (
+                  <Row label="Service charge (6%)" value={serviceCharge.toFixed(2)} />
                 )}
               </>
             )}

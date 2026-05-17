@@ -50,6 +50,8 @@ export default function LoyaltyPage() {
       <h1 className="text-xl font-bold text-zinc-900">Loyalty Management</h1>
       <LoyaltyRulesSection />
       <Separator />
+      <VerifyRedemptionSection />
+      <Separator />
       <CustomerPointsSection />
       <Separator />
       <RewardsCatalogueSection />
@@ -128,6 +130,69 @@ function LoyaltyRulesSection() {
                   {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save Rule"}
                 </Button>
               </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </section>
+  );
+}
+
+function VerifyRedemptionSection() {
+  const [code, setCode] = useState("");
+  const [verifying, setVerifying] = useState(false);
+  const [result, setResult] = useState<{ reward_name: string; customer_name: string; discount_rm: number } | null>(null);
+  const [resultError, setResultError] = useState<string | null>(null);
+
+  async function handleVerify() {
+    const trimmed = code.trim().toUpperCase();
+    if (!trimmed) return;
+    setVerifying(true);
+    setResult(null);
+    setResultError(null);
+    const res = await fetch("/api/verify-redemption", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ code: trimmed }),
+    });
+    const data = await res.json();
+    setVerifying(false);
+    if (!res.ok) { setResultError(data.error ?? "Verification failed"); return; }
+    setResult(data);
+    setCode("");
+    toast.success("Redemption verified!");
+  }
+
+  return (
+    <section className="space-y-4">
+      <h2 className="text-base font-semibold text-zinc-800">Verify Reward Redemption</h2>
+      <Card>
+        <CardContent className="pt-5 space-y-3">
+          <p className="text-xs text-zinc-500">Scan the customer&apos;s QR code or manually enter the redemption code to verify and mark it as used.</p>
+          <div className="flex gap-2">
+            <Input
+              placeholder="Enter or scan redemption code"
+              value={code}
+              onChange={e => { setCode(e.target.value.toUpperCase()); setResult(null); setResultError(null); }}
+              onKeyDown={e => e.key === "Enter" && handleVerify()}
+              className="font-mono tracking-widest uppercase max-w-xs"
+            />
+            <Button onClick={handleVerify} disabled={verifying || !code.trim()} className="gap-2">
+              {verifying ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+              Verify
+            </Button>
+          </div>
+          {result && (
+            <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 space-y-1">
+              <p className="text-sm font-bold text-emerald-800">Redemption confirmed!</p>
+              <p className="text-sm text-emerald-700">Customer: <span className="font-semibold">{result.customer_name}</span></p>
+              <p className="text-sm text-emerald-700">Reward: <span className="font-semibold">{result.reward_name}</span></p>
+              <p className="text-sm text-emerald-700">Discount: <span className="font-semibold">RM {result.discount_rm.toFixed(2)}</span></p>
+            </div>
+          )}
+          {resultError && (
+            <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3">
+              <p className="text-sm font-medium text-red-700">{resultError}</p>
             </div>
           )}
         </CardContent>

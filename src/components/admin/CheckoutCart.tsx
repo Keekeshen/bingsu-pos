@@ -14,6 +14,7 @@ import ReceiptPrint, { type ReceiptOrder, type ReceiptLineItem } from "@/compone
 import CustomerScanner, { type ScannedCustomer } from "@/components/admin/CustomerScanner";
 import VoucherScanner from "@/components/admin/VoucherScanner";
 import { getTier } from "@/lib/tiers";
+import { TABLE_SERVICE_CHARGE_PCT } from "@/lib/voucher-utils";
 
 type Customer = { id: string; full_name: string; phone: string | null; loyalty_points: number };
 type VoucherData = { id: string; code: string; label: string; discount_type: string; discount_value: number; description: string | null; type: string };
@@ -28,6 +29,7 @@ type PendingReceipt = {
   tableNumber?: string;
   tierDiscount?: number;
   tierLabel?: string;
+  serviceCharge?: number;
 };
 
 type Props = {
@@ -74,14 +76,16 @@ export default function CheckoutCart({ items, subtotal, total, onUpdateQuantity,
   const isFreeItem = voucher?.discount_type === "free_item";
   const totalDiscount = +(tierDiscountAmt + voucherDiscount).toFixed(2);
   const discountedTotal = Math.max(0, +(total - totalDiscount).toFixed(2));
+  const serviceChargeAmt = +(discountedTotal * TABLE_SERVICE_CHARGE_PCT / 100).toFixed(2);
+  const chargeTotal = +(discountedTotal + serviceChargeAmt).toFixed(2);
 
   const receivedNum = parseFloat(amountReceived);
-  const change = paymentType === "cash" && !isNaN(receivedNum) && receivedNum >= discountedTotal
-    ? +(receivedNum - discountedTotal).toFixed(2)
+  const change = paymentType === "cash" && !isNaN(receivedNum) && receivedNum >= chargeTotal
+    ? +(receivedNum - chargeTotal).toFixed(2)
     : null;
 
   const canCharge = !!paymentType && items.length > 0 &&
-    (paymentType !== "cash" || (!isNaN(receivedNum) && receivedNum >= discountedTotal));
+    (paymentType !== "cash" || (!isNaN(receivedNum) && receivedNum >= chargeTotal));
 
   async function lookupCustomer() {
     const query = phone.trim();
@@ -132,6 +136,7 @@ export default function CheckoutCart({ items, subtotal, total, onUpdateQuantity,
         payment_method: paymentType,
         voucher_code: voucher?.code ?? null,
         discount_amount: totalDiscount,
+        service_charge: serviceChargeAmt,
         table_number: tableNumber.trim() || null,
       }),
     });
@@ -154,7 +159,7 @@ export default function CheckoutCart({ items, subtotal, total, onUpdateQuantity,
       });
     }
 
-    const paid = paymentType === "cash" ? receivedNum : discountedTotal;
+    const paid = paymentType === "cash" ? receivedNum : chargeTotal;
     setPending({
       order: {
         order_number: data.order_number, created_at: data.created_at,
@@ -165,8 +170,9 @@ export default function CheckoutCart({ items, subtotal, total, onUpdateQuantity,
       customerName: customer?.full_name,
       paymentMethod: paymentType === "cash" ? "Cash" : paymentType === "qr" ? "QR Code" : "Card",
       amountPaid: paid,
-      change: paymentType === "cash" ? +(paid - discountedTotal).toFixed(2) : 0,
+      change: paymentType === "cash" ? +(paid - chargeTotal).toFixed(2) : 0,
       tableNumber: tableNumber.trim() || undefined,
+      serviceCharge: serviceChargeAmt,
       tierDiscount: tierDiscountAmt > 0 ? tierDiscountAmt : undefined,
       tierLabel: tierDiscountAmt > 0 ? `${customerTier?.name} (${tierDiscountPct}%)` : undefined,
     });
@@ -317,7 +323,7 @@ export default function CheckoutCart({ items, subtotal, total, onUpdateQuantity,
                 step="0.10"
                 value={amountReceived}
                 onChange={(e) => setAmountReceived(e.target.value)}
-                placeholder={discountedTotal.toFixed(2)}
+                placeholder={chargeTotal.toFixed(2)}
                 autoFocus
                 className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-xl font-bold focus:outline-none focus:ring-2 focus:ring-zinc-900"
               />
@@ -349,12 +355,16 @@ export default function CheckoutCart({ items, subtotal, total, onUpdateQuantity,
               </div>
             )}
             {isFreeItem && (
-              <div className="text-xs text-pink-600 font-medium">🎁 Free item — confirm with customer</div>
+              <div className="text-xs text-pink-600 font-medium">Free item — confirm with customer</div>
             )}
+            <div className="flex justify-between text-zinc-500">
+              <span>Service charge ({TABLE_SERVICE_CHARGE_PCT}%)</span>
+              <span>RM {serviceChargeAmt.toFixed(2)}</span>
+            </div>
             <Separator />
             <div className="flex justify-between pt-1 text-base font-bold text-zinc-900">
               <span>Total</span>
-              <span>RM {discountedTotal.toFixed(2)}</span>
+              <span>RM {chargeTotal.toFixed(2)}</span>
             </div>
           </div>
 
@@ -363,7 +373,7 @@ export default function CheckoutCart({ items, subtotal, total, onUpdateQuantity,
             disabled={!canCharge || charging}
             onClick={handleCharge}
           >
-            {charging ? "Processing…" : `Charge RM ${discountedTotal.toFixed(2)}`}
+            {charging ? "Processing…" : `Charge RM ${chargeTotal.toFixed(2)}`}
           </Button>
         </div>
       </div>
@@ -380,6 +390,7 @@ export default function CheckoutCart({ items, subtotal, total, onUpdateQuantity,
           tableNumber={pending.tableNumber}
           tierDiscount={pending.tierDiscount}
           tierLabel={pending.tierLabel}
+          serviceCharge={pending.serviceCharge}
         />
       )}
     </>

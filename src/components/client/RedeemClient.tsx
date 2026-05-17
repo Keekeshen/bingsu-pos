@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { Gift, CheckCircle2, Loader2, Lock, ImageIcon, X, ChevronRight } from "lucide-react";
+import { QRCodeSVG } from "qrcode.react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import Image from "next/image";
@@ -218,15 +219,23 @@ export default function RedeemClient({ initialPoints, rewards }: Props) {
               <CheckCircle2 className="h-12 w-12 text-emerald-500 mb-1" />
               <DialogTitle>Reward Redeemed!</DialogTitle>
               <DialogDescription>
-                You have redeemed <span className="font-semibold text-zinc-800">{success.reward_name}</span>.
+                Show this QR code to the cashier to claim your <span className="font-semibold text-zinc-800">{success.reward_name}</span>.
               </DialogDescription>
             </DialogHeader>
-            <div className="rounded-xl border-2 border-dashed border-emerald-300 bg-emerald-50 px-4 py-4">
-              <p className="text-xs text-emerald-600 font-medium uppercase tracking-wider mb-1">Redemption Code</p>
-              <p className="font-mono text-2xl font-bold tracking-widest text-emerald-700">{success.redemption_code}</p>
-              <p className="mt-1.5 text-xs text-emerald-600">RM {success.discount_rm.toFixed(2)} off your next order</p>
+
+            <div className="flex flex-col items-center gap-3 rounded-2xl border-2 border-dashed border-emerald-300 bg-emerald-50 p-5">
+              <QRCodeSVG
+                value={success.redemption_code}
+                size={180}
+                bgColor="#f0fdf4"
+                fgColor="#065f46"
+                level="M"
+              />
+              <p className="font-mono text-lg font-bold tracking-widest text-emerald-700">{success.redemption_code}</p>
+              <p className="text-xs text-emerald-600 font-medium">RM {success.discount_rm.toFixed(2)} off</p>
             </div>
-            <p className="text-sm text-zinc-500">Show this code to the cashier to apply your discount.</p>
+
+            <p className="text-xs text-zinc-400">Let the cashier scan or type this code. Valid for one use only.</p>
             <Button className="w-full" onClick={() => setSuccess(null)}>Done</Button>
           </DialogContent>
         )}

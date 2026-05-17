@@ -298,7 +298,7 @@ export default function TableOrderView({ tableNumber, onClose, onOrdersUpdated }
                   <Button type="button" size="sm" className="h-9 shrink-0 px-3" variant="outline" disabled={voucherBusy} onClick={() => applyVoucherCode(voucherInput)}>
                     Apply
                   </Button>
-                  <VoucherScanner onCodeScanned={applyVoucherCode} trigger={<Button type="button" size="sm" variant="outline" className="h-9 shrink-0 px-2"><QrCode className="h-4 w-4" /></Button>} />
+                  <VoucherScanner onCodeScanned={applyVoucherCode} />
                 </div>
                 <p className="text-[10px] text-zinc-400">Applied to item subtotal before service charge ({TABLE_SERVICE_CHARGE_PCT}%). One voucher per checkout.</p>
               </>

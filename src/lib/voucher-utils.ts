@@ -14,9 +14,9 @@ export function computeVoucherDiscount(
   return 0;
 }
 
-export const TABLE_SERVICE_CHARGE_PCT = 10;
+export const TABLE_SERVICE_CHARGE_PCT = 6;
 
-/** Bill for table dine-in — basket subtotal, optional voucher-off-basket-subtotal first, then 10% service, then Malaysian 5‑sen rounding. */
+/** Bill for table dine-in — basket subtotal, optional voucher-off-basket-subtotal first, then 6% service, then Malaysian 5‑sen rounding. */
 export function tableBillTotals(basketSubtotal: number, voucherDiscountRaw: number) {
   const d = Math.max(0, Math.min(+Number(voucherDiscountRaw).toFixed(2), basketSubtotal));
   const taxableSubtotal = +(basketSubtotal - d).toFixed(2);

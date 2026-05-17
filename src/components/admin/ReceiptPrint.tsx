@@ -239,7 +239,7 @@ const ReceiptContent = forwardRef<HTMLDivElement, ContentProps>(
                 {tableBreakdown.voucherDiscount > 0 && (
                   <Row label="Voucher discount" value={"-" + tableBreakdown.voucherDiscount.toFixed(2)} />
                 )}
-                <Row label="SERVICE CHARGE (10%)" value={tableBreakdown.serviceCharge.toFixed(2)} />
+                <Row label="SERVICE CHARGE (6%)" value={tableBreakdown.serviceCharge.toFixed(2)} />
                 {tableBreakdown.rounding !== 0 && (
                   <Row label="Bill rounding" value={(tableBreakdown.rounding >= 0 ? "+" : "") + tableBreakdown.rounding.toFixed(2)} />
                 )}
@@ -280,7 +280,7 @@ const ReceiptContent = forwardRef<HTMLDivElement, ContentProps>(
                 <span>Taxable Amount</span>
               </div>
               <div className="receipt-row flex justify-between text-[9px]">
-                <span>SERVICE CHARGE 10%</span>
+                <span>SERVICE CHARGE 6%</span>
                 <span className="tabular-nums">{taxableBase.toFixed(2)}  {tableBreakdown.serviceCharge.toFixed(2)}</span>
               </div>
               <Dashes />

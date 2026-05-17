@@ -2,14 +2,18 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import { getTier, TIERS, TIER_BENEFITS } from "@/lib/tiers";
-import { ChevronLeft, Cake, Star, Check, Minus, Tag } from "lucide-react";
+import { ChevronLeft, Cake, Star, Check, Tag, RefreshCw, ShieldCheck } from "lucide-react";
 
 export default async function BenefitsPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const { data: profile } = await supabase.from("profiles").select("loyalty_points").eq("id", user.id).single();
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("loyalty_points")
+    .eq("id", user.id)
+    .single();
   const loyaltyPoints = profile?.loyalty_points ?? 0;
   const currentTier = getTier(loyaltyPoints);
 
@@ -53,15 +57,22 @@ export default async function BenefitsPage() {
                 </p>
                 <div className="mt-3 space-y-1 text-xs text-white/80">
                   {tierDef.orderDiscount > 0
-                    ? <p>✦ {tierDef.orderDiscount}% off every order</p>
-                    : <p className="text-white/40">✦ No order discount</p>}
-                  {b.memberReward
-                    ? <p>✦ {b.memberReward} (member reward)</p>
-                    : <p className="text-white/40">✦ No member reward</p>}
-                  {b.birthday.map((g, i) => <p key={i}>✦ {g} (birthday)</p>)}
+                    ? <p>+ {tierDef.orderDiscount}% off every order</p>
+                    : <p className="text-white/40">+ No order discount</p>}
+                  {b.monthlyRewards.length > 0
+                    ? b.monthlyRewards.map((r, i) => <p key={i}>+ {r} (monthly)</p>)
+                    : <p className="text-white/40">+ No monthly reward</p>}
+                  {b.birthday.length > 0
+                    ? b.birthday.map((g, i) => <p key={i}>+ {g} (birthday)</p>)
+                    : <p className="text-white/40">+ No birthday gift</p>}
                 </div>
-                {!isUnlocked && (
+                {tierDef.maintenanceOrdersPerYear > 0 && (
                   <div className="mt-3 rounded-xl bg-white/10 px-3 py-1.5 text-center">
+                    <p className="text-[11px] text-white/70">Maintain: {tierDef.maintenanceOrdersPerYear} orders/year</p>
+                  </div>
+                )}
+                {!isUnlocked && (
+                  <div className="mt-2 rounded-xl bg-white/10 px-3 py-1.5 text-center">
                     <p className="text-[11px] text-white/70">{(tierDef.min - loyaltyPoints).toLocaleString()} pts to unlock</p>
                   </div>
                 )}
@@ -77,8 +88,8 @@ export default async function BenefitsPage() {
         <section>
           <div className="flex items-center gap-2 mb-3">
             <Tag className="h-4 w-4 text-emerald-500" />
-            <h2 className="text-base font-black text-zinc-900">Member Discount</h2>
-            <span className="ml-auto text-xs text-zinc-400">Auto-applied every order</span>
+            <h2 className="text-base font-black text-zinc-900">Order Discount</h2>
+            <span className="ml-auto text-xs text-zinc-400">Auto-applied at checkout</span>
           </div>
           <div className="grid grid-cols-2 gap-3">
             {TIERS.map(tier => {
@@ -108,28 +119,37 @@ export default async function BenefitsPage() {
           </div>
         </section>
 
-        {/* Member Rewards */}
+        {/* Monthly Rewards */}
         <section>
           <div className="flex items-center gap-2 mb-3">
-            <Star className="h-4 w-4 text-amber-500" />
-            <h2 className="text-base font-black text-zinc-900">Member Rewards</h2>
+            <RefreshCw className="h-4 w-4 text-violet-500" />
+            <h2 className="text-base font-black text-zinc-900">Monthly Rewards</h2>
+            <span className="ml-auto text-xs text-zinc-400">Resets 1st of every month</span>
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-2">
             {TIER_BENEFITS.map(b => {
               const tierDef = TIERS.find(t => t.name === b.tier)!;
               const unlocked = loyaltyPoints >= tierDef.min;
+              const isCurrent = b.tier === currentTier.name;
               return (
-                <div key={b.tier} className={`flex flex-col items-center gap-2 rounded-2xl border p-4 text-center ${unlocked ? "border-amber-100 bg-amber-50" : "border-zinc-100 bg-zinc-50 opacity-50"}`}>
-                  <span className="text-2xl">{b.icon}</span>
-                  <p className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400">{b.tier}</p>
-                  {b.memberReward
-                    ? <p className={`text-sm font-bold leading-tight ${unlocked ? "text-amber-700" : "text-zinc-400"}`}>{b.memberReward}</p>
-                    : <span className="flex items-center gap-1 text-xs text-zinc-400"><Minus className="h-3 w-3" /> None</span>}
-                  {unlocked && b.memberReward && <Check className="h-4 w-4 text-emerald-500" />}
+                <div key={b.tier} className={`flex items-center gap-3 rounded-2xl border px-4 py-3
+                  ${isCurrent ? "border-violet-200 bg-violet-50" : unlocked ? "border-violet-100 bg-violet-50/50" : "border-zinc-100 bg-zinc-50 opacity-50"}`}>
+                  <span className={`w-8 h-8 flex items-center justify-center rounded-full text-xs font-black
+                    ${unlocked ? "bg-violet-200 text-violet-800" : "bg-zinc-200 text-zinc-400"}`}>{b.icon}</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-bold uppercase tracking-wider text-zinc-400">{b.tier}</p>
+                    {b.monthlyRewards.length > 0
+                      ? b.monthlyRewards.map((r, i) => (
+                          <p key={i} className={`text-sm font-medium mt-0.5 ${unlocked ? "text-violet-700" : "text-zinc-400"}`}>• {r}</p>
+                        ))
+                      : <p className="text-sm text-zinc-400 mt-0.5">— No monthly reward</p>}
+                  </div>
+                  {isCurrent && b.monthlyRewards.length > 0 && <Check className="h-4 w-4 text-emerald-500 shrink-0" />}
                 </div>
               );
             })}
           </div>
+          <p className="mt-2 text-xs text-zinc-400 text-center">Vouchers are auto-issued to your account on the 1st of each month.</p>
         </section>
 
         {/* Birthday Gifts */}
@@ -142,21 +162,51 @@ export default async function BenefitsPage() {
             {TIER_BENEFITS.map(b => {
               const tierDef = TIERS.find(t => t.name === b.tier)!;
               const unlocked = loyaltyPoints >= tierDef.min;
+              const isCurrent = b.tier === currentTier.name;
               return (
-                <div key={b.tier} className={`flex items-center gap-3 rounded-2xl border px-4 py-3 ${unlocked ? "border-pink-100 bg-pink-50" : "border-zinc-100 bg-zinc-50 opacity-50"}`}>
-                  <span className="text-2xl shrink-0">{b.icon}</span>
+                <div key={b.tier} className={`flex items-center gap-3 rounded-2xl border px-4 py-3
+                  ${isCurrent ? "border-pink-200 bg-pink-50" : unlocked ? "border-pink-100 bg-pink-50/50" : "border-zinc-100 bg-zinc-50 opacity-50"}`}>
+                  <span className={`w-8 h-8 flex items-center justify-center rounded-full text-xs font-black
+                    ${unlocked ? "bg-pink-200 text-pink-800" : "bg-zinc-200 text-zinc-400"}`}>{b.icon}</span>
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-bold uppercase tracking-wider text-zinc-400">{b.tier}</p>
-                    {b.birthday.map((g, i) => (
-                      <p key={i} className={`text-sm font-medium mt-0.5 ${unlocked ? "text-pink-700" : "text-zinc-400"}`}>• {g}</p>
-                    ))}
+                    {b.birthday.length > 0
+                      ? b.birthday.map((g, i) => (
+                          <p key={i} className={`text-sm font-medium mt-0.5 ${unlocked ? "text-pink-700" : "text-zinc-400"}`}>• {g}</p>
+                        ))
+                      : <p className="text-sm text-zinc-400 mt-0.5">— No birthday gift</p>}
                   </div>
-                  {unlocked && <Check className="h-4 w-4 text-emerald-500 shrink-0" />}
+                  {isCurrent && b.birthday.length > 0 && <Check className="h-4 w-4 text-emerald-500 shrink-0" />}
                 </div>
               );
             })}
           </div>
-          <p className="mt-2 text-xs text-zinc-400 text-center">Show your member QR to cashier in your birthday month.</p>
+          <p className="mt-2 text-xs text-zinc-400 text-center">Set your birthday in Profile. Vouchers are valid on your birthday only.</p>
+        </section>
+
+        {/* Tier Maintenance */}
+        <section>
+          <div className="flex items-center gap-2 mb-3">
+            <ShieldCheck className="h-4 w-4 text-amber-500" />
+            <h2 className="text-base font-black text-zinc-900">Tier Maintenance</h2>
+            <span className="ml-auto text-xs text-zinc-400">Evaluated every 12 months</span>
+          </div>
+          <div className="rounded-2xl border border-amber-100 bg-amber-50 p-4 space-y-3">
+            <p className="text-xs text-amber-800">To keep your tier, you need to place the following number of orders within any rolling 12-month window:</p>
+            <div className="space-y-2">
+              {TIERS.filter(t => t.maintenanceOrdersPerYear > 0).map(tier => {
+                const isCurrent = tier.name === currentTier.name;
+                return (
+                  <div key={tier.name} className={`flex items-center justify-between rounded-xl px-3 py-2
+                    ${isCurrent ? "bg-amber-200/60 font-semibold" : "bg-white/60"}`}>
+                    <span className="text-sm text-amber-900">{tier.name}</span>
+                    <span className="text-sm font-bold text-amber-700">{tier.maintenanceOrdersPerYear} orders / year</span>
+                  </div>
+                );
+              })}
+            </div>
+            <p className="text-[11px] text-amber-700">If you fall below the requirement, you drop to the next lower tier at your annual review.</p>
+          </div>
         </section>
 
         {/* Welcome vouchers info */}
@@ -170,15 +220,6 @@ export default async function BenefitsPage() {
           <p className="mt-2 text-xs text-emerald-600">Check your vouchers in the <strong>Vouchers</strong> tab.</p>
         </section>
 
-        {/* Birthday voucher info */}
-        <section className="rounded-2xl border border-pink-100 bg-pink-50 p-4 mb-6">
-          <p className="text-sm font-bold text-pink-800 mb-1">Birthday Gift</p>
-          <p className="text-xs text-pink-700">On your birthday, you automatically receive:</p>
-          <ul className="mt-2 space-y-1 text-xs text-pink-700">
-            <li>• 1x Free Drink voucher (valid your birthday only)</li>
-          </ul>
-          <p className="mt-2 text-xs text-pink-600">Make sure your birthday is set in your <strong>Profile</strong>.</p>
-        </section>
       </div>
     </div>
   );

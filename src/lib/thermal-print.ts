@@ -56,6 +56,8 @@ export type ThermalReceiptData = {
   customerName?: string;
   items: { name: string; qty: number; unitPrice: number; subtotal: number }[];
   subtotal: number;
+  tierDiscount?: number;
+  tierLabel?: string;
   voucherDiscount?: number;
   serviceCharge?: number;
   rounding?: number;
@@ -71,10 +73,15 @@ export function buildReceiptBytes(d: ThermalReceiptData): Uint8Array {
   const parts = d.orderNumber.split("-");
   const seq = parts[parts.length - 1] ?? d.orderNumber;
   p.init();
+
+  // Header
   p.align("center").bigText(true).bold(true).line("Koori Dessert").bigText(false).bold(false);
-  p.line("57, Jln SS 21/1a, Damansara Utama");
-  p.line("47400 Petaling Jaya, Selangor");
+  p.line("");
+  p.line("SSM : 003834965-W");
+  p.line("57, Jln SS 21/1a,");
+  p.line("Damansara Utama, 47400 PJ");
   p.dashes();
+
   p.align("left");
   p.line("Invoice: " + d.orderNumber);
   p.line("Date   : " + d.date);
@@ -83,8 +90,10 @@ export function buildReceiptBytes(d: ThermalReceiptData): Uint8Array {
   if (d.customerName) p.line("Customer: " + d.customerName);
   p.line("ORDER  : " + seq);
   p.dashes();
+
   p.bold(true).line("Qty  Item" + " ".repeat(W - 9 - 10) + "Price(MYR)").bold(false);
   p.dashes();
+
   for (const item of d.items) {
     const priceStr = item.subtotal.toFixed(2);
     const desc = item.qty + "x " + item.name;
@@ -94,12 +103,16 @@ export function buildReceiptBytes(d: ThermalReceiptData): Uint8Array {
     p.line("   @ RM" + item.unitPrice.toFixed(2) + "/ea");
   }
   p.dashes();
+
   p.row("Subtotal", "RM " + d.subtotal.toFixed(2));
+  if (d.tierDiscount && d.tierDiscount > 0) p.row("Member (" + (d.tierLabel ?? "") + ")", "-RM " + d.tierDiscount.toFixed(2));
   if (d.voucherDiscount && d.voucherDiscount > 0) p.row("Voucher discount", "-RM " + d.voucherDiscount.toFixed(2));
   if (d.serviceCharge && d.serviceCharge > 0) p.row("Service charge (10%)", "RM " + d.serviceCharge.toFixed(2));
   if (d.rounding !== undefined && d.rounding !== 0) p.row("Bill rounding", (d.rounding >= 0 ? "+" : "") + "RM " + Math.abs(d.rounding).toFixed(2));
+
   p.dashes();
   p.bold(true).row("TOTAL (MYR)", "RM " + d.total.toFixed(2)).bold(false);
+
   if (d.paymentMethod) {
     p.row(d.paymentMethod.toUpperCase(), "RM " + (d.amountPaid ?? d.total).toFixed(2));
     if (d.paymentMethod.toLowerCase() === "cash" && d.amountPaid != null) {
@@ -107,10 +120,12 @@ export function buildReceiptBytes(d: ThermalReceiptData): Uint8Array {
       if (change >= 0) p.row("Change", "RM " + change.toFixed(2));
     }
   }
+
   if (d.pointsEarned && d.pointsEarned > 0) {
     p.dashes();
     p.align("center").line("[+] " + d.pointsEarned + " loyalty points earned");
   }
+
   p.dashes();
   p.align("center");
   p.line("Scan QR to rate your experience:");
@@ -136,9 +151,11 @@ export type KitchenOrderData = {
 export function buildKitchenOrderBytes(d: KitchenOrderData): Uint8Array {
   const p = new EscPos();
   p.init();
+
   p.align("center").bold(true).bigText(true).line("KITCHEN").bigText(false).bold(false);
   p.align("center").line(d.orderNumber).line(d.date);
   p.dashes();
+
   if (d.tableNumber) {
     p.align("center");
     p.line("================================");
@@ -148,18 +165,22 @@ export function buildKitchenOrderBytes(d: KitchenOrderData): Uint8Array {
   } else {
     p.align("center").bold(true).bigText(true).line("COUNTER").bigText(false).bold(false);
   }
+
   p.dashes();
   p.align("left");
+
   for (const item of d.items) {
     p.bigText(true).bold(true).line(item.qty + "x").bigText(false);
     p.line("   " + item.name).bold(false);
     p.feed(1);
   }
+
   if (d.note) {
     p.dashes();
     p.align("center").bold(true).line("NOTE:").bold(false);
     p.align("left").line(d.note);
   }
+
   p.dashes();
   p.feed(4).cut();
   return p.build();

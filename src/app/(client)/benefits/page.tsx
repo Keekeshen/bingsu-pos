@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import { getTier, TIERS, TIER_BENEFITS } from "@/lib/tiers";
-import { ChevronLeft, Cake, Star, Check, Minus } from "lucide-react";
+import { ChevronLeft, Cake, Star, Check, Minus, Tag } from "lucide-react";
 
 export default async function BenefitsPage() {
   const supabase = await createClient();
@@ -52,6 +52,9 @@ export default async function BenefitsPage() {
                     : `${tierDef.min.toLocaleString()} – ${tierDef.max.toLocaleString()} pts`}
                 </p>
                 <div className="mt-3 space-y-1 text-xs text-white/80">
+                  {tierDef.orderDiscount > 0
+                    ? <p>✦ {tierDef.orderDiscount}% off every order</p>
+                    : <p className="text-white/40">✦ No order discount</p>}
                   {b.memberReward
                     ? <p>✦ {b.memberReward} (member reward)</p>
                     : <p className="text-white/40">✦ No member reward</p>}
@@ -69,6 +72,42 @@ export default async function BenefitsPage() {
       </div>
 
       <div className="px-4 space-y-6">
+
+        {/* Member Discount */}
+        <section>
+          <div className="flex items-center gap-2 mb-3">
+            <Tag className="h-4 w-4 text-emerald-500" />
+            <h2 className="text-base font-black text-zinc-900">Member Discount</h2>
+            <span className="ml-auto text-xs text-zinc-400">Auto-applied every order</span>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            {TIERS.map(tier => {
+              const unlocked = loyaltyPoints >= tier.min;
+              const isCurrent = tier.name === currentTier.name;
+              return (
+                <div
+                  key={tier.name}
+                  className={`relative flex flex-col items-center gap-1.5 rounded-2xl border p-4 text-center transition-all
+                    ${isCurrent ? "border-emerald-300 bg-emerald-50 ring-2 ring-emerald-400/40" : unlocked ? "border-emerald-100 bg-emerald-50/50" : "border-zinc-100 bg-zinc-50 opacity-45"}`}
+                >
+                  {isCurrent && (
+                    <span className="absolute -top-2 left-1/2 -translate-x-1/2 rounded-full bg-emerald-500 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white">
+                      Your Tier
+                    </span>
+                  )}
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 mt-1">{tier.name}</p>
+                  {tier.orderDiscount > 0
+                    ? <p className={`text-2xl font-black ${unlocked ? "text-emerald-600" : "text-zinc-300"}`}>{tier.orderDiscount}%</p>
+                    : <p className="text-2xl font-black text-zinc-300">—</p>}
+                  <p className={`text-[11px] ${unlocked ? "text-emerald-700" : "text-zinc-400"}`}>
+                    {tier.orderDiscount > 0 ? "off every order" : "No discount"}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+
         {/* Member Rewards */}
         <section>
           <div className="flex items-center gap-2 mb-3">

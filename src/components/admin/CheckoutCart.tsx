@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 import ReceiptPrint, { type ReceiptOrder, type ReceiptLineItem } from "@/components/admin/ReceiptPrint";
 import CustomerScanner, { type ScannedCustomer } from "@/components/admin/CustomerScanner";
 import VoucherScanner from "@/components/admin/VoucherScanner";
+import { getTier } from "@/lib/tiers";
 
 type Customer = { id: string; full_name: string; phone: string | null; loyalty_points: number };
 type VoucherData = { id: string; code: string; label: string; discount_type: string; discount_value: number; description: string | null; type: string };
@@ -25,6 +26,8 @@ type PendingReceipt = {
   amountPaid: number;
   change: number;
   tableNumber?: string;
+  tierDiscount?: number;
+  tierLabel?: string;
 };
 
 type Props = {
@@ -57,6 +60,10 @@ export default function CheckoutCart({ items, subtotal, total, onUpdateQuantity,
   const [tableNumber, setTableNumber] = useState("");
   const phoneRef = useRef<HTMLInputElement>(null);
 
+  const customerTier = customer ? getTier(customer.loyalty_points) : null;
+  const tierDiscountPct = customerTier?.orderDiscount ?? 0;
+  const tierDiscountAmt = tierDiscountPct > 0 ? +(total * tierDiscountPct / 100).toFixed(2) : 0;
+
   const voucherDiscount = voucher
     ? voucher.discount_type === "fixed"
       ? Math.min(voucher.discount_value, total)
@@ -65,7 +72,8 @@ export default function CheckoutCart({ items, subtotal, total, onUpdateQuantity,
         : 0
     : 0;
   const isFreeItem = voucher?.discount_type === "free_item";
-  const discountedTotal = Math.max(0, +(total - voucherDiscount).toFixed(2));
+  const totalDiscount = +(tierDiscountAmt + voucherDiscount).toFixed(2);
+  const discountedTotal = Math.max(0, +(total - totalDiscount).toFixed(2));
 
   const receivedNum = parseFloat(amountReceived);
   const change = paymentType === "cash" && !isNaN(receivedNum) && receivedNum >= discountedTotal
@@ -123,7 +131,7 @@ export default function CheckoutCart({ items, subtotal, total, onUpdateQuantity,
         points_redeemed: 0,
         payment_method: paymentType,
         voucher_code: voucher?.code ?? null,
-        discount_amount: voucherDiscount,
+        discount_amount: totalDiscount,
         table_number: tableNumber.trim() || null,
       }),
     });
@@ -159,6 +167,8 @@ export default function CheckoutCart({ items, subtotal, total, onUpdateQuantity,
       amountPaid: paid,
       change: paymentType === "cash" ? +(paid - discountedTotal).toFixed(2) : 0,
       tableNumber: tableNumber.trim() || undefined,
+      tierDiscount: tierDiscountAmt > 0 ? tierDiscountAmt : undefined,
+      tierLabel: tierDiscountAmt > 0 ? `${customerTier?.name} (${tierDiscountPct}%)` : undefined,
     });
 
     onClearCart();
@@ -326,6 +336,12 @@ export default function CheckoutCart({ items, subtotal, total, onUpdateQuantity,
               <span>Subtotal</span>
               <span>RM {subtotal.toFixed(2)}</span>
             </div>
+            {tierDiscountAmt > 0 && (
+              <div className="flex justify-between text-emerald-600 font-medium">
+                <span>{customerTier?.name} discount ({tierDiscountPct}%)</span>
+                <span>-RM {tierDiscountAmt.toFixed(2)}</span>
+              </div>
+            )}
             {voucherDiscount > 0 && (
               <div className="flex justify-between text-violet-600 font-medium">
                 <span>Voucher ({voucher?.label})</span>
@@ -362,6 +378,8 @@ export default function CheckoutCart({ items, subtotal, total, onUpdateQuantity,
           paymentMethod={pending.paymentMethod}
           amountPaid={pending.amountPaid}
           tableNumber={pending.tableNumber}
+          tierDiscount={pending.tierDiscount}
+          tierLabel={pending.tierLabel}
         />
       )}
     </>

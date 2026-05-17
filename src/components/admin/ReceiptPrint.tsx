@@ -105,7 +105,7 @@ const ReceiptContent = forwardRef<HTMLDivElement, ContentProps>(
         `}</style>
         <div ref={ref} className="receipt-root mx-auto w-[220px] bg-white font-mono text-[10px] text-black">
           <div className="receipt-center mb-1 text-center">
-            <p className="receipt-bold text-[13px] font-bold">Bingsu Delight</p>
+            <p className="receipt-bold text-[13px] font-bold">Koori Dessert</p>
             <p className="receipt-small text-[9px] text-zinc-500">Sweet moments, every visit</p>
           </div>
           <Dashes />

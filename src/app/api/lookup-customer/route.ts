@@ -14,7 +14,18 @@ export async function GET(request: Request) {
 
   const admin = createAdminClient();
 
-  // 1) Try exact phone match
+  // 1) Short ID prefix: first 8 chars of UUID shown in loyalty QR (e.g. "68D8CFC0")
+  if (q.length >= 6 && q.length <= 8) {
+    const byShortId = await admin
+      .from("profiles")
+      .select("id, full_name, loyalty_points, phone")
+      .filter("id::text", "ilike", `${q.toLowerCase()}%`)
+      .limit(1)
+      .maybeSingle();
+    if (byShortId.data) return NextResponse.json({ customer: byShortId.data });
+  }
+
+  // 2) Exact phone match
   const byPhone = await admin
     .from("profiles")
     .select("id, full_name, loyalty_points, phone")
@@ -22,7 +33,7 @@ export async function GET(request: Request) {
     .maybeSingle();
   if (byPhone.data) return NextResponse.json({ customer: byPhone.data });
 
-  // 2) Try UUID id match
+  // 3) Full UUID match
   const uuidRe = /^[0-9a-f]{8}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{12}$/i;
   if (uuidRe.test(q)) {
     const byId = await admin
@@ -32,16 +43,6 @@ export async function GET(request: Request) {
       .maybeSingle();
     if (byId.data) return NextResponse.json({ customer: byId.data });
   }
-
-  // 3) Try partial name match
-  const byName = await admin
-    .from("profiles")
-    .select("id, full_name, loyalty_points, phone")
-    .ilike("full_name", `%${q}%`)
-    .eq("role", "client")
-    .limit(1)
-    .maybeSingle();
-  if (byName.data) return NextResponse.json({ customer: byName.data });
 
   return NextResponse.json({ error: "Customer not found" }, { status: 404 });
 }

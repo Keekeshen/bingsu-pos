@@ -104,15 +104,13 @@ const ReceiptContent = forwardRef<HTMLDivElement, ContentProps>(
 
     return (
       <div ref={ref} className="mx-auto w-[240px] bg-white font-mono text-[10px] text-black">
-        {/* Brand header */}
         <div className="mb-1 text-center">
-          <p className="text-[15px] font-bold tracking-tight">Koori Dessert</p>
-          <p className="text-[9px] text-zinc-500">57, Jalan SS 21/1a, Damansara Utama,</p>
+          <p style={{ fontSize: "22px", fontWeight: "bold", letterSpacing: "-0.5px", lineHeight: 1.2 }}>Koori Dessert</p>
+          <p className="text-[9px] text-zinc-500 mt-0.5">57, Jalan SS 21/1a, Damansara Utama,</p>
           <p className="text-[9px] text-zinc-500">47400 Petaling Jaya, Selangor, Malaysia</p>
         </div>
         <Dashes />
 
-        {/* Invoice info */}
         <div className="flex justify-between items-start mb-1">
           <div className="space-y-0.5">
             <p><span className="text-zinc-500">Invoice no:</span> {order.order_number}</p>
@@ -128,7 +126,6 @@ const ReceiptContent = forwardRef<HTMLDivElement, ContentProps>(
         </div>
         <Dashes />
 
-        {/* Items */}
         <div className="flex justify-between font-bold text-[9px] mb-0.5">
           <span>Qty  Item</span><span>Price (MYR)</span>
         </div>
@@ -146,7 +143,6 @@ const ReceiptContent = forwardRef<HTMLDivElement, ContentProps>(
         </div>
         <Dashes />
 
-        {/* Totals */}
         <div className="space-y-0.5">
           <Row label="Subtotal" value={order.subtotal.toFixed(2)} />
           {tableBreakdown ? (
@@ -167,7 +163,6 @@ const ReceiptContent = forwardRef<HTMLDivElement, ContentProps>(
           </div>
         </div>
 
-        {/* Payment */}
         {paymentMethod && (
           <>
             <div className="mt-1 space-y-0.5">
@@ -178,7 +173,6 @@ const ReceiptContent = forwardRef<HTMLDivElement, ContentProps>(
           </>
         )}
 
-        {/* Tax summary (table) */}
         {tableBreakdown && tableBreakdown.serviceCharge > 0 && (
           <>
             <div className="flex justify-between font-bold text-[9px] mb-0.5">
@@ -192,7 +186,6 @@ const ReceiptContent = forwardRef<HTMLDivElement, ContentProps>(
           </>
         )}
 
-        {/* Points */}
         {order.points_earned > 0 && (
           <>
             <div className="text-center"><p>[+] {order.points_earned} loyalty points earned</p></div>
@@ -200,9 +193,8 @@ const ReceiptContent = forwardRef<HTMLDivElement, ContentProps>(
           </>
         )}
 
-        {/* Footer */}
         <div className="mt-1 text-center text-[9px] leading-snug text-zinc-500">
-          <p>Scan QR to rate us &amp; let us know</p>
+          <p>Scan QR to rate us and let us know</p>
           <p>how you enjoyed your visit!</p>
         </div>
         <div className="my-2 flex justify-center">

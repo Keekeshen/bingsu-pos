@@ -27,7 +27,7 @@ type Order = {
   total_amount: number;
   created_at: string;
   customer_id: string | null;
-  profiles: { full_name: string } | null;
+  profiles: { full_name: string }[] | null;
   order_items: OrderItem[];
 };
 
@@ -79,7 +79,7 @@ export default function TableOrderView({ tableNumber, onClose, onOrdersUpdated }
       .in("status", ["pending", "served"])
       .order("created_at", { ascending: true });
     if (error) { toast.error("Failed to load orders"); setLoading(false); return; }
-    setOrders((data as Order[]) ?? []);
+    setOrders((data as unknown as Order[]) ?? []);
     setLoading(false);
   }, [tableNumber]);
 
@@ -112,8 +112,8 @@ export default function TableOrderView({ tableNumber, onClose, onOrdersUpdated }
   const guestLabels = Array.from(
     new Set(
       orders
-        .filter((o) => o.customer_id && o.profiles?.full_name?.trim())
-        .map((o) => String(o.profiles?.full_name).trim())
+        .filter((o) => o.customer_id && o.profiles?.[0]?.full_name?.trim())
+        .map((o) => String(o.profiles?.[0]?.full_name).trim())
     )
   );
 
@@ -405,8 +405,8 @@ export default function TableOrderView({ tableNumber, onClose, onOrdersUpdated }
                         <span className="text-xs font-semibold text-amber-800">Round {idx + 1} · {order.order_number}</span>
                         <span className="text-xs text-amber-600">{new Date(order.created_at).toLocaleTimeString("en-MY", { hour: "2-digit", minute: "2-digit" })}</span>
                       </div>
-                      {order.profiles?.full_name && (
-                        <p className="mb-1 text-[11px] text-amber-800 font-medium truncate">Guest: {order.profiles.full_name}</p>
+                      {order.profiles?.[0]?.full_name && (
+                        <p className="mb-1 text-[11px] text-amber-800 font-medium truncate">Guest: {order.profiles[0].full_name}</p>
                       )}
                       {!order.customer_id && (
                         <p className="mb-1 text-[10px] text-amber-600">Guest not signed in</p>
@@ -443,8 +443,8 @@ export default function TableOrderView({ tableNumber, onClose, onOrdersUpdated }
                         <span className="text-xs font-medium text-emerald-700">Round {pending.length + idx + 1} · {order.order_number}</span>
                         <span className="text-xs text-emerald-500">{new Date(order.created_at).toLocaleTimeString("en-MY", { hour: "2-digit", minute: "2-digit" })}</span>
                       </div>
-                      {order.profiles?.full_name && (
-                        <p className="mb-1 text-[11px] text-emerald-800 font-medium truncate">Guest: {order.profiles.full_name}</p>
+                      {order.profiles?.[0]?.full_name && (
+                        <p className="mb-1 text-[11px] text-emerald-800 font-medium truncate">Guest: {order.profiles[0].full_name}</p>
                       )}
                       {!order.customer_id && (
                         <p className="mb-1 text-[10px] text-emerald-600">Guest not signed in</p>

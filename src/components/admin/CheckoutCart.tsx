@@ -54,6 +54,7 @@ export default function CheckoutCart({ items, subtotal, total, onUpdateQuantity,
   const [voucher, setVoucher] = useState<VoucherData | null>(null);
   const [lookingUpVoucher, setLookingUpVoucher] = useState(false);
   const [pending, setPending] = useState<PendingReceipt | null>(null);
+  const [tableNumber, setTableNumber] = useState("");
   const phoneRef = useRef<HTMLInputElement>(null);
 
   const voucherDiscount = voucher
@@ -123,6 +124,7 @@ export default function CheckoutCart({ items, subtotal, total, onUpdateQuantity,
         payment_method: paymentType,
         voucher_code: voucher?.code ?? null,
         discount_amount: voucherDiscount,
+        table_number: tableNumber.trim() || null,
       }),
     });
 
@@ -199,6 +201,17 @@ export default function CheckoutCart({ items, subtotal, total, onUpdateQuantity,
             </ul>
           )}
         </ScrollArea>
+
+        {/* Table Number */}
+        <div className="space-y-2 border-t border-zinc-200 px-4 py-3">
+          <p className="text-xs font-medium text-zinc-500">Table No. (optional)</p>
+          <Input
+            placeholder="Enter table number"
+            value={tableNumber}
+            onChange={(e) => setTableNumber(e.target.value)}
+            className="h-9 text-sm"
+          />
+        </div>
 
         {/* Customer */}
         <div className="space-y-2 border-t border-zinc-200 px-4 py-3">

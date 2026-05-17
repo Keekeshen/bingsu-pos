@@ -78,11 +78,14 @@ export default function CheckoutCart({ items, subtotal, total, onUpdateQuantity,
     if (!query) return;
     setLookingUp(true);
     setCustomer(null);
-    const supabase = createClient();
-    const { data, error } = await supabase.from("profiles").select("id, full_name, phone, loyalty_points").or(`phone.eq.${query},id.eq.${query}`).single();
-    setLookingUp(false);
-    if (error || !data) { toast.error("Customer not found"); return; }
-    setCustomer(data);
+    try {
+      const res = await fetch(`/api/lookup-customer?q=${encodeURIComponent(query)}`);
+      const data = await res.json();
+      if (!res.ok) { toast.error(data.error ?? "Customer not found"); return; }
+      setCustomer(data.customer);
+    } finally {
+      setLookingUp(false);
+    }
   }
 
   async function applyVoucherCode(code: string) {
@@ -347,6 +350,8 @@ export default function CheckoutCart({ items, subtotal, total, onUpdateQuantity,
           order={pending.order}
           items={pending.items}
           customerName={pending.customerName}
+          paymentMethod={pending.paymentMethod}
+          amountPaid={pending.amountPaid}
         />
       )}
     </>

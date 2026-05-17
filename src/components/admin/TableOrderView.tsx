@@ -72,6 +72,8 @@ export default function TableOrderView({ tableNumber, onClose, onOrdersUpdated }
     order: ReceiptOrder;
     items: ReceiptLineItem[];
     guestLabel: string;
+    paymentMethod: string;
+    amountPaid: number;
     tableBreakdown: { voucherDiscount: number; serviceCharge: number; rounding: number; payableTotal: number };
   } | null>(null);
 
@@ -123,6 +125,16 @@ export default function TableOrderView({ tableNumber, onClose, onOrdersUpdated }
 
   const pending = orders.filter(o => o.status === "pending");
   const served = orders.filter(o => o.status === "served");
+
+  // Auto-switch: if payment done (no pending) but still need delivery, show orders/delivery view
+  useEffect(() => {
+    if (!loading) {
+      if (pending.length === 0 && served.length > 0) setView("orders");
+      else if (pending.length > 0) setView("checkout");
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading, orders.length]);
+
   const allItems = orders.flatMap(o => o.order_items);
   const basketSubtotal = +allItems.reduce((s, i) => s + i.unit_price * i.quantity, 0).toFixed(2);
   const voucherDiscountRaw = voucher
@@ -141,18 +153,16 @@ export default function TableOrderView({ tableNumber, onClose, onOrdersUpdated }
     const q = customerInput.trim();
     if (!q) return;
     setCustomerBusy(true);
-    const supabase = createClient();
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("id, full_name, loyalty_points, phone")
-      .or(`phone.eq.${q},id.eq.${q}`)
-      .eq("role", "client")
-      .single();
-    setCustomerBusy(false);
-    if (error || !data) { toast.error("Customer not found"); return; }
-    setLinkedCustomer(data as LinkedCustomer);
-    setCustomerInput("");
-    toast.success(`Linked: ${data.full_name}`);
+    try {
+      const res = await fetch(`/api/lookup-customer?q=${encodeURIComponent(q)}`);
+      const data = await res.json();
+      if (!res.ok) { toast.error(data.error ?? "Customer not found"); return; }
+      setLinkedCustomer(data.customer as LinkedCustomer);
+      setCustomerInput("");
+      toast.success(`Linked: ${data.customer.full_name}`);
+    } finally {
+      setCustomerBusy(false);
+    }
   }
 
   function onCustomerScanned(c: ScannedCustomer) {
@@ -235,6 +245,7 @@ export default function TableOrderView({ tableNumber, onClose, onOrdersUpdated }
 
       const guestLabel = allGuestLabels.length > 0 ? allGuestLabels.join(", ") : "Walk-in";
 
+      const paidAmt = paymentType === "cash" ? paid : data.total;
       setReceiptData({
         order: {
           order_number: data.order_number,
@@ -246,6 +257,8 @@ export default function TableOrderView({ tableNumber, onClose, onOrdersUpdated }
         },
         items: receiptItems,
         guestLabel,
+        paymentMethod: paymentType === "cash" ? "CASH" : paymentType === "qr" ? "QR CODE" : "CARD",
+        amountPaid: paidAmt,
         tableBreakdown: {
           voucherDiscount: data.voucher_discount ?? 0,
           serviceCharge: data.service_charge ?? 0,
@@ -541,7 +554,10 @@ export default function TableOrderView({ tableNumber, onClose, onOrdersUpdated }
           onClose={() => { setReceiptOpen(false); setReceiptData(null); onClose(); }}
           order={receiptData.order}
           items={receiptData.items}
-          customerName={`Table ${tableNumber} · ${receiptData.guestLabel}`}
+          customerName={receiptData.guestLabel !== "Walk-in" ? receiptData.guestLabel : undefined}
+          paymentMethod={receiptData.paymentMethod}
+          amountPaid={receiptData.amountPaid}
+          tableNumber={tableNumber}
           tableBreakdown={receiptData.tableBreakdown}
         />
       )}

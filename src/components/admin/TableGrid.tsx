@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Users, Clock, CheckCircle2 } from "lucide-react";
+import { Users, Clock, CheckCircle2, UtensilsCrossed } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 
@@ -101,59 +101,49 @@ export default function TableGrid({ onSelectTable, selectedTable, refreshKey }: 
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
         {tables.map((table) => {
           const status = statuses[table.table_number];
+          // pending = unpaid orders. served = paid, awaiting delivery to table.
           const hasPending = (status?.pending ?? 0) > 0;
-          const hasServed = (status?.served ?? 0) > 0 && (status?.pending ?? 0) === 0;
+          const hasServedOnly = (status?.served ?? 0) > 0 && (status?.pending ?? 0) === 0;
+          const hasBoth = (status?.pending ?? 0) > 0 && (status?.served ?? 0) > 0;
           const isSelected = selectedTable === table.table_number;
 
           return (
             <button
               key={table.id}
-              onClick={() =>
-                onSelectTable(
-                  isSelected ? null : table.table_number
-                )
-              }
+              onClick={() => onSelectTable(isSelected ? null : table.table_number)}
               className={cn(
                 "relative flex flex-col items-start rounded-xl border p-3 text-left transition-all",
                 isSelected
                   ? "border-zinc-900 bg-zinc-900 text-white"
                   : hasPending
                   ? "border-amber-300 bg-amber-50 hover:border-amber-400"
-                  : hasServed
-                  ? "border-emerald-400 bg-emerald-50 hover:border-emerald-500"
+                  : hasServedOnly
+                  ? "border-violet-300 bg-violet-50 hover:border-violet-400"
                   : "border-zinc-200 bg-white hover:border-zinc-300"
               )}
             >
-              <span
-                className={cn(
-                  "text-lg font-bold",
-                  isSelected ? "text-white" : "text-zinc-900"
-                )}
-              >
+              <span className={cn("text-lg font-bold", isSelected ? "text-white" : "text-zinc-900")}>
                 {table.table_number}
               </span>
               {table.label && (
-                <span
-                  className={cn(
-                    "text-xs",
-                    isSelected ? "text-zinc-300" : "text-zinc-400"
-                  )}
-                >
+                <span className={cn("text-xs", isSelected ? "text-zinc-300" : "text-zinc-400")}>
                   {table.label}
                 </span>
               )}
-              <div className="mt-2 flex items-center gap-2">
-                {hasPending ? (
+              <div className="mt-2 flex flex-col gap-0.5">
+                {hasPending && (
                   <span className="flex items-center gap-1 text-xs font-medium text-amber-700">
                     <Clock className="h-3 w-3" />
-                    {status.pending} pending
+                    {status.pending} pending payment
                   </span>
-                ) : hasServed ? (
-                  <span className="flex items-center gap-1 text-xs font-medium text-emerald-600">
-                    <CheckCircle2 className="h-3 w-3" />
-                    Pay now
+                )}
+                {(hasBoth || hasServedOnly) && (
+                  <span className="flex items-center gap-1 text-xs font-medium text-violet-600">
+                    <UtensilsCrossed className="h-3 w-3" />
+                    {status.served} pending serve
                   </span>
-                ) : (
+                )}
+                {!hasPending && !hasServedOnly && (
                   <span className={cn("flex items-center gap-1 text-xs", isSelected ? "text-zinc-400" : "text-zinc-400")}>
                     <CheckCircle2 className="h-3 w-3" />
                     Available

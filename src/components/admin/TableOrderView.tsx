@@ -83,7 +83,7 @@ export default function TableOrderView({ tableNumber, onClose, onOrdersUpdated }
       .select("id, order_number, status, subtotal, total_amount, created_at, customer_id, order_items(id, product_name, quantity, unit_price, subtotal)")
       .eq("source", "table")
       .eq("table_number", tableNumber)
-      .in("status", ["pending", "served"])
+      .in("status", ["pending", "served"])   // pending=unpaid, served=paid pending delivery
       .order("created_at", { ascending: true });
     if (error) { toast.error("Failed to load orders"); setLoading(false); return; }
 
@@ -178,22 +178,22 @@ export default function TableOrderView({ tableNumber, onClose, onOrdersUpdated }
 
   function removeVoucher() { setVoucher(null); setVoucherInput(""); }
 
-  async function markServed(orderId: string) {
+  async function markDelivered(orderId: string) {
     setMarkingId(orderId);
     const supabase = createClient();
-    const { error } = await supabase.from("orders").update({ status: "served" }).eq("id", orderId);
+    const { error } = await supabase.from("orders").update({ status: "completed" }).eq("id", orderId);
     setMarkingId(null);
     if (error) { toast.error("Failed to update"); return; }
-    toast.success("Marked as served");
+    toast.success("Order delivered!");
     load(); onOrdersUpdated();
   }
 
-  async function markAllServed() {
-    if (!pending.length) return;
+  async function markAllDelivered() {
+    if (!served.length) return;
     const supabase = createClient();
-    const { error } = await supabase.from("orders").update({ status: "served" }).in("id", pending.map(o => o.id));
+    const { error } = await supabase.from("orders").update({ status: "completed" }).in("id", served.map(o => o.id));
     if (error) { toast.error("Failed to update"); return; }
-    toast.success("All marked as served");
+    toast.success("All orders delivered!");
     load(); onOrdersUpdated();
   }
 
@@ -219,6 +219,7 @@ export default function TableOrderView({ tableNumber, onClose, onOrdersUpdated }
           amount_paid: paid,
           voucher_code: voucher?.code ?? null,
           discount_amount: voucherDiscountRaw,
+          customer_id: linkedCustomer?.id ?? null,
         }),
       });
       const data = await res.json();
@@ -241,7 +242,7 @@ export default function TableOrderView({ tableNumber, onClose, onOrdersUpdated }
           subtotal: data.subtotal_before_discount,
           total_amount: data.total,
           points_redeemed: 0,
-          points_earned: 0,
+          points_earned: data.points_earned ?? 0,
         },
         items: receiptItems,
         guestLabel,
@@ -292,9 +293,10 @@ export default function TableOrderView({ tableNumber, onClose, onOrdersUpdated }
             </div>
           ) : (
             <>
+              {/* Pending payment – awaiting checkout */}
               {pending.length > 0 && (
                 <div>
-                  <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-amber-600">Preparing ({pending.length})</p>
+                  <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-amber-600">Pending Payment ({pending.length})</p>
                   <div className="space-y-2">
                     {pending.map((order, idx) => (
                       <div key={order.id} className="rounded-xl border border-amber-200 bg-amber-50 p-3">
@@ -302,7 +304,7 @@ export default function TableOrderView({ tableNumber, onClose, onOrdersUpdated }
                           <span className="text-xs font-semibold text-amber-800">Round {idx + 1} · {order.order_number}</span>
                           <span className="text-xs text-amber-600">{new Date(order.created_at).toLocaleTimeString("en-MY", { hour: "2-digit", minute: "2-digit" })}</span>
                         </div>
-                        <ul className="space-y-1 mb-2">
+                        <ul className="space-y-1">
                           {order.order_items.map(item => (
                             <li key={item.id} className="flex justify-between text-sm">
                               <span className="text-zinc-800">{item.quantity}x {item.product_name}</span>
@@ -310,37 +312,38 @@ export default function TableOrderView({ tableNumber, onClose, onOrdersUpdated }
                             </li>
                           ))}
                         </ul>
-                        <div className="flex items-center justify-between pt-1">
-                          <span className="text-xs font-semibold text-zinc-700">RM {order.total_amount.toFixed(2)}</span>
-                          <Button size="sm" disabled={markingId === order.id} onClick={() => markServed(order.id)}
-                            className="h-7 text-xs bg-zinc-900 hover:bg-zinc-700 text-white">
-                            <CheckCheck className="mr-1 h-3 w-3" />
-                            {markingId === order.id ? "Saving…" : "Served"}
-                          </Button>
-                        </div>
                       </div>
                     ))}
                   </div>
                 </div>
               )}
+              {/* Paid – awaiting delivery to table */}
               {served.length > 0 && (
                 <div>
-                  <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-emerald-600">Served ({served.length})</p>
+                  <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-violet-600">Paid – Pending Serve ({served.length})</p>
                   <div className="space-y-2">
                     {served.map((order, idx) => (
-                      <div key={order.id} className="rounded-xl border border-emerald-100 bg-emerald-50 p-3">
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="text-xs font-medium text-emerald-700">Round {pending.length + idx + 1} · {order.order_number}</span>
-                          <span className="text-xs text-emerald-500">{new Date(order.created_at).toLocaleTimeString("en-MY", { hour: "2-digit", minute: "2-digit" })}</span>
+                      <div key={order.id} className="rounded-xl border border-violet-200 bg-violet-50 p-3">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-xs font-medium text-violet-700">Round {pending.length + idx + 1} · {order.order_number}</span>
+                          <span className="text-xs text-violet-500">{new Date(order.created_at).toLocaleTimeString("en-MY", { hour: "2-digit", minute: "2-digit" })}</span>
                         </div>
-                        <ul className="space-y-0.5">
+                        <ul className="space-y-0.5 mb-2">
                           {order.order_items.map(item => (
-                            <li key={item.id} className="flex justify-between text-xs text-zinc-500">
+                            <li key={item.id} className="flex justify-between text-xs text-zinc-600">
                               <span>{item.quantity}x {item.product_name}</span>
                               <span className="tabular-nums">RM {item.subtotal.toFixed(2)}</span>
                             </li>
                           ))}
                         </ul>
+                        <div className="flex items-center justify-between pt-1">
+                          <span className="text-xs font-semibold text-zinc-700">RM {order.total_amount.toFixed(2)}</span>
+                          <Button size="sm" disabled={markingId === order.id} onClick={() => markDelivered(order.id)}
+                            className="h-7 text-xs bg-violet-700 hover:bg-violet-800 text-white">
+                            <CheckCheck className="mr-1 h-3 w-3" />
+                            {markingId === order.id ? "Saving…" : "Delivered"}
+                          </Button>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -351,9 +354,14 @@ export default function TableOrderView({ tableNumber, onClose, onOrdersUpdated }
         </div>
 
         <div className="border-t border-zinc-200 px-4 py-3 space-y-2">
+          {served.length > 0 && (
+            <Button className="w-full h-10 text-sm bg-violet-700 hover:bg-violet-800 text-white" onClick={markAllDelivered}>
+              <CheckCheck className="mr-2 h-4 w-4" /> Mark All as Delivered
+            </Button>
+          )}
           {pending.length > 0 && (
-            <Button variant="outline" className="w-full h-10 text-sm" onClick={markAllServed}>
-              <CheckCheck className="mr-2 h-4 w-4" /> Mark All as Served
+            <Button variant="outline" className="w-full h-10 text-sm" onClick={() => setView("checkout")}>
+              Process Payment ({pending.length} round{pending.length !== 1 ? "s" : ""})
             </Button>
           )}
         </div>

@@ -6,7 +6,7 @@ function err(message: string, status: number) {
   return NextResponse.json({ error: message }, { status });
 }
 
-type OrderRow = { id: string; order_number: string; subtotal: number };
+type OrderRow = { id: string; order_number: string; subtotal: number; customer_id: string | null };
 
 export async function POST(request: NextRequest) {
   try {
@@ -37,12 +37,13 @@ export async function POST(request: NextRequest) {
       return err("Missing table_number or payment_method", 400);
     }
 
+    // Only fetch PENDING orders (not yet paid) — served = already paid
     const { data: orders, error: fetchError } = await admin
       .from("orders")
-      .select("id, order_number, subtotal")
+      .select("id, order_number, subtotal, customer_id")
       .eq("table_number", tableNumber)
       .eq("source", "table")
-      .in("status", ["pending", "served"])
+      .eq("status", "pending")
       .order("created_at", { ascending: true });
 
     if (fetchError) {
@@ -115,9 +116,10 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Set to "served" = paid but awaiting food delivery. "completed" happens when admin marks delivered.
     for (const o of list) {
       const patch = {
-        status: "completed" as const,
+        status: "served" as const,
         payment_method: paymentMethod,
         voucher_code: voucherCodeRaw ? voucherCodeRaw : null,
         discount_amount: +(allocations[o.id] ?? 0).toFixed(2),
@@ -126,6 +128,33 @@ export async function POST(request: NextRequest) {
       if (updErr) {
         console.error("[table-checkout] update row:", updErr);
         return err("Failed to complete orders", 500);
+      }
+    }
+
+    // Award loyalty points to customer (use explicitly provided customer_id or fall back to first order's customer)
+    const explicitCustomerId = body.customer_id ? String(body.customer_id).trim() : null;
+    const orderCustomerId = list.find(o => o.customer_id)?.customer_id ?? null;
+    const rewardCustomerId = explicitCustomerId ?? orderCustomerId;
+
+    let pointsEarned = 0;
+    if (rewardCustomerId) {
+      const { data: loyaltyRule } = await admin
+        .from("loyalty_rules")
+        .select("points_per_rm, min_spend")
+        .eq("is_active", true)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .single();
+      const pointsPerRm = loyaltyRule?.points_per_rm ?? 1;
+      const meetsMinSpend = !loyaltyRule?.min_spend || totals.total >= loyaltyRule.min_spend;
+      if (meetsMinSpend) {
+        pointsEarned = Math.floor(totals.total * pointsPerRm);
+        if (pointsEarned > 0) {
+          const { data: profile } = await admin.from("profiles").select("loyalty_points").eq("id", rewardCustomerId).single();
+          if (profile) {
+            await admin.from("profiles").update({ loyalty_points: (profile.loyalty_points ?? 0) + pointsEarned }).eq("id", rewardCustomerId);
+          }
+        }
       }
     }
 
@@ -154,13 +183,15 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       order_number: list[0].order_number,
-      orders_completed: list.length,
+      orders_paid: list.length,
       subtotal_before_discount: basketSubtotal,
       voucher_discount: totals.voucherDiscountApplied,
       subtotal_after_discount: totals.taxableSubtotal,
       service_charge: totals.serviceCharge,
       rounding_adjustment: totals.rounding,
       total: totals.total,
+      points_earned: pointsEarned,
+      customer_id: rewardCustomerId,
     });
   } catch (e) {
     console.error("[table-checkout] unexpected:", e);

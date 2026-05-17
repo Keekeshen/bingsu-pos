@@ -21,6 +21,9 @@ type Order = {
   status: string;
   voucher_code: string | null;
   discount_amount: number;
+  payment_method: string | null;
+  table_number: string | null;
+  source: string | null;
   order_items: OrderItem[];
 };
 
@@ -46,7 +49,7 @@ export default async function HistoryPage() {
 
   const { data: orders } = await supabase
     .from("orders")
-    .select(`id, order_number, created_at, subtotal, total_amount, points_earned, status, voucher_code, discount_amount, order_items ( id, product_name, quantity, unit_price, subtotal )`)
+    .select(`id, order_number, created_at, subtotal, total_amount, points_earned, status, voucher_code, discount_amount, payment_method, table_number, source, order_items ( id, product_name, quantity, unit_price, subtotal )`)
     .eq("customer_id", user.id)
     .order("created_at", { ascending: false });
 
@@ -77,6 +80,9 @@ export default async function HistoryPage() {
                 items={order.order_items}
                 voucherCode={order.voucher_code}
                 discountAmount={order.discount_amount}
+                paymentMethod={order.payment_method}
+                tableNumber={order.table_number}
+                source={order.source}
               />
             </li>
           ))}

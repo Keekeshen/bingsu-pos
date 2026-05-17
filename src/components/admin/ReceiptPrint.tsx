@@ -3,6 +3,7 @@
 import { useRef, forwardRef } from "react";
 import { useReactToPrint } from "react-to-print";
 import { Printer } from "lucide-react";
+import { QRCodeSVG } from "qrcode.react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
@@ -46,9 +47,10 @@ const PAGE_STYLE = `
   * { box-sizing: border-box; }
 `;
 
+const FEEDBACK_URL = "https://bit.ly/4eNKmF7";
+
 export default function ReceiptPrint({ open, onClose, order, items, customerName, paymentMethod, amountPaid, tableNumber, tableBreakdown }: Props) {
   const receiptRef = useRef<HTMLDivElement>(null);
-
   const handlePrint = useReactToPrint({
     contentRef: receiptRef,
     pageStyle: PAGE_STYLE,
@@ -59,24 +61,11 @@ export default function ReceiptPrint({ open, onClose, order, items, customerName
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-w-sm gap-0 overflow-hidden p-0">
         <DialogHeader className="border-b border-zinc-100 px-6 pb-4 pt-6">
-          <DialogTitle className="flex items-center gap-2 text-base">
-            OK - Order Complete
-          </DialogTitle>
+          <DialogTitle className="text-base">OK - Order Complete</DialogTitle>
         </DialogHeader>
-
-        <div className="max-h-[58vh] overflow-y-auto bg-zinc-50 px-6 py-4">
-          <ReceiptContent
-            ref={receiptRef}
-            order={order}
-            items={items}
-            customerName={customerName}
-            paymentMethod={paymentMethod}
-            amountPaid={amountPaid}
-            tableNumber={tableNumber}
-            tableBreakdown={tableBreakdown}
-          />
+        <div className="max-h-[60vh] overflow-y-auto bg-zinc-50 px-6 py-4">
+          <ReceiptContent ref={receiptRef} order={order} items={items} customerName={customerName} paymentMethod={paymentMethod} amountPaid={amountPaid} tableNumber={tableNumber} tableBreakdown={tableBreakdown} />
         </div>
-
         <div className="flex gap-2 border-t border-zinc-100 px-6 py-4">
           <Button variant="outline" className="flex-1 gap-2" onClick={() => handlePrint()}>
             <Printer className="h-4 w-4" />Print Receipt
@@ -104,25 +93,26 @@ const ReceiptContent = forwardRef<HTMLDivElement, ContentProps>(
       day: "2-digit", month: "2-digit", year: "numeric",
       hour: "2-digit", minute: "2-digit", hour12: false,
     });
-
     const total = tableBreakdown ? tableBreakdown.payableTotal : order.total_amount;
     const paid = amountPaid ?? total;
     const change = paymentMethod?.toLowerCase() === "cash" ? +(paid - total).toFixed(2) : 0;
     const taxableBase = tableBreakdown
       ? +(tableBreakdown.payableTotal - tableBreakdown.serviceCharge - tableBreakdown.rounding).toFixed(2)
       : order.subtotal;
-
     const parts = order.order_number.split("-");
     const invoiceSeq = parts[parts.length - 1] ?? order.order_number;
 
     return (
-      <div ref={ref} className="receipt-root mx-auto w-[240px] bg-white font-mono text-[10px] text-black">
-        <div className="mb-1 text-center text-[9px] leading-tight text-zinc-500">
-          <p>57, Jalan SS 21/1a, Damansara Utama,</p>
-          <p>47400 Petaling Jaya, Selangor, Malaysia</p>
+      <div ref={ref} className="mx-auto w-[240px] bg-white font-mono text-[10px] text-black">
+        {/* Brand header */}
+        <div className="mb-1 text-center">
+          <p className="text-[15px] font-bold tracking-tight">Koori Dessert</p>
+          <p className="text-[9px] text-zinc-500">57, Jalan SS 21/1a, Damansara Utama,</p>
+          <p className="text-[9px] text-zinc-500">47400 Petaling Jaya, Selangor, Malaysia</p>
         </div>
         <Dashes />
 
+        {/* Invoice info */}
         <div className="flex justify-between items-start mb-1">
           <div className="space-y-0.5">
             <p><span className="text-zinc-500">Invoice no:</span> {order.order_number}</p>
@@ -138,9 +128,9 @@ const ReceiptContent = forwardRef<HTMLDivElement, ContentProps>(
         </div>
         <Dashes />
 
+        {/* Items */}
         <div className="flex justify-between font-bold text-[9px] mb-0.5">
-          <span>Qty  Item</span>
-          <span>Price (MYR)</span>
+          <span>Qty  Item</span><span>Price (MYR)</span>
         </div>
         <Dashes />
         <div className="space-y-1.5">
@@ -150,28 +140,25 @@ const ReceiptContent = forwardRef<HTMLDivElement, ContentProps>(
                 <span>{item.quantity}  {item.name} ({item.unit_price.toFixed(2)}/ea)</span>
                 <span className="tabular-nums">{item.subtotal.toFixed(2)}</span>
               </div>
-              <p className="text-zinc-400 pl-2 text-[9px]">{item.quantity} Qty</p>
+              <p className="pl-2 text-[9px] text-zinc-400">{item.quantity} Qty</p>
             </div>
           ))}
         </div>
         <Dashes />
 
+        {/* Totals */}
         <div className="space-y-0.5">
           <Row label="Subtotal" value={order.subtotal.toFixed(2)} />
           {tableBreakdown ? (
             <>
-              {tableBreakdown.voucherDiscount > 0 && (
-                <Row label="Voucher discount" value={`-${tableBreakdown.voucherDiscount.toFixed(2)}`} />
-              )}
+              {tableBreakdown.voucherDiscount > 0 && <Row label="Voucher discount" value={`-${tableBreakdown.voucherDiscount.toFixed(2)}`} />}
               <Row label="SERVICE CHARGE (10%)" value={tableBreakdown.serviceCharge.toFixed(2)} />
-              {tableBreakdown.rounding !== 0 && (
-                <Row label="Bill rounding" value={`${tableBreakdown.rounding >= 0 ? "+" : ""}${tableBreakdown.rounding.toFixed(2)}`} />
-              )}
+              {tableBreakdown.rounding !== 0 && <Row label="Bill rounding" value={`${tableBreakdown.rounding >= 0 ? "+" : ""}${tableBreakdown.rounding.toFixed(2)}`} />}
             </>
           ) : (
-            order.points_redeemed > 0 ? (
-              <Row label={`Points redeemed (${order.points_redeemed} pts)`} value={`-${(order.subtotal - order.total_amount).toFixed(2)}`} />
-            ) : null
+            order.points_redeemed > 0
+              ? <Row label={`Points redeemed (${order.points_redeemed} pts)`} value={`-${(order.subtotal - order.total_amount).toFixed(2)}`} />
+              : null
           )}
           <Dashes />
           <div className="flex justify-between font-bold">
@@ -180,23 +167,22 @@ const ReceiptContent = forwardRef<HTMLDivElement, ContentProps>(
           </div>
         </div>
 
+        {/* Payment */}
         {paymentMethod && (
           <>
             <div className="mt-1 space-y-0.5">
               <Row label={paymentMethod.toUpperCase()} value={paid.toFixed(2)} />
-              {paymentMethod.toLowerCase() === "cash" && (
-                <Row label="Change" value={change.toFixed(2)} />
-              )}
+              {paymentMethod.toLowerCase() === "cash" && <Row label="Change" value={change.toFixed(2)} />}
             </div>
             <Dashes />
           </>
         )}
 
+        {/* Tax summary (table) */}
         {tableBreakdown && tableBreakdown.serviceCharge > 0 && (
           <>
             <div className="flex justify-between font-bold text-[9px] mb-0.5">
-              <span>Tax &amp; Charges summary</span>
-              <span>Taxable Amount</span>
+              <span>Tax &amp; Charges summary</span><span>Taxable Amount</span>
             </div>
             <div className="flex justify-between text-[9px]">
               <span>SERVICE CHARGE 10%</span>
@@ -206,19 +192,25 @@ const ReceiptContent = forwardRef<HTMLDivElement, ContentProps>(
           </>
         )}
 
+        {/* Points */}
         {order.points_earned > 0 && (
           <>
-            <div className="text-center">
-              <p>[+] {order.points_earned} loyalty points earned</p>
-            </div>
+            <div className="text-center"><p>[+] {order.points_earned} loyalty points earned</p></div>
             <Dashes />
           </>
         )}
 
+        {/* Footer */}
         <div className="mt-1 text-center text-[9px] leading-snug text-zinc-500">
-          <p>Don&apos;t forget to rate us!</p>
-          <p>Thank you for visiting us</p>
-          <p>We hope to see you again soon!</p>
+          <p>Scan QR to rate us &amp; let us know</p>
+          <p>how you enjoyed your visit!</p>
+        </div>
+        <div className="my-2 flex justify-center">
+          <QRCodeSVG value={FEEDBACK_URL} size={72} />
+        </div>
+        <div className="text-center text-[9px] text-zinc-400">
+          <p>Thank you for visiting Koori Dessert!</p>
+          <p>We hope to see you again soon.</p>
         </div>
         <Dashes />
         <div className="mt-1 text-center text-[8px] text-zinc-400">

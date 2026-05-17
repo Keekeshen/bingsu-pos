@@ -13,36 +13,12 @@ export async function GET(request: Request) {
   if (me?.role !== "admin") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const admin = createAdminClient();
+  const { data: customer, error } = await admin.rpc("lookup_customer", { search_query: q });
 
-  // 1) Short ID prefix: first 8 chars of UUID shown in loyalty QR (e.g. "68D8CFC0")
-  if (q.length >= 6 && q.length <= 8) {
-    const byShortId = await admin
-      .from("profiles")
-      .select("id, full_name, loyalty_points, phone")
-      .filter("id::text", "ilike", `${q.toLowerCase()}%`)
-      .limit(1)
-      .maybeSingle();
-    if (byShortId.data) return NextResponse.json({ customer: byShortId.data });
+  if (error) {
+    console.error("[lookup-customer] rpc error:", error);
+    return NextResponse.json({ error: "Lookup failed" }, { status: 500 });
   }
-
-  // 2) Exact phone match
-  const byPhone = await admin
-    .from("profiles")
-    .select("id, full_name, loyalty_points, phone")
-    .eq("phone", q)
-    .maybeSingle();
-  if (byPhone.data) return NextResponse.json({ customer: byPhone.data });
-
-  // 3) Full UUID match
-  const uuidRe = /^[0-9a-f]{8}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{12}$/i;
-  if (uuidRe.test(q)) {
-    const byId = await admin
-      .from("profiles")
-      .select("id, full_name, loyalty_points, phone")
-      .eq("id", q)
-      .maybeSingle();
-    if (byId.data) return NextResponse.json({ customer: byId.data });
-  }
-
-  return NextResponse.json({ error: "Customer not found" }, { status: 404 });
+  if (!customer) return NextResponse.json({ error: "Customer not found" }, { status: 404 });
+  return NextResponse.json({ customer });
 }

@@ -18,6 +18,7 @@ type Customer = { id: string; full_name: string; phone: string | null; loyalty_p
 type VoucherData = { id: string; code: string; label: string; discount_type: string; discount_value: number; description: string | null; type: string };
 
 type PendingReceipt = {
+  tableNumber?: string;
   order: ReceiptOrder;
   items: ReceiptLineItem[];
   customerName?: string;
@@ -47,6 +48,7 @@ export default function CheckoutCart({ items, subtotal, total, onUpdateQuantity,
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [lookingUp, setLookingUp] = useState(false);
   const [charging, setCharging] = useState(false);
+  const [tableNumber, setTableNumber] = useState("");
   const [paymentType, setPaymentType] = useState<"cash" | "qr" | "card" | null>(null);
   const [amountReceived, setAmountReceived] = useState("");
   const [voucherCode, setVoucherCode] = useState("");
@@ -112,15 +114,9 @@ export default function CheckoutCart({ items, subtotal, total, onUpdateQuantity,
     if (!canCharge) return;
     setCharging(true);
 
-    const supabase = createClient();
-    const { data: { session } } = await supabase.auth.getSession();
-
     const res = await fetch("/api/checkout", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        ...(session?.access_token ? { "Authorization": `Bearer ${session.access_token}` } : {}),
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         items: items.map(({ product_id, name, price, quantity }) => ({ product_id, product_name: name, unit_price: price, quantity })),
         customer_id: customer?.id ?? null,
@@ -128,6 +124,7 @@ export default function CheckoutCart({ items, subtotal, total, onUpdateQuantity,
         payment_method: paymentType,
         voucher_code: voucher?.code ?? null,
         discount_amount: voucherDiscount,
+        table_number: tableNumber.trim() || null,
       }),
     });
 
@@ -158,6 +155,7 @@ export default function CheckoutCart({ items, subtotal, total, onUpdateQuantity,
       },
       items: items.map(i => ({ product_id: i.product_id, name: i.name, unit_price: i.price, quantity: i.quantity, subtotal: +(i.price * i.quantity).toFixed(2) })),
       customerName: customer?.full_name,
+      tableNumber: tableNumber.trim() || undefined,
       paymentMethod: paymentType === "cash" ? "Cash" : paymentType === "qr" ? "QR Code" : "Card",
       amountPaid: paid,
       change: paymentType === "cash" ? +(paid - discountedTotal).toFixed(2) : 0,
@@ -204,6 +202,17 @@ export default function CheckoutCart({ items, subtotal, total, onUpdateQuantity,
           )}
         </ScrollArea>
 
+        {/* Table Number */}
+        <div className="space-y-2 border-t border-zinc-200 px-4 py-3">
+          <p className="text-xs font-medium text-zinc-500">Table No. (optional)</p>
+          <input
+            type="text"
+            placeholder="e.g. 3"
+            value={tableNumber}
+            onChange={(e) => setTableNumber(e.target.value)}
+            className="h-9 w-full rounded-md border border-zinc-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900"
+          />
+        </div>
         {/* Customer */}
         <div className="space-y-2 border-t border-zinc-200 px-4 py-3">
           <p className="text-xs font-medium text-zinc-500">Customer (optional)</p>

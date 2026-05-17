@@ -2,13 +2,13 @@
 
 import { useRef, forwardRef } from "react";
 import { useReactToPrint } from "react-to-print";
-import { Printer, Zap } from "lucide-react";
+import { Printer, Zap, UtensilsCrossed } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { usePrinter } from "@/components/admin/PrinterProvider";
-import { buildReceiptBytes } from "@/lib/thermal-print";
+import { buildReceiptBytes, buildKitchenOrderBytes } from "@/lib/thermal-print";
 
 export type ReceiptOrder = {
   order_number: string;
@@ -54,7 +54,7 @@ const FEEDBACK_URL = "https://bit.ly/4eNKmF7";
 
 export default function ReceiptPrint({ open, onClose, order, items, customerName, paymentMethod, amountPaid, tableNumber, tableBreakdown }: Props) {
   const receiptRef = useRef<HTMLDivElement>(null);
-  const { connected, print } = usePrinter();
+  const { counter, kitchen } = usePrinter();
 
   const handlePrint = useReactToPrint({
     contentRef: receiptRef,
@@ -62,13 +62,14 @@ export default function ReceiptPrint({ open, onClose, order, items, customerName
     documentTitle: `Receipt-${order.order_number}`,
   });
 
-  async function handleThermalPrint() {
-    const total = tableBreakdown ? tableBreakdown.payableTotal : order.total_amount;
-    const dateStr = new Date(order.created_at).toLocaleString("en-MY", {
-      day: "2-digit", month: "2-digit", year: "numeric",
-      hour: "2-digit", minute: "2-digit", hour12: false,
-      timeZone: "Asia/Kuala_Lumpur",
-    });
+  const dateStr = new Date(order.created_at).toLocaleString("en-MY", {
+    day: "2-digit", month: "2-digit", year: "numeric",
+    hour: "2-digit", minute: "2-digit", hour12: false,
+    timeZone: "Asia/Kuala_Lumpur",
+  });
+  const total = tableBreakdown ? tableBreakdown.payableTotal : order.total_amount;
+
+  async function handleThermalReceipt() {
     const bytes = buildReceiptBytes({
       orderNumber: order.order_number,
       date: dateStr,
@@ -84,9 +85,21 @@ export default function ReceiptPrint({ open, onClose, order, items, customerName
       amountPaid,
       pointsEarned: order.points_earned,
     });
-    const ok = await print(bytes);
-    if (ok) toast.success("Printed to thermal printer!");
-    else toast.error("Print failed — check printer connection");
+    const ok = await counter.print(bytes);
+    if (ok) toast.success("Receipt printed!");
+    else toast.error("Counter printer not connected");
+  }
+
+  async function handleKitchenPrint() {
+    const bytes = buildKitchenOrderBytes({
+      orderNumber: order.order_number,
+      date: dateStr,
+      tableNumber,
+      items: items.map(i => ({ name: i.name, qty: i.quantity })),
+    });
+    const ok = await kitchen.print(bytes);
+    if (ok) toast.success("Sent to kitchen!");
+    else toast.error("Kitchen printer not connected");
   }
 
   return (
@@ -95,19 +108,29 @@ export default function ReceiptPrint({ open, onClose, order, items, customerName
         <DialogHeader className="border-b border-zinc-100 px-6 pb-4 pt-6">
           <DialogTitle className="text-base">OK - Order Complete</DialogTitle>
         </DialogHeader>
-        <div className="max-h-[58vh] overflow-y-auto bg-zinc-50 px-6 py-4">
+        <div className="max-h-[52vh] overflow-y-auto bg-zinc-50 px-6 py-4">
           <ReceiptContent ref={receiptRef} order={order} items={items} customerName={customerName} paymentMethod={paymentMethod} amountPaid={amountPaid} tableNumber={tableNumber} tableBreakdown={tableBreakdown} />
         </div>
-        <div className="flex gap-2 border-t border-zinc-100 px-6 py-4">
-          {connected && (
-            <Button variant="outline" className="flex-1 gap-2 border-emerald-300 text-emerald-700 hover:bg-emerald-50" onClick={handleThermalPrint}>
-              <Zap className="h-4 w-4" />Thermal Print
-            </Button>
-          )}
-          <Button variant="outline" className="flex-1 gap-2" onClick={() => handlePrint()}>
-            <Printer className="h-4 w-4" />Print Receipt
+        {/* Kitchen + Receipt print buttons */}
+        <div className="grid grid-cols-2 gap-2 border-t border-zinc-100 px-6 pt-3 pb-1">
+          <Button variant="outline"
+            className={`h-9 gap-1.5 text-xs ${kitchen.connected ? "border-orange-300 text-orange-600 hover:bg-orange-50" : "text-zinc-400"}`}
+            onClick={handleKitchenPrint}>
+            <UtensilsCrossed className="h-3.5 w-3.5" />
+            {kitchen.connected ? "Print Kitchen" : "Kitchen (offline)"}
           </Button>
-          <Button className="flex-1" onClick={onClose}>New Order</Button>
+          <Button variant="outline"
+            className={`h-9 gap-1.5 text-xs ${counter.connected ? "border-emerald-300 text-emerald-600 hover:bg-emerald-50" : "text-zinc-400"}`}
+            onClick={handleThermalReceipt}>
+            <Zap className="h-3.5 w-3.5" />
+            {counter.connected ? "Thermal Receipt" : "Counter (offline)"}
+          </Button>
+        </div>
+        <div className="flex gap-2 px-6 pb-4 pt-2">
+          <Button variant="outline" className="flex-1 gap-2 text-sm" onClick={() => handlePrint()}>
+            <Printer className="h-4 w-4" />Print
+          </Button>
+          <Button className="flex-1 text-sm" onClick={onClose}>New Order</Button>
         </div>
       </DialogContent>
     </Dialog>
@@ -245,9 +268,7 @@ const ReceiptContent = forwardRef<HTMLDivElement, ContentProps>(
   }
 );
 
-function Dashes() {
-  return <hr className="my-1 border-t border-dashed border-zinc-300" />;
-}
+function Dashes() { return <hr className="my-1 border-t border-dashed border-zinc-300" />; }
 function Row({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex justify-between gap-2">

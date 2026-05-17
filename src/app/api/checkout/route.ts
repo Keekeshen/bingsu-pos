@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createAdminClient } from "@/lib/supabase/server";
+import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { generateOrderNumber } from "@/lib/order-number";
 
 type OrderItemInput = {
@@ -15,6 +15,7 @@ type CheckoutBody = {
   points_redeemed?: number;
   payment_method?: string | null;
   voucher_code?: string | null;
+  table_number?: string | null;
   discount_amount?: number;
 };
 
@@ -46,16 +47,14 @@ export async function POST(request: NextRequest) {
     try { body = await request.json(); } catch { return err("Invalid JSON body", 400); }
     if (!validateBody(body)) return err("Invalid request body", 400);
 
-    const { items, customer_id = null, points_redeemed = 0, payment_method = null, voucher_code = null, discount_amount = 0 } = body;
+    const { items, customer_id = null, points_redeemed = 0, payment_method = null, voucher_code = null, discount_amount = 0, table_number = null } = body;
 
-    const authHeader = request.headers.get("Authorization");
-    const token = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null;
-    if (!token) return err("Unauthorized", 401);
+    // Cookie-based auth — works reliably on all browsers including Android Chrome
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return err("Unauthorized", 401);
 
     const admin = createAdminClient();
-    const { data: { user }, error: userError } = await admin.auth.getUser(token);
-    if (userError || !user) return err("Unauthorized", 401);
-
     const { data: profile } = await admin.from("profiles").select("role").eq("id", user.id).single();
     if (profile?.role !== "admin") return err("Forbidden: admin role required", 403);
 
@@ -84,7 +83,7 @@ export async function POST(request: NextRequest) {
     const orderNumber = await generateOrderNumber();
     const { data: order, error: orderError } = await admin
       .from("orders")
-      .insert({ order_number: orderNumber, admin_id: user.id, customer_id, subtotal, points_redeemed, total_amount: totalAmount, status: "completed", payment_method: payment_method ? String(payment_method) : null, voucher_code: voucher_code ? String(voucher_code) : null, discount_amount: voucherDiscountAmount })
+      .insert({ order_number: orderNumber, admin_id: user.id, customer_id, subtotal, points_redeemed, total_amount: totalAmount, status: "completed", payment_method: payment_method ? String(payment_method) : null, voucher_code: voucher_code ? String(voucher_code) : null, discount_amount: voucherDiscountAmount, table_number: table_number ? String(table_number) : null })
       .select("id, order_number, created_at")
       .single();
 

@@ -10,32 +10,37 @@ import { Button } from "@/components/ui/button";
 import { PrinterProvider, usePrinter } from "@/components/admin/PrinterProvider";
 
 const NAV_ITEMS = [
-  { label: "POS", href: "/admin/pos", icon: ShoppingCart },
-  { label: "Tables", href: "/admin/tables", icon: LayoutGrid },
-  { label: "Reports", href: "/admin/reports", icon: BarChart2 },
-  { label: "Loyalty", href: "/admin/loyalty", icon: Gift },
-  { label: "Products", href: "/admin/products", icon: Package },
+  { label: "POS",      href: "/admin/pos",      icon: ShoppingCart },
+  { label: "Tables",   href: "/admin/tables",   icon: LayoutGrid   },
+  { label: "Reports",  href: "/admin/reports",  icon: BarChart2    },
+  { label: "Loyalty",  href: "/admin/loyalty",  icon: Gift         },
+  { label: "Products", href: "/admin/products", icon: Package      },
 ] as const;
 
-function PrinterButton() {
-  const { connected, connecting, connect, disconnect } = usePrinter();
+function PrinterBtn({ type }: { type: "counter" | "kitchen" }) {
+  const { counter, kitchen } = usePrinter();
+  const p = type === "counter" ? counter : kitchen;
+  const label = type === "counter" ? "Counter Printer" : "Kitchen Printer";
+  const color = type === "counter" ? "emerald" : "orange";
   return (
     <Button
       variant="ghost"
-      onClick={connected ? disconnect : connect}
-      disabled={connecting}
-      title={connected ? "Printer connected — click to disconnect" : "Connect thermal printer"}
+      onClick={p.connected ? p.disconnect : p.connect}
+      disabled={p.connecting}
+      title={p.connected ? `${label} connected — click to disconnect` : `Connect ${label}`}
       className={cn(
-        "flex h-11 w-full items-center justify-start gap-3 rounded-lg px-3",
-        "text-sm font-medium",
-        connected
-          ? "text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700"
-          : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900"
+        "flex h-10 w-full items-center justify-start gap-3 rounded-lg px-3",
+        "text-xs font-medium",
+        p.connected
+          ? color === "emerald"
+            ? "text-emerald-600 hover:bg-emerald-50"
+            : "text-orange-500 hover:bg-orange-50"
+          : "text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900"
       )}
     >
-      {connected ? <Printer className="h-5 w-5 flex-shrink-0" /> : <Unplug className="h-5 w-5 flex-shrink-0" />}
+      {p.connected ? <Printer className="h-4 w-4 flex-shrink-0" /> : <Unplug className="h-4 w-4 flex-shrink-0" />}
       <span className="hidden md:block">
-        {connecting ? "Connecting…" : connected ? "Printer On" : "Connect Printer"}
+        {p.connecting ? "Connecting…" : p.connected ? `${label} ON` : label}
       </span>
     </Button>
   );
@@ -65,15 +70,10 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
             {NAV_ITEMS.map(({ label, href, icon: Icon }) => {
               const active = pathname === href || pathname.startsWith(`${href}/`);
               return (
-                <Link
-                  key={href}
-                  href={href}
-                  title={label}
+                <Link key={href} href={href} title={label}
                   className={cn(
                     "flex h-11 items-center gap-3 rounded-lg px-3 text-sm font-medium transition-colors",
-                    active
-                      ? "bg-zinc-900 text-white"
-                      : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900"
+                    active ? "bg-zinc-900 text-white" : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900"
                   )}
                 >
                   <Icon className="h-5 w-5 flex-shrink-0" />
@@ -83,18 +83,12 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
             })}
           </nav>
 
-          <div className="border-t border-zinc-200 p-2 space-y-1">
-            <PrinterButton />
-            <Button
-              variant="ghost"
-              onClick={handleSignOut}
-              title="Sign out"
-              className={cn(
-                "flex h-11 w-full items-center justify-start gap-3 rounded-lg px-3",
-                "text-sm font-medium text-zinc-600 hover:bg-red-50 hover:text-red-600"
-              )}
-            >
-              <LogOut className="h-5 w-5 flex-shrink-0" />
+          <div className="border-t border-zinc-200 p-2 space-y-0.5">
+            <PrinterBtn type="counter" />
+            <PrinterBtn type="kitchen" />
+            <Button variant="ghost" onClick={handleSignOut} title="Sign out"
+              className="flex h-10 w-full items-center justify-start gap-3 rounded-lg px-3 text-xs font-medium text-zinc-600 hover:bg-red-50 hover:text-red-600">
+              <LogOut className="h-4 w-4 flex-shrink-0" />
               <span className="hidden md:block">Sign out</span>
             </Button>
           </div>

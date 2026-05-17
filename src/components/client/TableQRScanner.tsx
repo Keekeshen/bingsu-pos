@@ -28,20 +28,6 @@ export default function TableQRScanner() {
     lastRef.current = null;
   }, []);
 
-  const start = useCallback(async () => {
-    setStatus("requesting");
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" } }, audio: false });
-      streamRef.current = stream;
-      if (videoRef.current) { videoRef.current.srcObject = stream; await videoRef.current.play().catch(() => {}); }
-      setStatus("scanning");
-      lastRef.current = null;
-      intervalRef.current = setInterval(decode, SCAN_INTERVAL_MS);
-    } catch {
-      setStatus("error");
-      setErrorMsg("Camera access denied. Please allow camera and try again.");
-    }
-
   function decode() {
     const video = videoRef.current;
     const canvas = canvasRef.current;
@@ -69,9 +55,24 @@ export default function TableQRScanner() {
       router.push(`/order/${slug}`);
       return;
     }
-
     setTimeout(() => { lastRef.current = null; }, 2000);
   }
+
+  const start = useCallback(async () => {
+    setStatus("requesting");
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" } }, audio: false });
+      streamRef.current = stream;
+      if (videoRef.current) { videoRef.current.srcObject = stream; await videoRef.current.play().catch(() => {}); }
+      setStatus("scanning");
+      lastRef.current = null;
+      intervalRef.current = setInterval(decode, SCAN_INTERVAL_MS);
+    } catch {
+      setStatus("error");
+      setErrorMsg("Camera access denied. Please allow camera and try again.");
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stop]);
 
   function handleOpen() { setOpen(true); setStatus("idle"); setErrorMsg(""); }
   function handleClose() { stop(); setOpen(false); setStatus("idle"); }
@@ -95,7 +96,6 @@ export default function TableQRScanner() {
 
       {open && (
         <div className="fixed inset-0 z-50 flex flex-col bg-black">
-          {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 bg-black/80">
             <p className="text-sm font-semibold text-white">Scan Table QR Code</p>
             <button onClick={handleClose} className="rounded-full p-1.5 text-white hover:bg-white/10">
@@ -103,7 +103,6 @@ export default function TableQRScanner() {
             </button>
           </div>
 
-          {/* Camera */}
           <div className="relative flex-1 overflow-hidden">
             <video ref={videoRef} className="h-full w-full object-cover" playsInline muted />
             <canvas ref={canvasRef} className="hidden" />

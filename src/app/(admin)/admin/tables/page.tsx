@@ -204,7 +204,7 @@ export default function TablesPage() {
                 className="rounded-2xl border border-zinc-200 bg-white p-5"
               >
                 <QRCodeSVG
-                  value={`${origin}/order/${qrTable.table_number}`}
+                  value={`${origin}/order/${qrTable.id}`}
                   size={200}
                   level="M"
                   includeMargin={false}
@@ -212,7 +212,7 @@ export default function TablesPage() {
               </div>
               <div className="text-center">
                 <p className="text-xs text-zinc-500 break-all">
-                  {origin}/order/{qrTable.table_number}
+                  {origin}/order/{qrTable.id}
                 </p>
               </div>
               <div className="flex gap-2 w-full">
@@ -227,7 +227,7 @@ export default function TablesPage() {
                 <Button
                   variant="outline"
                   className="flex-1"
-                  onClick={() => window.open(`${origin}/order/${qrTable.table_number}`, "_blank")}
+                  onClick={() => window.open(`${origin}/order/${qrTable.id}`, "_blank")}
                 >
                   Preview
                 </Button>

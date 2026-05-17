@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/server";
 import { generateOrderNumber } from "@/lib/order-number";
 
+const TABLE_SLUG_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
 function err(msg: string, status: number) {
   return NextResponse.json({ error: msg }, { status });
 }
@@ -16,8 +19,10 @@ export async function POST(request: NextRequest) {
       return err("Invalid JSON", 400);
     }
 
-    const tableNumber = String(body.table_number ?? "").trim();
-    if (!tableNumber) return err("Missing table_number", 400);
+    const tableSlugRaw = typeof body.table_slug === "string" ? body.table_slug.trim() : "";
+    if (!tableSlugRaw || !TABLE_SLUG_RE.test(tableSlugRaw)) {
+      return err("Missing or invalid table_slug", 400);
+    }
 
     const rawItems = body.items;
     if (!Array.isArray(rawItems) || rawItems.length === 0) {
@@ -39,6 +44,17 @@ export async function POST(request: NextRequest) {
 
     const customerId = body.customer_id ? String(body.customer_id) : null;
     const admin = createAdminClient();
+
+    const { data: tableRow } = await admin
+      .from("tables")
+      .select("table_number")
+      .eq("id", tableSlugRaw)
+      .maybeSingle();
+
+    if (!tableRow?.table_number) return err("Table not found", 404);
+
+    const tableNumber = String(tableRow.table_number);
+
     const subtotal = +items.reduce((s, i) => s + i.unit_price * i.quantity, 0).toFixed(2);
     const orderNumber = await generateOrderNumber();
 

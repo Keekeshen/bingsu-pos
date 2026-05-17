@@ -1,12 +1,15 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { CheckCheck, X, RefreshCw, Clock, ArrowLeft, Banknote, QrCode, CreditCard } from "lucide-react";
+import { CheckCheck, X, RefreshCw, Clock, ArrowLeft, Banknote, QrCode, CreditCard, Ticket, UserRound } from "lucide-react";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import ReceiptPrint, { ReceiptOrder, ReceiptLineItem } from "@/components/admin/ReceiptPrint";
+import VoucherScanner from "@/components/admin/VoucherScanner";
+import { computeVoucherDiscount, tableBillTotals, TABLE_SERVICE_CHARGE_PCT } from "@/lib/voucher-utils";
 
 type OrderItem = {
   id: string;
@@ -23,7 +26,17 @@ type Order = {
   subtotal: number;
   total_amount: number;
   created_at: string;
+  customer_id: string | null;
+  profiles: { full_name: string } | null;
   order_items: OrderItem[];
+};
+
+type VoucherData = {
+  id: string;
+  code: string;
+  label: string;
+  discount_type: string;
+  discount_value: number;
 };
 
 type Props = {
@@ -31,8 +44,6 @@ type Props = {
   onClose: () => void;
   onOrdersUpdated: () => void;
 };
-
-const SERVICE_CHARGE_PCT = 10;
 
 export default function TableOrderView({ tableNumber, onClose, onOrdersUpdated }: Props) {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -43,6 +54,9 @@ export default function TableOrderView({ tableNumber, onClose, onOrdersUpdated }
   const [amountPaid, setAmountPaid] = useState("");
   const [charging, setCharging] = useState(false);
   const [receiptOpen, setReceiptOpen] = useState(false);
+  const [voucherInput, setVoucherInput] = useState("");
+  const [voucher, setVoucher] = useState<VoucherData | null>(null);
+  const [voucherBusy, setVoucherBusy] = useState(false);
   const [receiptData, setReceiptData] = useState<{
     order: ReceiptOrder;
     items: ReceiptLineItem[];
@@ -50,8 +64,8 @@ export default function TableOrderView({ tableNumber, onClose, onOrdersUpdated }
     amountPaid: number;
     change: number;
     tableNumber: string;
-    serviceCharge: number;
-    rounding: number;
+    tableBreakdown: { voucherDiscount: number; serviceCharge: number; rounding: number; payableTotal: number };
+    guestNamesLabel: string;
   } | null>(null);
 
   const load = useCallback(async () => {
@@ -59,7 +73,7 @@ export default function TableOrderView({ tableNumber, onClose, onOrdersUpdated }
     const supabase = createClient();
     const { data, error } = await supabase
       .from("orders")
-      .select("id, order_number, status, subtotal, total_amount, created_at, order_items(id, product_name, quantity, unit_price, subtotal)")
+      .select("id, order_number, status, subtotal, total_amount, created_at, customer_id, profiles!customer_id(full_name), order_items(id, product_name, quantity, unit_price, subtotal)")
       .eq("source", "table")
       .eq("table_number", tableNumber)
       .in("status", ["pending", "served"])
@@ -82,13 +96,44 @@ export default function TableOrderView({ tableNumber, onClose, onOrdersUpdated }
 
   const pending = orders.filter(o => o.status === "pending");
   const served = orders.filter(o => o.status === "served");
+
   const allItems = orders.flatMap(o => o.order_items);
-  const subtotal = +allItems.reduce((s, i) => s + i.unit_price * i.quantity, 0).toFixed(2);
-  const serviceCharge = +(subtotal * SERVICE_CHARGE_PCT / 100).toFixed(2);
-  const rawTotal = +(subtotal + serviceCharge).toFixed(2);
-  const rounded = Math.round(rawTotal * 20) / 20;
-  const rounding = +(rounded - rawTotal).toFixed(2);
-  const total = rounded;
+
+  /** Sum of POS line subtotals for all open rounds (before table service charge & voucher). */
+  const basketSubtotal = +allItems.reduce((s, i) => s + i.unit_price * i.quantity, 0).toFixed(2);
+
+  const voucherDiscountRaw = voucher
+    ? computeVoucherDiscount(basketSubtotal, { discount_type: voucher.discount_type, discount_value: voucher.discount_value })
+    : 0;
+
+  const bill = tableBillTotals(basketSubtotal, voucherDiscountRaw);
+  const total = bill.total;
+
+  const guestLabels = Array.from(
+    new Set(
+      orders
+        .filter((o) => o.customer_id && o.profiles?.full_name?.trim())
+        .map((o) => String(o.profiles?.full_name).trim())
+    )
+  );
+
+  async function applyVoucherCode(code: string) {
+    const trimmed = code.trim().toUpperCase();
+    if (!trimmed) return;
+    setVoucherBusy(true);
+    try {
+      const res = await fetch(`/api/voucher?code=${encodeURIComponent(trimmed)}`);
+      const data = await res.json();
+      if (!res.ok) { toast.error(data.error ?? "Invalid voucher"); return; }
+      setVoucher(data.voucher);
+      setVoucherInput(trimmed);
+      toast.success(`Voucher applied: ${data.voucher.label}`);
+    } finally {
+      setVoucherBusy(false);
+    }
+  }
+
+  function removeVoucher() { setVoucher(null); setVoucherInput(""); }
 
   async function markServed(orderId: string) {
     setMarkingId(orderId);
@@ -117,10 +162,21 @@ export default function TableOrderView({ tableNumber, onClose, onOrdersUpdated }
     }
     setCharging(true);
     try {
+      const supabase = createClient();
+      const { data: { session } } = await supabase.auth.getSession();
       const res = await fetch("/api/table-checkout", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ table_number: tableNumber, payment_method: paymentType, amount_paid: paid }),
+        headers: {
+          "Content-Type": "application/json",
+          ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
+        },
+        body: JSON.stringify({
+          table_number: tableNumber,
+          payment_method: paymentType,
+          amount_paid: paid,
+          voucher_code: voucher?.code ?? null,
+          discount_amount: voucherDiscountRaw,
+        }),
       });
       const data = await res.json();
       if (!res.ok) { toast.error(data.error ?? "Checkout failed"); return; }
@@ -132,18 +188,36 @@ export default function TableOrderView({ tableNumber, onClose, onOrdersUpdated }
         quantity: i.quantity,
         subtotal: +(i.unit_price * i.quantity).toFixed(2),
       }));
+
+      const guestNamesLabel =
+        guestLabels.length > 0 ? guestLabels.join(", ") : "Walk-in";
+
       setReceiptData({
-        order: { order_number: data.order_number, created_at: new Date().toISOString(), subtotal, total_amount: total, points_redeemed: 0, points_earned: 0 },
+        order: {
+          order_number: data.order_number,
+          created_at: new Date().toISOString(),
+          subtotal: data.subtotal_before_discount,
+          total_amount: data.total,
+          points_redeemed: 0,
+          points_earned: 0,
+        },
         items: receiptItems,
         paymentMethod: paymentType === "cash" ? "Cash" : paymentType === "qr" ? "QR Code" : "Card",
         amountPaid: paid,
-        change: +(paid - total).toFixed(2),
+        change: +(paid - data.total).toFixed(2),
         tableNumber,
-        serviceCharge,
-        rounding,
+        tableBreakdown: {
+          voucherDiscount: data.voucher_discount ?? 0,
+          serviceCharge: data.service_charge ?? 0,
+          rounding: data.rounding_adjustment ?? 0,
+          payableTotal: data.total,
+        },
+        guestNamesLabel,
       });
       setReceiptOpen(true);
       toast.success("Payment processed!");
+      setVoucher(null);
+      setVoucherInput("");
       onOrdersUpdated();
     } finally {
       setCharging(false);
@@ -161,25 +235,24 @@ export default function TableOrderView({ tableNumber, onClose, onOrdersUpdated }
     return (
       <div className="flex h-full flex-col">
         <div className="flex items-center gap-2 border-b border-zinc-200 px-4 py-3">
-          <button onClick={() => setView("orders")} className="rounded p-1 text-zinc-400 hover:bg-zinc-100">
+          <button type="button" onClick={() => setView("orders")} className="rounded p-1 text-zinc-400 hover:bg-zinc-100">
             <ArrowLeft className="h-4 w-4" />
           </button>
-          <div>
+          <div className="min-w-0">
             <h2 className="text-sm font-bold text-zinc-900">Table {tableNumber} — Payment</h2>
-            <p className="text-xs text-zinc-400">RM {total.toFixed(2)} due</p>
+            <p className="text-xs text-zinc-400 truncate">Guests: {guestLabels.length ? guestLabels.join(", ") : "Walk-in"}</p>
           </div>
-          <button onClick={onClose} className="ml-auto rounded p-1 text-zinc-400 hover:bg-zinc-100">
+          <button type="button" onClick={onClose} className="ml-auto shrink-0 rounded p-1 text-zinc-400 hover:bg-zinc-100">
             <X className="h-3.5 w-3.5" />
           </button>
         </div>
 
         <div className="flex-1 overflow-y-auto px-4 py-3 space-y-4">
-          {/* Order summary */}
           <div className="rounded-xl border border-zinc-200 bg-white p-3">
             <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-zinc-400">Order Summary</p>
             <div className="space-y-1.5">
               {allItems.map((item, idx) => (
-                <div key={idx} className="flex justify-between text-sm">
+                <div key={`${item.id}-${idx}`} className="flex justify-between text-sm">
                   <span className="text-zinc-700">{item.quantity}× {item.product_name}</span>
                   <span className="tabular-nums text-zinc-600">RM {(item.unit_price * item.quantity).toFixed(2)}</span>
                 </div>
@@ -187,20 +260,61 @@ export default function TableOrderView({ tableNumber, onClose, onOrdersUpdated }
             </div>
             <Separator className="my-2" />
             <div className="space-y-1">
-              <div className="flex justify-between text-sm text-zinc-500"><span>Subtotal</span><span>RM {subtotal.toFixed(2)}</span></div>
-              <div className="flex justify-between text-sm text-zinc-500"><span>Service Charge ({SERVICE_CHARGE_PCT}%)</span><span>RM {serviceCharge.toFixed(2)}</span></div>
-              {rounding !== 0 && <div className="flex justify-between text-sm text-zinc-500"><span>Rounding</span><span>RM {rounding.toFixed(2)}</span></div>}
-              <div className="flex justify-between text-base font-bold text-zinc-900 pt-1"><span>Total</span><span>RM {total.toFixed(2)}</span></div>
+              <div className="flex justify-between text-sm text-zinc-500"><span>Subtotal (items)</span><span className="tabular-nums">RM {basketSubtotal.toFixed(2)}</span></div>
+              {voucherDiscountRaw > 0 && (
+                <div className="flex justify-between text-sm text-emerald-600"><span>Voucher{voucher?.label ? ` (${voucher.label})` : ""}</span><span className="tabular-nums">-RM {voucherDiscountRaw.toFixed(2)}</span></div>
+              )}
+              <div className="flex justify-between text-sm text-zinc-500"><span>Subtotal after voucher</span><span className="tabular-nums">RM {bill.taxableSubtotal.toFixed(2)}</span></div>
+              <div className="flex justify-between text-sm text-zinc-500"><span>Service charge ({TABLE_SERVICE_CHARGE_PCT}%)</span><span className="tabular-nums">RM {bill.serviceCharge.toFixed(2)}</span></div>
+              {bill.rounding !== 0 && <div className="flex justify-between text-sm text-zinc-500"><span>Rounding</span><span className="tabular-nums">{bill.rounding >= 0 ? "+" : "-"}RM {Math.abs(bill.rounding).toFixed(2)}</span></div>}
+              <div className="flex justify-between text-base font-bold text-zinc-900 pt-1"><span>Total Due</span><span className="tabular-nums">RM {total.toFixed(2)}</span></div>
             </div>
           </div>
 
-          {/* Payment method */}
+          {/* Voucher */}
+          <div className="rounded-xl border border-zinc-200 bg-white p-3 space-y-2">
+            <p className="text-xs font-semibold uppercase tracking-wider text-zinc-400">Voucher</p>
+            {voucher ? (
+              <div className="flex items-center gap-2">
+                <div className="flex flex-1 min-w-0 items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2">
+                  <Ticket className="h-4 w-4 shrink-0 text-emerald-600" />
+                  <div className="min-w-0">
+                    <p className="truncate text-xs font-semibold text-emerald-800">{voucher.label}</p>
+                    <p className="truncate font-mono text-[10px] text-emerald-600">{voucher.code}</p>
+                  </div>
+                </div>
+                <Button type="button" size="sm" variant="outline" className="h-8 shrink-0" onClick={removeVoucher}>Remove</Button>
+              </div>
+            ) : (
+              <>
+                <div className="flex gap-2">
+                  <Input
+                    value={voucherInput}
+                    onChange={(e) => setVoucherInput(e.target.value.toUpperCase())}
+                    placeholder="Voucher code"
+                    className="h-9 text-xs"
+                    onKeyDown={(e) => e.key === "Enter" && applyVoucherCode(voucherInput)}
+                  />
+                  <Button type="button" size="sm" className="h-9 shrink-0 px-3" variant="outline" disabled={voucherBusy} onClick={() => applyVoucherCode(voucherInput)}>
+                    Apply
+                  </Button>
+                  <VoucherScanner onCodeScanned={applyVoucherCode} trigger={<Button type="button" size="sm" variant="outline" className="h-9 shrink-0 px-2"><QrCode className="h-4 w-4" /></Button>} />
+                </div>
+                <p className="text-[10px] text-zinc-400">Applied to item subtotal before service charge ({TABLE_SERVICE_CHARGE_PCT}%). One voucher per checkout.</p>
+              </>
+            )}
+          </div>
+
           <div>
             <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-zinc-400">Payment Method</p>
             <div className="grid grid-cols-3 gap-2">
               {(["cash", "qr", "card"] as const).map(t => (
-                <button key={t} onClick={() => setPaymentType(t)}
-                  className={`flex flex-col items-center gap-1.5 rounded-xl border-2 py-3 transition-all ${paymentType === t ? "border-zinc-900 bg-zinc-900 text-white" : "border-zinc-200 bg-white text-zinc-600 hover:border-zinc-400"}`}>
+                <button
+                  key={t}
+                  type="button"
+                  onClick={() => setPaymentType(t)}
+                  className={`flex flex-col items-center gap-1.5 rounded-xl border-2 py-3 transition-all ${paymentType === t ? "border-zinc-900 bg-zinc-900 text-white" : "border-zinc-200 bg-white text-zinc-600 hover:border-zinc-400"}`}
+                >
                   {t === "cash" ? <Banknote className="h-5 w-5" /> : t === "qr" ? <QrCode className="h-5 w-5" /> : <CreditCard className="h-5 w-5" />}
                   <span className="text-xs font-medium">{t === "cash" ? "Cash" : t === "qr" ? "QR Code" : "Card"}</span>
                 </button>
@@ -208,18 +322,20 @@ export default function TableOrderView({ tableNumber, onClose, onOrdersUpdated }
             </div>
           </div>
 
-          {/* Cash input */}
           {paymentType === "cash" && (
             <div className="space-y-2">
               <p className="text-xs font-semibold uppercase tracking-wider text-zinc-400">Amount Received (RM)</p>
-              <input
-                type="number" min={total} step="0.10" value={amountPaid}
-                onChange={e => setAmountPaid(e.target.value)}
+              <Input
+                type="number"
+                min={total}
+                step="0.10"
+                value={amountPaid}
+                onChange={(e) => setAmountPaid(e.target.value)}
                 placeholder={total.toFixed(2)}
-                className="w-full rounded-lg border border-zinc-300 px-3 py-2.5 text-xl font-bold focus:outline-none focus:ring-2 focus:ring-zinc-900"
+                className="text-xl font-bold"
               />
               {change !== null && (
-                <div className="flex items-center justify-between rounded-lg bg-emerald-50 border border-emerald-200 px-3 py-2.5">
+                <div className="flex items-center justify-between rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2.5">
                   <span className="text-sm font-semibold text-emerald-700">Change</span>
                   <span className="text-lg font-bold text-emerald-700">RM {change.toFixed(2)}</span>
                 </div>
@@ -237,32 +353,37 @@ export default function TableOrderView({ tableNumber, onClose, onOrdersUpdated }
         {receiptData && (
           <ReceiptPrint
             open={receiptOpen}
-            onClose={() => { setReceiptOpen(false); onClose(); }}
+            onClose={() => { setReceiptOpen(false); setReceiptData(null); onClose(); }}
             order={receiptData.order}
             items={receiptData.items}
-            paymentMethod={receiptData.paymentMethod}
-            amountPaid={receiptData.amountPaid}
-            change={receiptData.change}
-            tableNumber={receiptData.tableNumber}
-            serviceCharge={receiptData.serviceCharge}
-            rounding={receiptData.rounding}
+            customerName={`Table ${tableNumber} · ${receiptData.guestNamesLabel}`}
+            tableBreakdown={receiptData.tableBreakdown}
           />
         )}
       </div>
     );
   }
 
-  // ── Orders view ────────────────────────────────────────────────────────────
   return (
     <div className="flex h-full flex-col">
       <div className="flex items-center justify-between border-b border-zinc-200 px-4 py-3">
-        <div>
+        <div className="min-w-0">
           <h2 className="text-sm font-bold text-zinc-900">Table {tableNumber}</h2>
-          <p className="text-xs text-zinc-400">{orders.length} round{orders.length !== 1 ? "s" : ""} · RM {subtotal.toFixed(2)}</p>
+          <p className="text-xs text-zinc-400">{orders.length} round{orders.length !== 1 ? "s" : ""} · RM {basketSubtotal.toFixed(2)} items</p>
+          {guestLabels.length > 0 && (
+            <div className="mt-2 flex flex-wrap items-center gap-1.5">
+              <UserRound className="h-3.5 w-3.5 text-zinc-400" />
+              {guestLabels.map((n) => (
+                <span key={n} className="rounded-full bg-zinc-100 px-2 py-0.5 text-[10px] font-semibold text-zinc-700 truncate max-w-[10rem]" title={n}>
+                  {n}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
-        <div className="flex items-center gap-1">
-          <button onClick={load} className="rounded p-1.5 text-zinc-400 hover:bg-zinc-100"><RefreshCw className="h-3.5 w-3.5" /></button>
-          <button onClick={onClose} className="rounded p-1.5 text-zinc-400 hover:bg-zinc-100"><X className="h-3.5 w-3.5" /></button>
+        <div className="flex items-center gap-1 shrink-0">
+          <button type="button" onClick={load} className="rounded p-1.5 text-zinc-400 hover:bg-zinc-100"><RefreshCw className="h-3.5 w-3.5" /></button>
+          <button type="button" onClick={onClose} className="rounded p-1.5 text-zinc-400 hover:bg-zinc-100"><X className="h-3.5 w-3.5" /></button>
         </div>
       </div>
 
@@ -284,6 +405,12 @@ export default function TableOrderView({ tableNumber, onClose, onOrdersUpdated }
                         <span className="text-xs font-semibold text-amber-800">Round {idx + 1} · {order.order_number}</span>
                         <span className="text-xs text-amber-600">{new Date(order.created_at).toLocaleTimeString("en-MY", { hour: "2-digit", minute: "2-digit" })}</span>
                       </div>
+                      {order.profiles?.full_name && (
+                        <p className="mb-1 text-[11px] text-amber-800 font-medium truncate">Guest: {order.profiles.full_name}</p>
+                      )}
+                      {!order.customer_id && (
+                        <p className="mb-1 text-[10px] text-amber-600">Guest not signed in</p>
+                      )}
                       <ul className="space-y-1 mb-2">
                         {order.order_items.map(item => (
                           <li key={item.id} className="flex justify-between text-sm">
@@ -316,6 +443,12 @@ export default function TableOrderView({ tableNumber, onClose, onOrdersUpdated }
                         <span className="text-xs font-medium text-emerald-700">Round {pending.length + idx + 1} · {order.order_number}</span>
                         <span className="text-xs text-emerald-500">{new Date(order.created_at).toLocaleTimeString("en-MY", { hour: "2-digit", minute: "2-digit" })}</span>
                       </div>
+                      {order.profiles?.full_name && (
+                        <p className="mb-1 text-[11px] text-emerald-800 font-medium truncate">Guest: {order.profiles.full_name}</p>
+                      )}
+                      {!order.customer_id && (
+                        <p className="mb-1 text-[10px] text-emerald-600">Guest not signed in</p>
+                      )}
                       <ul className="space-y-0.5">
                         {order.order_items.map(item => (
                           <li key={item.id} className="flex justify-between text-xs text-zinc-500">
@@ -341,7 +474,7 @@ export default function TableOrderView({ tableNumber, onClose, onOrdersUpdated }
         )}
         {orders.length > 0 && (
           <Button className="w-full h-11 text-sm font-semibold bg-emerald-600 hover:bg-emerald-700 text-white" onClick={() => setView("checkout")}>
-            Process Payment · RM {total.toFixed(2)}
+            Process Payment · RM {tableBillTotals(basketSubtotal, 0).total.toFixed(2)}
           </Button>
         )}
       </div>

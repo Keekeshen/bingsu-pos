@@ -7,6 +7,9 @@ import { QrCode, X, CameraOff, ScanLine } from "lucide-react";
 
 const SCAN_INTERVAL_MS = 150;
 
+const TABLE_SLUG_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
 export default function TableQRScanner() {
   const [open, setOpen] = useState(false);
   const [status, setStatus] = useState<"idle" | "requesting" | "scanning" | "error">("idle");
@@ -38,7 +41,6 @@ export default function TableQRScanner() {
       setStatus("error");
       setErrorMsg("Camera access denied. Please allow camera and try again.");
     }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   function decode() {
     const video = videoRef.current;
@@ -56,15 +58,19 @@ export default function TableQRScanner() {
     if (val === lastRef.current) return;
     lastRef.current = val;
 
-    // Accept either a full URL containing /order/ or just a table number/path
-    const match = val.match(/\/order\/([^/?#]+)/);
-    if (match) {
+    let slug: string | null = null;
+    const fromUrl = val.match(/\/order\/([^/?#]+)/i)?.[1];
+    if (fromUrl && TABLE_SLUG_RE.test(fromUrl)) slug = fromUrl;
+    else if (TABLE_SLUG_RE.test(val)) slug = val;
+
+    if (slug) {
       stop();
       setOpen(false);
-      router.push(`/order/${match[1]}`);
-    } else {
-      setTimeout(() => { lastRef.current = null; }, 2000);
+      router.push(`/order/${slug}`);
+      return;
     }
+
+    setTimeout(() => { lastRef.current = null; }, 2000);
   }
 
   function handleOpen() { setOpen(true); setStatus("idle"); setErrorMsg(""); }

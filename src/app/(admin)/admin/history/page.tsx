@@ -291,9 +291,6 @@ export default function SalesHistoryPage() {
           onClose={() => setReceipt(null)}
           order={receipt.order}
           items={receipt.items}
-          paymentMethod={receipt.paymentMethod}
-          tableNumber={receipt.tableNumber}
-          serviceCharge={receipt.serviceCharge}
         />
       )}
     </div>

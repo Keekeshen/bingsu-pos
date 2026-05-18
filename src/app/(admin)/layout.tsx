@@ -3,18 +3,19 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { ShoppingCart, BarChart2, Gift, Package, LogOut, LayoutGrid, Printer, Unplug } from "lucide-react";
+import { ShoppingCart, BarChart2, Gift, Package, LogOut, LayoutGrid, Printer, Unplug, ClipboardList } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { PrinterProvider, usePrinter } from "@/components/admin/PrinterProvider";
 
 const NAV_ITEMS = [
-  { label: "POS",      href: "/admin/pos",      icon: ShoppingCart },
-  { label: "Tables",   href: "/admin/tables",   icon: LayoutGrid   },
-  { label: "Reports",  href: "/admin/reports",  icon: BarChart2    },
-  { label: "Loyalty",  href: "/admin/loyalty",  icon: Gift         },
-  { label: "Products", href: "/admin/products", icon: Package      },
+  { label: "POS",      href: "/admin/pos",      icon: ShoppingCart  },
+  { label: "Tables",   href: "/admin/tables",   icon: LayoutGrid    },
+  { label: "History",  href: "/admin/history",  icon: ClipboardList },
+  { label: "Reports",  href: "/admin/reports",  icon: BarChart2     },
+  { label: "Loyalty",  href: "/admin/loyalty",  icon: Gift          },
+  { label: "Products", href: "/admin/products", icon: Package       },
 ] as const;
 
 function PrinterBtn({ type }: { type: "counter" | "kitchen" }) {

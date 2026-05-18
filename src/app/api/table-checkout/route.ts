@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createAdminClient } from "@/lib/supabase/server";
+import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { computeVoucherDiscount, tableBillTotals } from "@/lib/voucher-utils";
 
 function err(message: string, status: number) {
@@ -10,22 +10,14 @@ type OrderRow = { id: string; order_number: string; subtotal: number; customer_i
 
 export async function POST(request: NextRequest) {
   try {
-    const authHeader = request.headers.get("Authorization");
-    const token = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null;
-    if (!token) return err("Unauthorized", 401);
-
-    const adminAuth = createAdminClient();
-    const { data: { user }, error: userError } = await adminAuth.auth.getUser(token);
-    if (userError || !user) return err("Unauthorized", 401);
-
-    const { data: adminProfile } = await adminAuth
-      .from("profiles")
-      .select("role")
-      .eq("id", user.id)
-      .single();
-    if (adminProfile?.role !== "admin") return err("Forbidden: admin role required", 403);
+    // Cookie-based auth — reliable on all browsers including Android Chrome
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return err("Unauthorized", 401);
 
     const admin = createAdminClient();
+    const { data: adminProfile } = await admin.from("profiles").select("role").eq("id", user.id).single();
+    if (adminProfile?.role !== "admin") return err("Forbidden: admin role required", 403);
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const body: any = await request.json().catch(() => null);
@@ -152,7 +144,13 @@ export async function POST(request: NextRequest) {
         if (pointsEarned > 0) {
           const { data: profile } = await admin.from("profiles").select("loyalty_points").eq("id", rewardCustomerId).single();
           if (profile) {
-            await admin.from("profiles").update({ loyalty_points: (profile.loyalty_points ?? 0) + pointsEarned }).eq("id", rewardCustomerId);
+            const { error: ptsErr } = await admin.from("profiles")
+              .update({ loyalty_points: (profile.loyalty_points ?? 0) + pointsEarned })
+              .eq("id", rewardCustomerId);
+            if (ptsErr) {
+              console.error("[table-checkout] loyalty points update error:", ptsErr);
+              pointsEarned = 0;
+            }
           }
         }
       }

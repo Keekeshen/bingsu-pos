@@ -1,17 +1,19 @@
 "use client";
 
-import { Suspense } from "react";
 import { useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 
-function LoginForm() {
+export default function LoginPage() {
+  const router = useRouter();
   const searchParams = useSearchParams();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -19,26 +21,46 @@ function LoginForm() {
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setLoading(true);
+
     const supabase = createClient();
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) { toast.error(error.message); setLoading(false); return; }
+
+    if (error) {
+      toast.error(error.message);
+      setLoading(false);
+      return;
+    }
+
     const { data: profile } = await supabase.from("profiles").select("role").eq("id", data.user.id).single();
     const next = searchParams.get("next") ?? "";
     const isAdmin = profile?.role === "admin";
+
     if (isAdmin) {
-      window.location.href = next.startsWith("/admin") ? next : "/admin/pos";
+      router.push(next.startsWith("/admin") ? next : "/admin/pos");
     } else {
-      window.location.href = next && !next.startsWith("/admin") ? next : "/dashboard";
+      router.push(next && !next.startsWith("/admin") ? next : "/dashboard");
     }
+    router.refresh();
   }
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-zinc-50 px-4">
       <div className="w-full max-w-sm space-y-8">
-        <div className="space-y-1 text-center">
-          <h1 className="text-2xl font-bold tracking-tight text-zinc-900">Welcome back</h1>
-          <p className="text-sm text-zinc-500">Sign in to your account</p>
+        <div className="flex flex-col items-center gap-3">
+          <Image
+            src="/logo.png"
+            alt="Koori Dessert"
+            width={110}
+            height={110}
+            className="rounded-2xl"
+            priority
+          />
+          <div className="space-y-1 text-center">
+            <h1 className="text-2xl font-bold tracking-tight text-zinc-900">Welcome back</h1>
+            <p className="text-sm text-zinc-500">Sign in to your account</p>
+          </div>
         </div>
+
         <div className="rounded-2xl border border-zinc-200 bg-white px-6 py-8 shadow-sm">
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-1.5">
@@ -47,13 +69,14 @@ function LoginForm() {
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="password">Password</Label>
-              <Input id="password" type="password" autoComplete="current-password" placeholder="????????" value={password} onChange={(e) => setPassword(e.target.value)} required disabled={loading} />
+              <Input id="password" type="password" autoComplete="current-password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} required disabled={loading} />
             </div>
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Signing in..." : "Sign in"}
+              {loading ? "Signing in…" : "Sign in"}
             </Button>
           </form>
         </div>
+
         <p className="text-center text-sm text-zinc-500">
           Don&apos;t have an account?{" "}
           <Link href="/register" className="font-medium text-zinc-900 underline-offset-4 hover:underline">Create one</Link>
@@ -61,8 +84,4 @@ function LoginForm() {
       </div>
     </div>
   );
-}
-
-export default function LoginPage() {
-  return <Suspense><LoginForm /></Suspense>;
 }

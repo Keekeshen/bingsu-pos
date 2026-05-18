@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { CheckCheck, X, RefreshCw, Clock, ArrowLeft, Banknote, QrCode, CreditCard, Ticket, UserRound, UserSearch } from "lucide-react";
+import { CheckCheck, X, RefreshCw, Clock, ArrowLeft, Banknote, QrCode, CreditCard, Ticket, UserRound, UserSearch, Percent } from "lucide-react";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -58,6 +58,9 @@ export default function TableOrderView({ tableNumber, onClose, onOrdersUpdated }
   const [receiptOpen, setReceiptOpen] = useState(false);
   const [voucherInput, setVoucherInput] = useState("");
   const [voucher, setVoucher] = useState<VoucherData | null>(null);
+  const [itemDiscounts, setItemDiscounts] = useState<Record<string, number>>({});
+  const [editingDiscountId, setEditingDiscountId] = useState<string | null>(null);
+  const [discountDraft, setDiscountDraft] = useState("");
   const [voucherBusy, setVoucherBusy] = useState(false);
 
   // manually-linked customer (for loyalty / receipt name)
@@ -136,7 +139,14 @@ export default function TableOrderView({ tableNumber, onClose, onOrdersUpdated }
   }, [loading, orders.length]);
 
   const allItems = orders.flatMap(o => o.order_items);
-  const basketSubtotal = +allItems.reduce((s, i) => s + i.unit_price * i.quantity, 0).toFixed(2);
+  const itemDiscountAmt = +allItems.reduce((s, i) => {
+    const pct = itemDiscounts[i.id] ?? 0;
+    return pct > 0 ? s + i.unit_price * i.quantity * pct / 100 : s;
+  }, 0).toFixed(2);
+  const basketSubtotal = +Math.max(0, allItems.reduce((s, i) => {
+    const pct = itemDiscounts[i.id] ?? 0;
+    return s + i.unit_price * i.quantity * (1 - pct / 100);
+  }, 0)).toFixed(2);
   const voucherDiscountRaw = voucher
     ? computeVoucherDiscount(basketSubtotal, { discount_type: voucher.discount_type, discount_value: voucher.discount_value })
     : 0;
@@ -215,14 +225,9 @@ export default function TableOrderView({ tableNumber, onClose, onOrdersUpdated }
     }
     setCharging(true);
     try {
-      const supabase = createClient();
-      const { data: { session } } = await supabase.auth.getSession();
       const res = await fetch("/api/table-checkout", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           table_number: tableNumber,
           payment_method: paymentType,
@@ -235,13 +240,18 @@ export default function TableOrderView({ tableNumber, onClose, onOrdersUpdated }
       const data = await res.json();
       if (!res.ok) { toast.error(data.error ?? "Checkout failed"); return; }
 
-      const receiptItems: ReceiptLineItem[] = allItems.map(i => ({
-        product_id: i.id,
-        name: i.product_name,
-        unit_price: i.unit_price,
-        quantity: i.quantity,
-        subtotal: +(i.unit_price * i.quantity).toFixed(2),
-      }));
+      const receiptItems: ReceiptLineItem[] = allItems.map(i => {
+        const pct = itemDiscounts[i.id] ?? 0;
+        const effPrice = pct > 0 ? +(i.unit_price * (1 - pct / 100)).toFixed(2) : i.unit_price;
+        return {
+          product_id: i.id,
+          name: i.product_name,
+          unit_price: i.unit_price,
+          quantity: i.quantity,
+          subtotal: +(effPrice * i.quantity).toFixed(2),
+          discountPct: pct > 0 ? pct : undefined,
+        };
+      });
 
       const guestLabel = allGuestLabels.length > 0 ? allGuestLabels.join(", ") : "Walk-in";
 
@@ -422,23 +432,68 @@ export default function TableOrderView({ tableNumber, onClose, onOrdersUpdated }
           <>
             <div className="rounded-xl border border-zinc-200 bg-white p-3">
               <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-zinc-400">Order Summary</p>
-              <div className="space-y-1.5">
-                {allItems.map((item, idx) => (
-                  <div key={`${item.id}-${idx}`} className="flex justify-between text-sm">
-                    <span className="text-zinc-700">{item.quantity}x {item.product_name}</span>
-                    <span className="tabular-nums text-zinc-600">RM {(item.unit_price * item.quantity).toFixed(2)}</span>
-                  </div>
-                ))}
+              <div className="space-y-1">
+                {allItems.map((item, idx) => {
+                  const pct = itemDiscounts[item.id] ?? 0;
+                  const lineTotal = pct > 0
+                    ? +(item.unit_price * item.quantity * (1 - pct / 100)).toFixed(2)
+                    : +(item.unit_price * item.quantity).toFixed(2);
+                  const isEditing = editingDiscountId === item.id;
+                  return (
+                    <div key={`${item.id}-${idx}`}>
+                      <div className="flex items-center gap-1.5 text-sm">
+                        <span className="flex-1 text-zinc-700">{item.quantity}x {item.product_name}</span>
+                        <button
+                          onClick={() => { setEditingDiscountId(isEditing ? null : item.id); setDiscountDraft(pct > 0 ? String(pct) : ""); }}
+                          className={`flex h-5 w-5 shrink-0 items-center justify-center rounded border text-[10px] transition-colors ${pct > 0 ? "border-orange-300 bg-orange-100 text-orange-600" : "border-zinc-200 text-zinc-400 hover:border-zinc-400"}`}
+                        ><Percent className="h-2.5 w-2.5" /></button>
+                        <span className="tabular-nums text-zinc-600 w-14 text-right">RM {lineTotal.toFixed(2)}</span>
+                      </div>
+                      {pct > 0 && (
+                        <p className="text-[10px] text-orange-500 pl-0 mt-0.5">-{pct}% off · orig RM {(item.unit_price * item.quantity).toFixed(2)}</p>
+                      )}
+                      {isEditing && (
+                        <div className="mt-1 flex items-center gap-1.5 rounded-lg border border-orange-200 bg-orange-50 px-2 py-1">
+                          <Percent className="h-3 w-3 text-orange-500 shrink-0" />
+                          <input
+                            type="number" min="0" max="100" step="1"
+                            value={discountDraft}
+                            onChange={e => setDiscountDraft(e.target.value)}
+                            onKeyDown={e => {
+                              if (e.key === "Enter") {
+                                const p = parseFloat(discountDraft);
+                                setItemDiscounts(prev => ({ ...prev, [item.id]: isNaN(p) ? 0 : Math.min(100, Math.max(0, p)) }));
+                                setEditingDiscountId(null);
+                              }
+                              if (e.key === "Escape") setEditingDiscountId(null);
+                            }}
+                            placeholder="e.g. 50"
+                            autoFocus
+                            className="w-12 bg-transparent text-sm font-bold text-orange-700 focus:outline-none"
+                          />
+                          <span className="text-xs text-orange-600">%</span>
+                          <button onClick={() => {
+                            const p = parseFloat(discountDraft);
+                            setItemDiscounts(prev => ({ ...prev, [item.id]: isNaN(p) ? 0 : Math.min(100, Math.max(0, p)) }));
+                            setEditingDiscountId(null);
+                          }} className="ml-auto rounded bg-orange-500 px-2 py-0.5 text-xs font-bold text-white">Apply</button>
+                          {pct > 0 && <button onClick={() => { setItemDiscounts(prev => ({ ...prev, [item.id]: 0 })); setEditingDiscountId(null); }} className="text-xs text-zinc-400">Clear</button>}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
               <Separator className="my-2" />
               <div className="space-y-1">
-                <div className="flex justify-between text-sm text-zinc-500"><span>Subtotal</span><span className="tabular-nums">RM {basketSubtotal.toFixed(2)}</span></div>
+                <div className="flex justify-between text-sm text-zinc-500"><span>Subtotal</span><span className="tabular-nums">RM {(basketSubtotal + itemDiscountAmt).toFixed(2)}</span></div>
+                {itemDiscountAmt > 0 && (
+                  <div className="flex justify-between text-sm text-orange-600"><span>Item discount</span><span className="tabular-nums">-RM {itemDiscountAmt.toFixed(2)}</span></div>
+                )}
                 {voucherDiscountRaw > 0 && (
                   <div className="flex justify-between text-sm text-emerald-600"><span>Voucher{voucher?.label ? ` (${voucher.label})` : ""}</span><span className="tabular-nums">-RM {voucherDiscountRaw.toFixed(2)}</span></div>
                 )}
-                <div className="flex justify-between text-sm text-zinc-500"><span>After voucher</span><span className="tabular-nums">RM {bill.taxableSubtotal.toFixed(2)}</span></div>
                 <div className="flex justify-between text-sm text-zinc-500"><span>Service charge ({TABLE_SERVICE_CHARGE_PCT}%)</span><span className="tabular-nums">RM {bill.serviceCharge.toFixed(2)}</span></div>
-                {bill.rounding !== 0 && <div className="flex justify-between text-sm text-zinc-500"><span>Rounding</span><span className="tabular-nums">{bill.rounding >= 0 ? "+" : ""}RM {bill.rounding.toFixed(2)}</span></div>}
                 <div className="flex justify-between text-base font-bold text-zinc-900 pt-1"><span>Total Due</span><span className="tabular-nums">RM {total.toFixed(2)}</span></div>
               </div>
               {pending.length > 0 && (

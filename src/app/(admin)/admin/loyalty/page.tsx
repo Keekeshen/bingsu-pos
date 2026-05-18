@@ -347,10 +347,10 @@ function RewardsCatalogueSection() {
 
   async function handleSaveReward() {
     const pointsCost = parseInt(form.points_cost, 10);
-    const discountRm = parseFloat(form.discount_rm);
+    const discountRm = form.discount_rm.trim() === "" ? 0 : parseFloat(form.discount_rm);
     if (!form.name.trim()) { toast.error("Name is required"); return; }
     if (isNaN(pointsCost) || pointsCost < 1) { toast.error("Points cost must be at least 1"); return; }
-    if (isNaN(discountRm) || discountRm < 0) { toast.error("Discount RM must be 0 or more"); return; }
+    if (isNaN(discountRm) || discountRm < 0) { toast.error("Value (RM) must be 0 or more"); return; }
 
     setSaving(true);
     let image_url = form.image_url;
@@ -463,8 +463,11 @@ function RewardsCatalogueSection() {
                 <Input id="rPoints" type="number" min="1" placeholder="500" value={form.points_cost} onChange={(e) => setForm(f => ({ ...f, points_cost: e.target.value }))} />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="rDiscount">Discount (RM)</Label>
-                <Input id="rDiscount" type="number" min="0" step="0.01" placeholder="10.00" value={form.discount_rm} onChange={(e) => setForm(f => ({ ...f, discount_rm: e.target.value }))} />
+                <Label htmlFor="rDiscount">
+                  Value (RM) <span className="font-normal text-zinc-400">(optional)</span>
+                </Label>
+                <Input id="rDiscount" type="number" min="0" step="0.01" placeholder="0 for free items" value={form.discount_rm} onChange={(e) => setForm(f => ({ ...f, discount_rm: e.target.value }))} />
+                <p className="text-[11px] text-zinc-400">Leave 0 for free drinks / free bingsu</p>
               </div>
             </div>
           </div>

@@ -81,7 +81,7 @@ export default function ReceiptPrint({ open, onClose, order, items, customerName
       tierDiscount,
       tierLabel,
       voucherDiscount: tableBreakdown?.voucherDiscount,
-      serviceCharge: tableBreakdown?.serviceCharge,
+      serviceCharge: tableBreakdown?.serviceCharge ?? serviceCharge,
       rounding: tableBreakdown?.rounding,
       total,
       paymentMethod,

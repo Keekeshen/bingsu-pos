@@ -139,7 +139,11 @@ export default function CheckoutCart({ items, subtotal, total, onUpdateQuantity,
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        items: items.map(({ product_id, name, price, quantity }) => ({ product_id, product_name: name, unit_price: price, quantity })),
+        items: items.map(({ product_id, name, price, quantity }) => {
+          const pct = itemDiscounts[product_id] ?? 0;
+          const effPrice = pct > 0 ? +(price * (1 - pct / 100)).toFixed(2) : price;
+          return { product_id, product_name: name, unit_price: price, quantity, subtotal: +(effPrice * quantity).toFixed(2) };
+        }),
         customer_id: customer?.id ?? null,
         points_redeemed: 0,
         payment_method: paymentType,

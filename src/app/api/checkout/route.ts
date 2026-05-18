@@ -92,7 +92,14 @@ export async function POST(request: NextRequest) {
 
     if (orderError || !order) { console.error("[checkout] order insert error:", orderError); return err("Failed to create order", 500); }
 
-    const orderItems = items.map((item) => ({ order_id: order.id, product_id: item.product_id, product_name: item.product_name, unit_price: item.unit_price, quantity: item.quantity, subtotal: +(item.unit_price * item.quantity).toFixed(2) }));
+    const orderItems = items.map((item) => ({
+      order_id: order.id,
+      product_id: item.product_id,
+      product_name: item.product_name,
+      unit_price: item.unit_price,
+      quantity: item.quantity,
+      subtotal: item.subtotal != null ? +Number(item.subtotal).toFixed(2) : +(item.unit_price * item.quantity).toFixed(2),
+    }));
     const { error: itemsError } = await admin.from("order_items").insert(orderItems);
 
     if (itemsError) {

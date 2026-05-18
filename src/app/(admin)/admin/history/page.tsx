@@ -99,9 +99,14 @@ export default function SalesHistoryPage() {
 
   function openReceipt(order: Order) {
     const isTable = order.source === "table";
-    const serviceCharge = isTable ? +(order.subtotal * SERVICE_CHARGE_PCT / 100).toFixed(2) : undefined;
-    const rounding = serviceCharge !== undefined
-      ? +(order.total_amount - order.subtotal - serviceCharge).toFixed(2)
+    const discountAmt = order.discount_amount ?? 0;
+    // For POS: derive service charge = total - (subtotal - all_discounts).
+    // For table: use standard rate on original subtotal.
+    const serviceCharge = isTable
+      ? +(order.subtotal * SERVICE_CHARGE_PCT / 100).toFixed(2)
+      : Math.max(0, +(order.total_amount - Math.max(0, order.subtotal - discountAmt)).toFixed(2));
+    const rounding = isTable
+      ? +(order.total_amount - (order.subtotal - discountAmt) - serviceCharge).toFixed(2)
       : undefined;
 
     const items: ReceiptLineItem[] = order.order_items.map(i => {

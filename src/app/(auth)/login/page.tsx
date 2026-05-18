@@ -23,17 +23,32 @@ function LoginForm() {
     setLoading(true);
 
     const supabase = createClient();
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
-    if (error) {
-      toast.error(error.message);
+    // Check if email is registered
+    const checkRes = await fetch("/api/check-email", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email }),
+    });
+    const { exists } = await checkRes.json();
+
+    if (!exists) {
+      toast.error("This email hasn't been registered yet.");
       setLoading(false);
       return;
     }
 
-    const { data: profile } = await supabase.from("profiles").select("role").eq("id", data.user.id).single();
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+
+    if (error) {
+      toast.error("Invalid login credentials. Please check your password.");
+      setLoading(false);
+      return;
+    }
+
+    const { data: fullProfile } = await supabase.from("profiles").select("role").eq("id", data.user.id).single();
     const next = searchParams.get("next") ?? "";
-    const isAdmin = profile?.role === "admin";
+    const isAdmin = fullProfile?.role === "admin";
 
     if (isAdmin) {
       router.push(next.startsWith("/admin") ? next : "/admin/pos");

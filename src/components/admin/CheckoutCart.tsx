@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { Minus, Plus, Trash2, UserSearch, X, Banknote, QrCode, CreditCard, Ticket } from "lucide-react";
+import { Minus, Plus, Trash2, UserSearch, X, Banknote, QrCode, CreditCard, Ticket, Gift, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import type { CartItem } from "@/lib/hooks/useCart";
 import { createClient } from "@/lib/supabase/client";
@@ -58,6 +58,9 @@ export default function CheckoutCart({ items, subtotal, total, onUpdateQuantity,
   const [voucherCode, setVoucherCode] = useState("");
   const [voucher, setVoucher] = useState<VoucherData | null>(null);
   const [lookingUpVoucher, setLookingUpVoucher] = useState(false);
+  const [rewardCode, setRewardCode] = useState("");
+  const [verifyingReward, setVerifyingReward] = useState(false);
+  const [verifiedReward, setVerifiedReward] = useState<{ reward_name: string; customer_name: string; discount_rm: number } | null>(null);
   const [pending, setPending] = useState<PendingReceipt | null>(null);
   const [tableNumber, setTableNumber] = useState("");
   const phoneRef = useRef<HTMLInputElement>(null);
@@ -121,6 +124,27 @@ export default function CheckoutCart({ items, subtotal, total, onUpdateQuantity,
   function applyVoucher() { applyVoucherCode(voucherCode); }
 
   function removeVoucher() { setVoucher(null); setVoucherCode(""); }
+
+  async function verifyReward(code?: string) {
+    const c = (code ?? rewardCode).trim().toUpperCase();
+    if (!c) return;
+    setVerifyingReward(true);
+    setVerifiedReward(null);
+    try {
+      const res = await fetch("/api/verify-redemption", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: c }),
+      });
+      const data = await res.json();
+      if (!res.ok) { toast.error(data.error ?? "Invalid reward code"); return; }
+      setVerifiedReward(data);
+      setRewardCode("");
+      toast.success(`Reward verified: ${data.reward_name} for ${data.customer_name}`);
+    } finally {
+      setVerifyingReward(false);
+    }
+  }
 
   async function handleCharge() {
     if (!canCharge) return;
@@ -286,6 +310,42 @@ export default function CheckoutCart({ items, subtotal, total, onUpdateQuantity,
                 {lookingUpVoucher ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-zinc-300 border-t-zinc-700" /> : "Apply"}
               </Button>
               <VoucherScanner onCodeScanned={(code) => applyVoucherCode(code)} />
+            </div>
+          )}
+        </div>
+
+        {/* Redeem Reward */}
+        <div className="space-y-2 border-t border-zinc-200 px-4 py-3">
+          <p className="text-xs font-medium text-zinc-500">Redeem Reward (optional)</p>
+          {verifiedReward ? (
+            <div className="flex items-center justify-between rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2">
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
+                <div>
+                  <p className="text-sm font-semibold text-emerald-700">{verifiedReward.reward_name}</p>
+                  <p className="text-xs text-zinc-500">{verifiedReward.customer_name} · RM {verifiedReward.discount_rm.toFixed(2)} off · Marked used</p>
+                </div>
+              </div>
+              <button onClick={() => setVerifiedReward(null)}><X className="h-4 w-4 text-zinc-400" /></button>
+            </div>
+          ) : (
+            <div className="flex gap-2">
+              <Input
+                placeholder="Reward code or scan QR"
+                value={rewardCode}
+                onChange={(e) => setRewardCode(e.target.value.toUpperCase())}
+                onKeyDown={(e) => e.key === "Enter" && verifyReward()}
+                className="h-9 text-sm font-mono tracking-wider"
+              />
+              <Button
+                size="sm" variant="outline"
+                onClick={() => verifyReward()}
+                disabled={verifyingReward || !rewardCode.trim()}
+                className="h-9 shrink-0 px-2 text-xs"
+              >
+                {verifyingReward ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-zinc-300 border-t-zinc-700" /> : "Verify"}
+              </Button>
+              <VoucherScanner onCodeScanned={(code) => verifyReward(code)} />
             </div>
           )}
         </div>

@@ -1,4 +1,4 @@
-// ESC/POS thermal printer utility (58mm paper, ~32 chars wide)
+﻿// ESC/POS thermal printer utility (58mm paper, ~32 chars wide)
 const ESC = 0x1b;
 const GS  = 0x1d;
 
@@ -107,8 +107,7 @@ export function buildReceiptBytes(d: ThermalReceiptData): Uint8Array {
   p.row("Subtotal", "RM " + d.subtotal.toFixed(2));
   if (d.tierDiscount && d.tierDiscount > 0) p.row("Member (" + (d.tierLabel ?? "") + ")", "-RM " + d.tierDiscount.toFixed(2));
   if (d.voucherDiscount && d.voucherDiscount > 0) p.row("Voucher discount", "-RM " + d.voucherDiscount.toFixed(2));
-  if (d.serviceCharge && d.serviceCharge > 0) p.row("Service charge (10%)", "RM " + d.serviceCharge.toFixed(2));
-  if (d.rounding !== undefined && d.rounding !== 0) p.row("Bill rounding", (d.rounding >= 0 ? "+" : "") + "RM " + Math.abs(d.rounding).toFixed(2));
+  if (d.serviceCharge && d.serviceCharge > 0) p.row("Service charge (6%)", "RM " + d.serviceCharge.toFixed(2));
 
   p.dashes();
   p.bold(true).row("TOTAL (MYR)", "RM " + d.total.toFixed(2)).bold(false);

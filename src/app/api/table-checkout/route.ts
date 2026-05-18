@@ -48,7 +48,10 @@ export async function POST(request: NextRequest) {
       return err("No active orders for this table", 404);
     }
 
-    const basketSubtotal = +list.reduce((s, o) => s + (Number(o.subtotal) || 0), 0).toFixed(2);
+    const rawBasketSubtotal = +list.reduce((s, o) => s + (Number(o.subtotal) || 0), 0).toFixed(2);
+    // item_discount_amount is the total of per-item discounts applied by admin at payment time
+    const itemDiscountAmount = +Math.min(+(Number(body.item_discount_amount) || 0).toFixed(2), rawBasketSubtotal).toFixed(2);
+    const basketSubtotal = +Math.max(0, rawBasketSubtotal - itemDiscountAmount).toFixed(2);
 
     const voucherCodeRaw = body.voucher_code ? String(body.voucher_code).trim().toUpperCase() : "";
     let voucherDiscountApplied = 0;
@@ -184,7 +187,8 @@ export async function POST(request: NextRequest) {
       success: true,
       order_number: list[0].order_number,
       orders_paid: list.length,
-      subtotal_before_discount: basketSubtotal,
+      subtotal_before_discount: rawBasketSubtotal,
+      item_discount: itemDiscountAmount,
       voucher_discount: totals.voucherDiscountApplied,
       subtotal_after_discount: totals.taxableSubtotal,
       service_charge: totals.serviceCharge,

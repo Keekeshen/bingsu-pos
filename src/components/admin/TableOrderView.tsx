@@ -234,6 +234,7 @@ export default function TableOrderView({ tableNumber, onClose, onOrdersUpdated }
           amount_paid: paid,
           voucher_code: voucher?.code ?? null,
           discount_amount: voucherDiscountRaw,
+          item_discount_amount: itemDiscountAmt,
           customer_id: linkedCustomer?.id ?? null,
         }),
       });
@@ -255,13 +256,14 @@ export default function TableOrderView({ tableNumber, onClose, onOrdersUpdated }
 
       const guestLabel = allGuestLabels.length > 0 ? allGuestLabels.join(", ") : "Walk-in";
 
-      const paidAmt = paymentType === "cash" ? paid : data.total;
+      const apiTotal = data.total as number;
+      const paidAmt = paymentType === "cash" ? paid : apiTotal;
       setReceiptData({
         order: {
           order_number: data.order_number,
           created_at: new Date().toISOString(),
           subtotal: data.subtotal_before_discount,
-          total_amount: data.total,
+          total_amount: apiTotal,
           points_redeemed: 0,
           points_earned: data.points_earned ?? 0,
         },
@@ -270,10 +272,10 @@ export default function TableOrderView({ tableNumber, onClose, onOrdersUpdated }
         paymentMethod: paymentType === "cash" ? "CASH" : paymentType === "qr" ? "QR CODE" : "CARD",
         amountPaid: paidAmt,
         tableBreakdown: {
-          voucherDiscount: data.voucher_discount ?? 0,
-          serviceCharge: data.service_charge ?? 0,
-          rounding: data.rounding_adjustment ?? 0,
-          payableTotal: data.total,
+          voucherDiscount: (data.voucher_discount ?? 0) as number,
+          serviceCharge: (data.service_charge ?? 0) as number,
+          rounding: (data.rounding_adjustment ?? 0) as number,
+          payableTotal: apiTotal,
         },
       });
       setReceiptOpen(true);

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useTransition, type ChangeEvent } from "react";
 import { Search, Plus, Pencil, Check, X, Loader2, ImageIcon } from "lucide-react";
+import VoucherScanner from "@/components/admin/VoucherScanner";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -177,6 +178,25 @@ function VerifyRedemptionSection() {
               onKeyDown={e => e.key === "Enter" && handleVerify()}
               className="font-mono tracking-widest uppercase max-w-xs"
             />
+            <VoucherScanner onCodeScanned={(scanned) => {
+              setCode(scanned);
+              setResult(null);
+              setResultError(null);
+              // auto-verify after scan
+              setTimeout(() => {
+                const trimmed = scanned.trim().toUpperCase();
+                if (!trimmed) return;
+                setVerifying(true);
+                fetch("/api/verify-redemption", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ code: trimmed }),
+                }).then(r => r.json()).then(data => {
+                  setVerifying(false);
+                  if (data.error) { setResultError(data.error); } else { setResult(data); setCode(""); toast.success("Redemption verified!"); }
+                }).catch(() => { setVerifying(false); setResultError("Verification failed"); });
+              }, 100);
+            }} />
             <Button onClick={handleVerify} disabled={verifying || !code.trim()} className="gap-2">
               {verifying ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
               Verify

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { Minus, Plus, Trash2, UserSearch, X, Banknote, QrCode, CreditCard, Ticket, Gift, CheckCircle2 } from "lucide-react";
+import { Minus, Plus, Trash2, UserSearch, X, Banknote, QrCode, CreditCard, Ticket, Percent } from "lucide-react";
 import { toast } from "sonner";
 import type { CartItem } from "@/lib/hooks/useCart";
 import { createClient } from "@/lib/supabase/client";
@@ -58,26 +58,32 @@ export default function CheckoutCart({ items, subtotal, total, onUpdateQuantity,
   const [voucherCode, setVoucherCode] = useState("");
   const [voucher, setVoucher] = useState<VoucherData | null>(null);
   const [lookingUpVoucher, setLookingUpVoucher] = useState(false);
-  const [rewardCode, setRewardCode] = useState("");
-  const [verifyingReward, setVerifyingReward] = useState(false);
-  const [verifiedReward, setVerifiedReward] = useState<{ reward_name: string; customer_name: string; discount_rm: number } | null>(null);
+  const [itemDiscounts, setItemDiscounts] = useState<Record<string, number>>({});
   const [pending, setPending] = useState<PendingReceipt | null>(null);
   const [tableNumber, setTableNumber] = useState("");
   const phoneRef = useRef<HTMLInputElement>(null);
 
   const customerTier = customer ? getTier(customer.loyalty_points) : null;
   const tierDiscountPct = customerTier?.orderDiscount ?? 0;
-  const tierDiscountAmt = tierDiscountPct > 0 ? +(total * tierDiscountPct / 100).toFixed(2) : 0;
+
+  // Per-item discounts applied first
+  const itemDiscountAmt = +items.reduce((s, item) => {
+    const pct = itemDiscounts[item.product_id] ?? 0;
+    return pct > 0 ? s + item.price * item.quantity * pct / 100 : s;
+  }, 0).toFixed(2);
+  const afterItemDiscounts = Math.max(0, +(total - itemDiscountAmt).toFixed(2));
+
+  const tierDiscountAmt = tierDiscountPct > 0 ? +(afterItemDiscounts * tierDiscountPct / 100).toFixed(2) : 0;
 
   const voucherDiscount = voucher
     ? voucher.discount_type === "fixed"
-      ? Math.min(voucher.discount_value, total)
+      ? Math.min(voucher.discount_value, afterItemDiscounts)
       : voucher.discount_type === "percentage"
-        ? +(total * voucher.discount_value / 100).toFixed(2)
+        ? +(afterItemDiscounts * voucher.discount_value / 100).toFixed(2)
         : 0
     : 0;
   const isFreeItem = voucher?.discount_type === "free_item";
-  const totalDiscount = +(tierDiscountAmt + voucherDiscount).toFixed(2);
+  const totalDiscount = +(itemDiscountAmt + tierDiscountAmt + voucherDiscount).toFixed(2);
   const discountedTotal = Math.max(0, +(total - totalDiscount).toFixed(2));
   const serviceChargeAmt = +(discountedTotal * TABLE_SERVICE_CHARGE_PCT / 100).toFixed(2);
   const chargeTotal = +(discountedTotal + serviceChargeAmt).toFixed(2);
@@ -124,27 +130,6 @@ export default function CheckoutCart({ items, subtotal, total, onUpdateQuantity,
   function applyVoucher() { applyVoucherCode(voucherCode); }
 
   function removeVoucher() { setVoucher(null); setVoucherCode(""); }
-
-  async function verifyReward(code?: string) {
-    const c = (code ?? rewardCode).trim().toUpperCase();
-    if (!c) return;
-    setVerifyingReward(true);
-    setVerifiedReward(null);
-    try {
-      const res = await fetch("/api/verify-redemption", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code: c }),
-      });
-      const data = await res.json();
-      if (!res.ok) { toast.error(data.error ?? "Invalid reward code"); return; }
-      setVerifiedReward(data);
-      setRewardCode("");
-      toast.success(`Reward verified: ${data.reward_name} for ${data.customer_name}`);
-    } finally {
-      setVerifyingReward(false);
-    }
-  }
 
   async function handleCharge() {
     if (!canCharge) return;
@@ -206,6 +191,7 @@ export default function CheckoutCart({ items, subtotal, total, onUpdateQuantity,
     setPhone("");
     setPaymentType(null);
     setAmountReceived("");
+    setItemDiscounts({});
     setVoucher(null);
     setVoucherCode("");
   }
@@ -236,7 +222,14 @@ export default function CheckoutCart({ items, subtotal, total, onUpdateQuantity,
           ) : (
             <ul className="divide-y divide-zinc-100 py-2">
               {items.map((item) => (
-                <CartRow key={item.product_id} item={item} onUpdate={(q) => onUpdateQuantity(item.product_id, q)} onRemove={() => onRemoveItem(item.product_id)} />
+                <CartRow
+                  key={item.product_id}
+                  item={item}
+                  discountPct={itemDiscounts[item.product_id] ?? 0}
+                  onSetDiscount={(pct) => setItemDiscounts(prev => ({ ...prev, [item.product_id]: pct }))}
+                  onUpdate={(q) => onUpdateQuantity(item.product_id, q)}
+                  onRemove={() => onRemoveItem(item.product_id)}
+                />
               ))}
             </ul>
           )}
@@ -314,42 +307,6 @@ export default function CheckoutCart({ items, subtotal, total, onUpdateQuantity,
           )}
         </div>
 
-        {/* Redeem Reward */}
-        <div className="space-y-2 border-t border-zinc-200 px-4 py-3">
-          <p className="text-xs font-medium text-zinc-500">Redeem Reward (optional)</p>
-          {verifiedReward ? (
-            <div className="flex items-center justify-between rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2">
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
-                <div>
-                  <p className="text-sm font-semibold text-emerald-700">{verifiedReward.reward_name}</p>
-                  <p className="text-xs text-zinc-500">{verifiedReward.customer_name} · RM {verifiedReward.discount_rm.toFixed(2)} off · Marked used</p>
-                </div>
-              </div>
-              <button onClick={() => setVerifiedReward(null)}><X className="h-4 w-4 text-zinc-400" /></button>
-            </div>
-          ) : (
-            <div className="flex gap-2">
-              <Input
-                placeholder="Reward code or scan QR"
-                value={rewardCode}
-                onChange={(e) => setRewardCode(e.target.value.toUpperCase())}
-                onKeyDown={(e) => e.key === "Enter" && verifyReward()}
-                className="h-9 text-sm font-mono tracking-wider"
-              />
-              <Button
-                size="sm" variant="outline"
-                onClick={() => verifyReward()}
-                disabled={verifyingReward || !rewardCode.trim()}
-                className="h-9 shrink-0 px-2 text-xs"
-              >
-                {verifyingReward ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-zinc-300 border-t-zinc-700" /> : "Verify"}
-              </Button>
-              <VoucherScanner onCodeScanned={(code) => verifyReward(code)} />
-            </div>
-          )}
-        </div>
-
         <div className="space-y-3 border-t border-zinc-200 px-4 py-4">
           {/* Payment type */}
           {items.length > 0 && (
@@ -402,6 +359,12 @@ export default function CheckoutCart({ items, subtotal, total, onUpdateQuantity,
               <span>Subtotal</span>
               <span>RM {subtotal.toFixed(2)}</span>
             </div>
+            {itemDiscountAmt > 0 && (
+              <div className="flex justify-between text-orange-600 font-medium">
+                <span>Item discount</span>
+                <span>-RM {itemDiscountAmt.toFixed(2)}</span>
+              </div>
+            )}
             {tierDiscountAmt > 0 && (
               <div className="flex justify-between text-emerald-600 font-medium">
                 <span>{customerTier?.name} discount ({tierDiscountPct}%)</span>
@@ -457,26 +420,86 @@ export default function CheckoutCart({ items, subtotal, total, onUpdateQuantity,
   );
 }
 
-function CartRow({ item, onUpdate, onRemove }: { item: CartItem; onUpdate: (qty: number) => void; onRemove: () => void }) {
+function CartRow({ item, discountPct, onSetDiscount, onUpdate, onRemove }: {
+  item: CartItem;
+  discountPct: number;
+  onSetDiscount: (pct: number) => void;
+  onUpdate: (qty: number) => void;
+  onRemove: () => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState("");
+
+  const effectivePrice = discountPct > 0 ? +(item.price * (1 - discountPct / 100)).toFixed(2) : item.price;
+  const lineTotal = +(effectivePrice * item.quantity).toFixed(2);
+
+  function applyDiscount() {
+    const pct = parseFloat(draft);
+    if (!isNaN(pct) && pct >= 0 && pct <= 100) onSetDiscount(pct);
+    else if (draft === "" || draft === "0") onSetDiscount(0);
+    setEditing(false);
+    setDraft("");
+  }
+
   return (
-    <li className="flex items-center gap-3 py-2.5">
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-medium text-zinc-800">{item.name}</p>
-        <p className="text-xs text-zinc-400">RM {item.price.toFixed(2)} each</p>
-      </div>
-      <div className="flex items-center gap-1">
-        <button onClick={() => onUpdate(item.quantity - 1)} className="flex h-6 w-6 items-center justify-center rounded-md border border-zinc-200 text-zinc-600 transition-colors hover:border-zinc-400 hover:bg-zinc-50">
-          <Minus className="h-3 w-3" />
+    <li className="py-2.5">
+      <div className="flex items-center gap-3">
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-sm font-medium text-zinc-800">{item.name}</p>
+          <div className="flex items-center gap-1.5 mt-0.5">
+            {discountPct > 0 ? (
+              <>
+                <span className="text-[11px] text-zinc-400 line-through">RM {item.price.toFixed(2)}</span>
+                <span className="text-[11px] font-semibold text-orange-600">RM {effectivePrice.toFixed(2)} (-{discountPct}%)</span>
+              </>
+            ) : (
+              <span className="text-xs text-zinc-400">RM {item.price.toFixed(2)} each</span>
+            )}
+          </div>
+        </div>
+        {/* Discount button */}
+        <button
+          onClick={() => { setEditing(e => !e); setDraft(discountPct > 0 ? String(discountPct) : ""); }}
+          className={`flex h-6 w-6 items-center justify-center rounded-md border text-xs transition-colors ${discountPct > 0 ? "border-orange-300 bg-orange-100 text-orange-600" : "border-zinc-200 text-zinc-400 hover:border-zinc-400 hover:bg-zinc-50"}`}
+        >
+          <Percent className="h-3 w-3" />
         </button>
-        <span className="w-6 text-center text-sm font-medium tabular-nums">{item.quantity}</span>
-        <button onClick={() => onUpdate(item.quantity + 1)} className="flex h-6 w-6 items-center justify-center rounded-md border border-zinc-200 text-zinc-600 transition-colors hover:border-zinc-400 hover:bg-zinc-50">
-          <Plus className="h-3 w-3" />
+        <div className="flex items-center gap-1">
+          <button onClick={() => onUpdate(item.quantity - 1)} className="flex h-6 w-6 items-center justify-center rounded-md border border-zinc-200 text-zinc-600 transition-colors hover:border-zinc-400 hover:bg-zinc-50">
+            <Minus className="h-3 w-3" />
+          </button>
+          <span className="w-6 text-center text-sm font-medium tabular-nums">{item.quantity}</span>
+          <button onClick={() => onUpdate(item.quantity + 1)} className="flex h-6 w-6 items-center justify-center rounded-md border border-zinc-200 text-zinc-600 transition-colors hover:border-zinc-400 hover:bg-zinc-50">
+            <Plus className="h-3 w-3" />
+          </button>
+        </div>
+        <span className="w-16 text-right text-sm font-semibold tabular-nums text-zinc-900">RM {lineTotal.toFixed(2)}</span>
+        <button onClick={onRemove} className="text-zinc-300 transition-colors hover:text-red-500">
+          <Trash2 className="h-4 w-4" />
         </button>
       </div>
-      <span className="w-16 text-right text-sm font-semibold tabular-nums text-zinc-900">RM {(item.price * item.quantity).toFixed(2)}</span>
-      <button onClick={onRemove} className="text-zinc-300 transition-colors hover:text-red-500">
-        <Trash2 className="h-4 w-4" />
-      </button>
+      {editing && (
+        <div className="mt-1.5 flex items-center gap-2 rounded-lg border border-orange-200 bg-orange-50 px-2 py-1.5">
+          <Percent className="h-3.5 w-3.5 text-orange-500 shrink-0" />
+          <input
+            type="number"
+            min="0"
+            max="100"
+            step="1"
+            value={draft}
+            onChange={e => setDraft(e.target.value)}
+            onKeyDown={e => { if (e.key === "Enter") applyDiscount(); if (e.key === "Escape") { setEditing(false); setDraft(""); } }}
+            placeholder="e.g. 50"
+            autoFocus
+            className="w-16 bg-transparent text-sm font-mono font-bold text-orange-700 focus:outline-none"
+          />
+          <span className="text-xs text-orange-600">% off</span>
+          <button onClick={applyDiscount} className="ml-auto rounded bg-orange-500 px-2 py-0.5 text-xs font-bold text-white hover:bg-orange-600">Apply</button>
+          {discountPct > 0 && (
+            <button onClick={() => { onSetDiscount(0); setEditing(false); }} className="text-xs text-zinc-400 hover:text-zinc-600">Clear</button>
+          )}
+        </div>
+      )}
     </li>
   );
 }

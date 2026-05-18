@@ -7,6 +7,7 @@ type OrderItemInput = {
   product_name: string;
   unit_price: number;
   quantity: number;
+  subtotal?: number;
 };
 
 type CheckoutBody = {

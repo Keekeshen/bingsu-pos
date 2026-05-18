@@ -54,7 +54,7 @@ export default function SalesHistoryPage() {
   const [fromDate, setFromDate] = useState(() => toLocalDate(new Date()));
   const [toDate, setToDate] = useState(() => toLocalDate(new Date()));
   const [expanded, setExpanded] = useState<string | null>(null);
-  const [receipt, setReceipt] = useState<{ order: ReceiptOrder; items: ReceiptLineItem[]; paymentMethod?: string; tableNumber?: string; serviceCharge?: number } | null>(null);
+  const [receipt, setReceipt] = useState<{ order: ReceiptOrder; items: ReceiptLineItem[]; paymentMethod?: string; tableNumber?: string; serviceCharge?: number; rounding?: number } | null>(null);
 
   const fetchOrders = useCallback(async () => {
     setLoading(true);
@@ -306,6 +306,10 @@ export default function SalesHistoryPage() {
           onClose={() => setReceipt(null)}
           order={receipt.order}
           items={receipt.items}
+          paymentMethod={receipt.paymentMethod}
+          tableNumber={receipt.tableNumber}
+          serviceCharge={receipt.serviceCharge}
+          rounding={receipt.rounding}
         />
       )}
     </div>

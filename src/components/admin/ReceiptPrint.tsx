@@ -38,6 +38,7 @@ type Props = {
   tierDiscount?: number;
   tierLabel?: string;
   serviceCharge?: number;
+  rounding?: number;
   tableBreakdown?: {
     voucherDiscount: number;
     serviceCharge: number;
@@ -52,7 +53,7 @@ const PAGE_STYLE = `
   * { box-sizing: border-box; }
 `;
 
-export default function ReceiptPrint({ open, onClose, order, items, customerName, paymentMethod, amountPaid, tableNumber, tierDiscount, tierLabel, serviceCharge, tableBreakdown }: Props) {
+export default function ReceiptPrint({ open, onClose, order, items, customerName, paymentMethod, amountPaid, tableNumber, tierDiscount, tierLabel, serviceCharge, rounding, tableBreakdown }: Props) {
   const receiptRef = useRef<HTMLDivElement>(null);
   const { counter, kitchen } = usePrinter();
 
@@ -77,12 +78,12 @@ export default function ReceiptPrint({ open, onClose, order, items, customerName
       tableNumber,
       customerName,
       items: items.map(i => ({ name: i.name, qty: i.quantity, unitPrice: i.unit_price, subtotal: i.subtotal, discountPct: i.discountPct })),
-      subtotal: order.subtotal,
+      subtotal: +items.reduce((s, i) => s + i.subtotal, 0).toFixed(2),
       tierDiscount,
       tierLabel,
       voucherDiscount: tableBreakdown?.voucherDiscount,
       serviceCharge: tableBreakdown?.serviceCharge ?? serviceCharge,
-      rounding: tableBreakdown?.rounding,
+      rounding: tableBreakdown?.rounding ?? rounding,
       total,
       paymentMethod,
       amountPaid,
@@ -122,6 +123,7 @@ export default function ReceiptPrint({ open, onClose, order, items, customerName
             tierDiscount={tierDiscount}
             tierLabel={tierLabel}
             serviceCharge={serviceCharge}
+            rounding={rounding}
             tableBreakdown={tableBreakdown}
           />
         </div>
@@ -159,11 +161,12 @@ type ContentProps = {
   tierDiscount?: number;
   tierLabel?: string;
   serviceCharge?: number;
+  rounding?: number;
   tableBreakdown?: Props["tableBreakdown"];
 };
 
 const ReceiptContent = forwardRef<HTMLDivElement, ContentProps>(
-  function ReceiptContent({ order, items, customerName, paymentMethod, amountPaid, tableNumber, tierDiscount, tierLabel, serviceCharge, tableBreakdown }, ref) {
+  function ReceiptContent({ order, items, customerName, paymentMethod, amountPaid, tableNumber, tierDiscount, tierLabel, serviceCharge, rounding, tableBreakdown }, ref) {
     const dateStr = new Date(order.created_at).toLocaleString("en-MY", {
       day: "2-digit", month: "2-digit", year: "numeric",
       hour: "2-digit", minute: "2-digit", hour12: false,
@@ -173,9 +176,10 @@ const ReceiptContent = forwardRef<HTMLDivElement, ContentProps>(
     const total = tableBreakdown ? tableBreakdown.payableTotal : order.total_amount;
     const paid = amountPaid ?? total;
     const change = paymentMethod?.toLowerCase() === "cash" ? +(paid - total).toFixed(2) : 0;
+    const itemsSubtotal = +items.reduce((s, i) => s + i.subtotal, 0).toFixed(2);
     const taxableBase = tableBreakdown
       ? +(tableBreakdown.payableTotal - tableBreakdown.serviceCharge - tableBreakdown.rounding).toFixed(2)
-      : order.subtotal;
+      : itemsSubtotal;
 
     const parts = order.order_number.split("-");
     const invoiceSeq = parts[parts.length - 1] ?? order.order_number;
@@ -237,7 +241,7 @@ const ReceiptContent = forwardRef<HTMLDivElement, ContentProps>(
           <Dashes />
 
           <div className="space-y-0.5">
-            <Row label="Subtotal" value={order.subtotal.toFixed(2)} />
+            <Row label="Subtotal" value={itemsSubtotal.toFixed(2)} />
             {tableBreakdown ? (
               <>
                 {tableBreakdown.voucherDiscount > 0 && (
@@ -258,6 +262,9 @@ const ReceiptContent = forwardRef<HTMLDivElement, ContentProps>(
                 )}
                 {serviceCharge && serviceCharge > 0 && (
                   <Row label="Service charge (6%)" value={serviceCharge.toFixed(2)} />
+                )}
+                {rounding != null && rounding !== 0 && (
+                  <Row label="Bill rounding" value={(rounding >= 0 ? "+" : "") + rounding.toFixed(2)} />
                 )}
               </>
             )}

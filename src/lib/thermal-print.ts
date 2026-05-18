@@ -54,7 +54,7 @@ export type ThermalReceiptData = {
   cashier?: string;
   tableNumber?: string;
   customerName?: string;
-  items: { name: string; qty: number; unitPrice: number; subtotal: number }[];
+  items: { name: string; qty: number; unitPrice: number; subtotal: number; discountPct?: number }[];
   subtotal: number;
   tierDiscount?: number;
   tierLabel?: string;
@@ -100,7 +100,11 @@ export function buildReceiptBytes(d: ThermalReceiptData): Uint8Array {
     const maxDesc = W - priceStr.length - 1;
     const descTrunc = desc.length > maxDesc ? desc.slice(0, maxDesc - 1) + "~" : desc;
     p.line(descTrunc + " ".repeat(W - descTrunc.length - priceStr.length) + priceStr);
-    p.line("   @ RM" + item.unitPrice.toFixed(2) + "/ea");
+    if (item.discountPct && item.discountPct > 0) {
+      p.line("   @ RM" + item.unitPrice.toFixed(2) + "/ea (-" + item.discountPct + "%)");
+    } else {
+      p.line("   @ RM" + item.unitPrice.toFixed(2) + "/ea");
+    }
   }
   p.dashes();
 

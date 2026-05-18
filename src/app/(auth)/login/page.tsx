@@ -77,9 +77,9 @@ export default function LoginPage() {
           <Image
             src="/logo.png"
             alt="Koori Dessert"
-            width={110}
-            height={110}
-            className="rounded-2xl"
+            width={330}
+            height={330}
+            className="rounded-3xl"
             priority
           />
           <div className="space-y-1 text-center">

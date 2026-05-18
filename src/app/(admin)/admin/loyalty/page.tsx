@@ -298,8 +298,8 @@ function CustomerPointsSection() {
   );
 }
 
-type RewardFormState = { name: string; description: string; points_cost: string; discount_rm: string; image_url: string | null; imageFile: File | null; imagePreview: string | null; };
-const EMPTY_REWARD_FORM: RewardFormState = { name: "", description: "", points_cost: "", discount_rm: "", image_url: null, imageFile: null, imagePreview: null };
+type RewardFormState = { name: string; description: string; points_cost: string; image_url: string | null; imageFile: File | null; imagePreview: string | null; };
+const EMPTY_REWARD_FORM: RewardFormState = { name: "", description: "", points_cost: "", image_url: null, imageFile: null, imagePreview: null };
 const REWARD_BUCKET = "reward-images";
 
 function RewardsCatalogueSection() {
@@ -323,7 +323,7 @@ function RewardsCatalogueSection() {
   function openAdd() { setEditTarget(null); setForm(EMPTY_REWARD_FORM); setDialogOpen(true); }
   function openEdit(reward: Reward) {
     setEditTarget(reward);
-    setForm({ name: reward.name, description: reward.description ?? "", points_cost: String(reward.points_cost), discount_rm: String(reward.discount_rm), image_url: reward.image_url ?? null, imageFile: null, imagePreview: null });
+    setForm({ name: reward.name, description: reward.description ?? "", points_cost: String(reward.points_cost), image_url: reward.image_url ?? null, imageFile: null, imagePreview: null });
     setDialogOpen(true);
   }
   function closeDialog() { setDialogOpen(false); setEditTarget(null); setForm(EMPTY_REWARD_FORM); }
@@ -347,10 +347,8 @@ function RewardsCatalogueSection() {
 
   async function handleSaveReward() {
     const pointsCost = parseInt(form.points_cost, 10);
-    const discountRm = form.discount_rm.trim() === "" ? 0 : parseFloat(form.discount_rm);
     if (!form.name.trim()) { toast.error("Name is required"); return; }
     if (isNaN(pointsCost) || pointsCost < 1) { toast.error("Points cost must be at least 1"); return; }
-    if (isNaN(discountRm) || discountRm < 0) { toast.error("Value (RM) must be 0 or more"); return; }
 
     setSaving(true);
     let image_url = form.image_url;
@@ -361,7 +359,7 @@ function RewardsCatalogueSection() {
     }
 
     const supabase = createClient();
-    const payload = { name: form.name.trim(), description: form.description.trim() || null, points_cost: pointsCost, discount_rm: discountRm, image_url };
+    const payload = { name: form.name.trim(), description: form.description.trim() || null, points_cost: pointsCost, discount_rm: 0, image_url };
 
     if (editTarget) {
       const { error } = await supabase.from("rewards").update(payload).eq("id", editTarget.id);
@@ -457,18 +455,9 @@ function RewardsCatalogueSection() {
               <Label htmlFor="rDesc">Description <span className="font-normal text-zinc-400">(optional)</span></Label>
               <Textarea id="rDesc" placeholder="Redeem for a free regular bingsu of your choice" rows={2} value={form.description} onChange={(e) => setForm(f => ({ ...f, description: e.target.value }))} />
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label htmlFor="rPoints">Points cost</Label>
-                <Input id="rPoints" type="number" min="1" placeholder="500" value={form.points_cost} onChange={(e) => setForm(f => ({ ...f, points_cost: e.target.value }))} />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="rDiscount">
-                  Value (RM) <span className="font-normal text-zinc-400">(optional)</span>
-                </Label>
-                <Input id="rDiscount" type="number" min="0" step="0.01" placeholder="0 for free items" value={form.discount_rm} onChange={(e) => setForm(f => ({ ...f, discount_rm: e.target.value }))} />
-                <p className="text-[11px] text-zinc-400">Leave 0 for free drinks / free bingsu</p>
-              </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="rPoints">Points cost</Label>
+              <Input id="rPoints" type="number" min="1" placeholder="500" value={form.points_cost} onChange={(e) => setForm(f => ({ ...f, points_cost: e.target.value }))} />
             </div>
           </div>
           <DialogFooter>

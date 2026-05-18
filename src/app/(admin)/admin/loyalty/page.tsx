@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useTransition, type ChangeEvent } from "react";
-import { Search, Plus, Pencil, Check, X, Loader2, ImageIcon } from "lucide-react";
+import { Search, Plus, Pencil, Check, X, Loader2, ImageIcon, Trash2 } from "lucide-react";
 import VoucherScanner from "@/components/admin/VoucherScanner";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
@@ -340,6 +340,15 @@ function RewardsCatalogueSection() {
     setLoading(false);
   }
 
+  async function deleteReward(reward: Reward) {
+    if (!confirm(`Delete "${reward.name}"? This cannot be undone.`)) return;
+    const supabase = createClient();
+    const { error } = await supabase.from("rewards").delete().eq("id", reward.id);
+    if (error) { toast.error("Failed to delete reward"); return; }
+    setRewards(prev => prev.filter(r => r.id !== reward.id));
+    toast.success("Reward deleted");
+  }
+
   function openAdd() { setEditTarget(null); setForm(EMPTY_REWARD_FORM); setDialogOpen(true); }
   function openEdit(reward: Reward) {
     setEditTarget(reward);
@@ -437,6 +446,7 @@ function RewardsCatalogueSection() {
                 <Button variant="ghost" size="icon" className={`h-8 w-8 ${reward.is_active ? "text-zinc-400 hover:text-red-500" : "text-zinc-400 hover:text-emerald-600"}`} onClick={() => toggleActive(reward)}>
                   {reward.is_active ? <X className="h-3.5 w-3.5" /> : <Check className="h-3.5 w-3.5" />}
                 </Button>
+                <Button variant="ghost" size="icon" className="h-8 w-8 text-zinc-300 hover:text-red-500" onClick={() => deleteReward(reward)}><Trash2 className="h-3.5 w-3.5" /></Button>
               </div>
             </div>
           ))}

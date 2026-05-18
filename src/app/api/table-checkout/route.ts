@@ -142,10 +142,12 @@ export async function POST(request: NextRequest) {
       if (meetsMinSpend) {
         pointsEarned = Math.floor(totals.total * pointsPerRm);
         if (pointsEarned > 0) {
-          const { data: profile } = await admin.from("profiles").select("loyalty_points").eq("id", rewardCustomerId).single();
+          const { data: profile } = await admin.from("profiles").select("loyalty_points, redeem_points").eq("id", rewardCustomerId).single();
           if (profile) {
+            const newLoyaltyPoints = (profile.loyalty_points ?? 0) + pointsEarned;
+            const newRedeemPoints = (profile.redeem_points ?? profile.loyalty_points ?? 0) + pointsEarned;
             const { error: ptsErr } = await admin.from("profiles")
-              .update({ loyalty_points: (profile.loyalty_points ?? 0) + pointsEarned })
+              .update({ loyalty_points: newLoyaltyPoints, redeem_points: newRedeemPoints })
               .eq("id", rewardCustomerId);
             if (ptsErr) {
               console.error("[table-checkout] loyalty points update error:", ptsErr);

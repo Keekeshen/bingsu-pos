@@ -72,12 +72,13 @@ export async function POST(request: NextRequest) {
     const totalAmount = +(subtotal - pointsDiscountAmount - voucherDiscountAmount + serviceChargeAmount).toFixed(2);
     if (totalAmount < 0) return err("points_redeemed exceeds order value", 400);
 
-    let customerProfile: { loyalty_points: number } | null = null;
+    let customerProfile: { loyalty_points: number; redeem_points: number } | null = null;
     if (customer_id) {
-      const { data: cp, error: cpError } = await admin.from("profiles").select("loyalty_points").eq("id", customer_id).single();
+      const { data: cp, error: cpError } = await admin.from("profiles").select("loyalty_points, redeem_points").eq("id", customer_id).single();
       if (cpError || !cp) return err("Customer not found", 400);
       customerProfile = cp;
-      if (points_redeemed > cp.loyalty_points) return err(`Customer only has ${cp.loyalty_points} points available`, 400);
+      const spendable = cp.redeem_points ?? cp.loyalty_points ?? 0;
+      if (points_redeemed > spendable) return err(`Customer only has ${spendable} redeemable points available`, 400);
     } else if (points_redeemed > 0) {
       return err("Cannot redeem points without a customer_id", 400);
     }
@@ -104,8 +105,11 @@ export async function POST(request: NextRequest) {
     if (customer_id && customerProfile) {
       const meetsMinSpend = !loyaltyRule?.min_spend || totalAmount >= loyaltyRule.min_spend;
       if (meetsMinSpend) pointsEarned = Math.floor(totalAmount * pointsPerRm);
-      const netDelta = pointsEarned - points_redeemed;
-      const { error: pointsError } = await admin.from("profiles").update({ loyalty_points: Math.max(0, customerProfile.loyalty_points + netDelta) }).eq("id", customer_id);
+      // loyalty_points: cumulative/tier tracking — only goes UP (never deducted for redemptions)
+      // redeem_points: spendable balance — earned - redeemed at POS
+      const newLoyaltyPoints = customerProfile.loyalty_points + pointsEarned;
+      const newRedeemPoints = Math.max(0, (customerProfile.redeem_points ?? customerProfile.loyalty_points) + pointsEarned - points_redeemed);
+      const { error: pointsError } = await admin.from("profiles").update({ loyalty_points: newLoyaltyPoints, redeem_points: newRedeemPoints }).eq("id", customer_id);
       if (pointsError) { console.error("[checkout] loyalty points update error:", pointsError); pointsEarned = 0; }
     }
 

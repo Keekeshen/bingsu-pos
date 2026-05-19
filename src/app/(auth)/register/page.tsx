@@ -8,6 +8,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import { Check, X } from "lucide-react";
+
+const RULES = [
+  { label: "At least 8 characters", test: (p: string) => p.length >= 8 },
+  { label: "Contains a letter", test: (p: string) => /[a-zA-Z]/.test(p) },
+  { label: "Contains a number", test: (p: string) => /[0-9]/.test(p) },
+  { label: "Contains a symbol (!@#$…)", test: (p: string) => /[^a-zA-Z0-9]/.test(p) },
+];
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -16,12 +24,26 @@ export default function RegisterPage() {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showRules, setShowRules] = useState(false);
+
+  const allRulesMet = RULES.every(r => r.test(password));
+  const passwordsMatch = password === confirm;
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    setLoading(true);
 
+    if (!allRulesMet) {
+      toast.error("Password does not meet the requirements.");
+      return;
+    }
+    if (!passwordsMatch) {
+      toast.error("Passwords do not match.");
+      return;
+    }
+
+    setLoading(true);
     const supabase = createClient();
     const { error } = await supabase.auth.signUp({
       email,
@@ -67,12 +89,61 @@ export default function RegisterPage() {
               <Label htmlFor="phone">Phone <span className="text-zinc-400 font-normal">(optional)</span></Label>
               <Input id="phone" type="tel" autoComplete="tel" placeholder="+60 12 345 6789" value={phone} onChange={(e) => setPhone(e.target.value)} disabled={loading} />
             </div>
+
+            {/* Password */}
             <div className="space-y-1.5">
               <Label htmlFor="password">Password</Label>
-              <Input id="password" type="password" autoComplete="new-password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={8} disabled={loading} />
-              <p className="text-xs text-zinc-400">Minimum 8 characters</p>
+              <Input
+                id="password"
+                type="password"
+                autoComplete="new-password"
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                onFocus={() => setShowRules(true)}
+                required
+                disabled={loading}
+              />
+              {showRules && (
+                <ul className="mt-2 space-y-1 rounded-xl border border-zinc-100 bg-zinc-50 px-3 py-2">
+                  {RULES.map(rule => {
+                    const met = rule.test(password);
+                    return (
+                      <li key={rule.label} className={`flex items-center gap-2 text-xs ${met ? "text-emerald-600" : "text-zinc-400"}`}>
+                        {met
+                          ? <Check className="h-3 w-3 shrink-0" />
+                          : <X className="h-3 w-3 shrink-0" />}
+                        {rule.label}
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
             </div>
-            <Button type="submit" className="w-full" disabled={loading}>
+
+            {/* Confirm password */}
+            <div className="space-y-1.5">
+              <Label htmlFor="confirm">Confirm password</Label>
+              <Input
+                id="confirm"
+                type="password"
+                autoComplete="new-password"
+                placeholder="••••••••"
+                value={confirm}
+                onChange={(e) => setConfirm(e.target.value)}
+                required
+                disabled={loading}
+                className={confirm && !passwordsMatch ? "border-red-400 focus-visible:ring-red-400" : ""}
+              />
+              {confirm && !passwordsMatch && (
+                <p className="text-xs text-red-500">Passwords do not match.</p>
+              )}
+              {confirm && passwordsMatch && (
+                <p className="text-xs text-emerald-600 flex items-center gap-1"><Check className="h-3 w-3" /> Passwords match</p>
+              )}
+            </div>
+
+            <Button type="submit" className="w-full" disabled={loading || !allRulesMet || !passwordsMatch}>
               {loading ? "Creating account…" : "Create account"}
             </Button>
           </form>

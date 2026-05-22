@@ -41,7 +41,11 @@ function LoginForm() {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
     if (error) {
-      toast.error("Invalid login credentials. Please check your password.");
+      if (error.message.toLowerCase().includes("email not confirmed")) {
+        toast.error("Please verify your email before logging in. Check your inbox for the verification link.");
+      } else {
+        toast.error("Invalid login credentials. Please check your password.");
+      }
       setLoading(false);
       return;
     }

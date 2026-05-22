@@ -34,6 +34,7 @@ export default function TableOrderMenu({ tableSlug }: Props) {
   const [showCart, setShowCart] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [detail, setDetail] = useState<Product | null>(null);
+  const [activeCategory, setActiveCategory] = useState<string | null>(null);
 
   useEffect(() => {
     fetch("/api/menu")
@@ -43,6 +44,7 @@ export default function TableOrderMenu({ tableSlug }: Props) {
   }, []);
 
   const categories = Array.from(new Set(products.map((p) => p.category ?? "Other")));
+  const visibleCategories = activeCategory ? categories.filter(c => c === activeCategory) : categories;
 
   function getQty(id: string) {
     return cart.find((i) => i.product_id === id)?.quantity ?? 0;
@@ -131,9 +133,38 @@ export default function TableOrderMenu({ tableSlug }: Props) {
         </div>
       </header>
 
+      {/* Sticky category filter */}
+      <div className="sticky top-[65px] z-10 bg-zinc-50 border-b border-zinc-200 shadow-sm">
+        <div className="mx-auto max-w-lg flex gap-2 overflow-x-auto px-4 py-2.5 scrollbar-hide">
+          <button
+            onClick={() => setActiveCategory(null)}
+            className={`shrink-0 rounded-full px-4 py-1.5 text-xs font-semibold transition-colors ${
+              activeCategory === null
+                ? "bg-zinc-900 text-white"
+                : "bg-white border border-zinc-200 text-zinc-600 hover:border-zinc-400"
+            }`}
+          >
+            All
+          </button>
+          {categories.map((cat) => (
+            <button
+              key={cat}
+              onClick={() => setActiveCategory(activeCategory === cat ? null : cat)}
+              className={`shrink-0 rounded-full px-4 py-1.5 text-xs font-semibold capitalize transition-colors ${
+                activeCategory === cat
+                  ? "bg-zinc-900 text-white"
+                  : "bg-white border border-zinc-200 text-zinc-600 hover:border-zinc-400"
+              }`}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Menu */}
       <main className="mx-auto max-w-lg px-4 pt-4 space-y-6">
-        {categories.map((cat) => (
+        {visibleCategories.map((cat) => (
           <section key={cat}>
             <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-zinc-400">{cat}</h2>
             <div className="grid grid-cols-2 gap-3">

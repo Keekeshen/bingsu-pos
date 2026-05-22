@@ -31,11 +31,7 @@ export default function TablesPage() {
   const [newLabel, setNewLabel] = useState("");
   const [newCapacity, setNewCapacity] = useState("4");
   const [qrTable, setQrTable] = useState<Table | null>(null);
-  const [origin, setOrigin] = useState("");
-
-  useEffect(() => {
-    setOrigin(window.location.origin);
-  }, []);
+  const origin = "https://kooridessert.com";
 
   const load = useCallback(async () => {
     const supabase = createClient();

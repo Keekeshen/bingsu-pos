@@ -2,8 +2,20 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import { Plus, Minus, ShoppingCart, CheckCircle, ChefHat, X } from "lucide-react";
+import { Plus, Minus, ShoppingCart, CheckCircle, ChefHat, X, Check } from "lucide-react";
 import { toast } from "sonner";
+
+const TOPPINGS = [
+  "Mango Popping Ball",
+  "Melon Jelly",
+  "Aiyu Jelly",
+  "Grass Jelly",
+  "Taufufa",
+  "Taro Ball",
+  "Cream Cheese",
+  "Boba Jelly",
+];
+const TOPPING_PRICE = 2;
 
 type Product = {
   id: string;
@@ -15,15 +27,20 @@ type Product = {
 };
 
 type CartItem = {
+  key: string;
   product_id: string;
   name: string;
-  price: number;
+  basePrice: number;
+  toppings: string[];
+  unitPrice: number;
   quantity: number;
 };
 
-type Props = {
-  tableSlug: string;
-};
+type Props = { tableSlug: string };
+
+function toppingKey(productId: string, toppings: string[]) {
+  return productId + (toppings.length ? "|" + [...toppings].sort().join(",") : "");
+}
 
 export default function TableOrderMenu({ tableSlug }: Props) {
   const [products, setProducts] = useState<Product[]>([]);
@@ -34,6 +51,7 @@ export default function TableOrderMenu({ tableSlug }: Props) {
   const [showCart, setShowCart] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [detail, setDetail] = useState<Product | null>(null);
+  const [selectedToppings, setSelectedToppings] = useState<string[]>([]);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
 
   useEffect(() => {
@@ -46,54 +64,76 @@ export default function TableOrderMenu({ tableSlug }: Props) {
   const categories = Array.from(new Set(products.map((p) => p.category ?? "Other")));
   const visibleCategories = activeCategory ? categories.filter(c => c === activeCategory) : categories;
 
-  function getQty(id: string) {
-    return cart.find((i) => i.product_id === id)?.quantity ?? 0;
+  function openDetail(p: Product) {
+    setDetail(p);
+    setSelectedToppings([]);
   }
 
-  function add(p: Product) {
-    setCart((prev) => {
-      const ex = prev.find((i) => i.product_id === p.id);
-      if (ex) return prev.map((i) => i.product_id === p.id ? { ...i, quantity: i.quantity + 1 } : i);
-      return [...prev, { product_id: p.id, name: p.name, price: p.price, quantity: 1 }];
+  function toggleTopping(t: string) {
+    setSelectedToppings(prev =>
+      prev.includes(t) ? prev.filter(x => x !== t) : [...prev, t]
+    );
+  }
+
+  function getCartQty(productId: string, toppings: string[]) {
+    const k = toppingKey(productId, toppings);
+    return cart.find(i => i.key === k)?.quantity ?? 0;
+  }
+
+  function getTotalQtyForProduct(productId: string) {
+    return cart.filter(i => i.product_id === productId).reduce((s, i) => s + i.quantity, 0);
+  }
+
+  function addToCart(product: Product, toppings: string[]) {
+    const k = toppingKey(product.id, toppings);
+    const unitPrice = +(product.price + toppings.length * TOPPING_PRICE).toFixed(2);
+    setCart(prev => {
+      const ex = prev.find(i => i.key === k);
+      if (ex) return prev.map(i => i.key === k ? { ...i, quantity: i.quantity + 1 } : i);
+      return [...prev, { key: k, product_id: product.id, name: product.name, basePrice: product.price, toppings, unitPrice, quantity: 1 }];
     });
   }
 
-  function remove(id: string) {
-    setCart((prev) => {
-      const ex = prev.find((i) => i.product_id === id);
+  function removeFromCart(key: string) {
+    setCart(prev => {
+      const ex = prev.find(i => i.key === key);
       if (!ex) return prev;
-      if (ex.quantity <= 1) return prev.filter((i) => i.product_id !== id);
-      return prev.map((i) => i.product_id === id ? { ...i, quantity: i.quantity - 1 } : i);
+      if (ex.quantity <= 1) return prev.filter(i => i.key !== key);
+      return prev.map(i => i.key === key ? { ...i, quantity: i.quantity - 1 } : i);
     });
   }
 
   const totalItems = cart.reduce((s, i) => s + i.quantity, 0);
-  const totalPrice = cart.reduce((s, i) => s + i.price * i.quantity, 0);
+  const totalPrice = cart.reduce((s, i) => s + i.unitPrice * i.quantity, 0);
+
+  const detailToppingPrice = selectedToppings.length * TOPPING_PRICE;
+  const detailTotalPrice = detail ? detail.price + detailToppingPrice : 0;
+  const detailQty = detail ? getCartQty(detail.id, selectedToppings) : 0;
 
   async function submitOrder() {
     if (cart.length === 0) return;
     setSubmitting(true);
     try {
+      const items = cart.map(item => ({
+        product_id: item.product_id,
+        product_name: item.toppings.length
+          ? `${item.name} (+ ${item.toppings.join(", ")})`
+          : item.name,
+        unit_price: item.unitPrice,
+        quantity: item.quantity,
+      }));
+
       const res = await fetch("/api/table-order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          table_slug: tableSlug,
-          customer_id: null,
-          items: cart.map(({ product_id, name, price, quantity }) => ({
-            product_id,
-            product_name: name,
-            unit_price: price,
-            quantity,
-          })),
-        }),
+        body: JSON.stringify({ table_slug: tableSlug, customer_id: null, items }),
       });
       if (!res.ok) {
         const e = await res.json().catch(() => ({}));
         toast.error(e.error ?? "Failed to submit order");
         return;
       }
-      setOrderCount((c) => c + 1);
+      setOrderCount(c => c + 1);
       setCart([]);
       setShowCart(false);
       setShowSuccess(true);
@@ -135,26 +175,18 @@ export default function TableOrderMenu({ tableSlug }: Props) {
 
       {/* Sticky category filter */}
       <div className="sticky top-[65px] z-10 bg-zinc-50 border-b border-zinc-200 shadow-sm">
-        <div className="mx-auto max-w-lg flex gap-2 overflow-x-auto px-4 py-2.5 scrollbar-hide">
+        <div className="mx-auto max-w-lg flex gap-2 overflow-x-auto px-4 py-2.5 no-scrollbar">
           <button
             onClick={() => setActiveCategory(null)}
-            className={`shrink-0 rounded-full px-4 py-1.5 text-xs font-semibold transition-colors ${
-              activeCategory === null
-                ? "bg-zinc-900 text-white"
-                : "bg-white border border-zinc-200 text-zinc-600 hover:border-zinc-400"
-            }`}
+            className={`shrink-0 rounded-full px-4 py-1.5 text-xs font-semibold transition-colors ${activeCategory === null ? "bg-zinc-900 text-white" : "bg-white border border-zinc-200 text-zinc-600 hover:border-zinc-400"}`}
           >
             All
           </button>
-          {categories.map((cat) => (
+          {categories.map(cat => (
             <button
               key={cat}
               onClick={() => setActiveCategory(activeCategory === cat ? null : cat)}
-              className={`shrink-0 rounded-full px-4 py-1.5 text-xs font-semibold capitalize transition-colors ${
-                activeCategory === cat
-                  ? "bg-zinc-900 text-white"
-                  : "bg-white border border-zinc-200 text-zinc-600 hover:border-zinc-400"
-              }`}
+              className={`shrink-0 rounded-full px-4 py-1.5 text-xs font-semibold capitalize transition-colors ${activeCategory === cat ? "bg-zinc-900 text-white" : "bg-white border border-zinc-200 text-zinc-600 hover:border-zinc-400"}`}
             >
               {cat}
             </button>
@@ -164,21 +196,17 @@ export default function TableOrderMenu({ tableSlug }: Props) {
 
       {/* Menu */}
       <main className="mx-auto max-w-lg px-4 pt-4 space-y-6">
-        {visibleCategories.map((cat) => (
+        {visibleCategories.map(cat => (
           <section key={cat}>
             <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-zinc-400">{cat}</h2>
             <div className="grid grid-cols-2 gap-3">
               {products
-                .filter((p) => (p.category ?? "Other") === cat)
-                .map((product) => {
-                  const qty = getQty(product.id);
+                .filter(p => (p.category ?? "Other") === cat)
+                .map(product => {
+                  const totalQty = getTotalQtyForProduct(product.id);
                   return (
                     <div key={product.id} className="relative flex flex-col rounded-2xl bg-white shadow-sm overflow-hidden">
-                      {/* Image — tappable to open detail */}
-                      <button
-                        className="relative w-full aspect-square bg-zinc-100 overflow-hidden"
-                        onClick={() => setDetail(product)}
-                      >
+                      <button className="relative w-full aspect-square bg-zinc-100 overflow-hidden" onClick={() => openDetail(product)}>
                         {product.image_url ? (
                           <Image src={product.image_url} alt={product.name} fill className="object-cover" />
                         ) : (
@@ -187,37 +215,26 @@ export default function TableOrderMenu({ tableSlug }: Props) {
                           </div>
                         )}
                       </button>
-
-                      {/* Info */}
                       <div className="p-2.5 flex flex-col gap-1.5">
-                        <button className="text-left" onClick={() => setDetail(product)}>
+                        <button className="text-left" onClick={() => openDetail(product)}>
                           <p className="text-sm font-semibold text-zinc-900 line-clamp-2 leading-tight">{product.name}</p>
                           {product.description && (
                             <p className="text-xs text-zinc-400 mt-0.5 line-clamp-2 leading-snug">{product.description}</p>
                           )}
                           <p className="text-sm font-bold text-zinc-800 mt-1">RM {product.price.toFixed(2)}</p>
                         </button>
-
-                        {/* Qty controls */}
                         <div className="flex items-center justify-end gap-2 mt-0.5">
-                          {qty > 0 && (
-                            <>
-                              <button onClick={() => remove(product.id)} className="flex h-7 w-7 items-center justify-center rounded-full border border-zinc-200 text-zinc-600 hover:border-zinc-400 active:scale-95">
-                                <Minus className="h-3.5 w-3.5" />
-                              </button>
-                              <span className="w-5 text-center text-sm font-semibold tabular-nums">{qty}</span>
-                            </>
-                          )}
-                          <button onClick={() => add(product)} className="flex h-7 w-7 items-center justify-center rounded-full bg-zinc-900 text-white hover:bg-zinc-700 active:scale-95">
+                          <button
+                            onClick={() => openDetail(product)}
+                            className="flex h-7 w-7 items-center justify-center rounded-full bg-zinc-900 text-white hover:bg-zinc-700 active:scale-95"
+                          >
                             <Plus className="h-3.5 w-3.5" />
                           </button>
                         </div>
                       </div>
-
-                      {/* Cart badge */}
-                      {qty > 0 && (
+                      {totalQty > 0 && (
                         <div className="absolute top-2 right-2 h-5 w-5 flex items-center justify-center rounded-full bg-zinc-900 text-white text-[10px] font-bold">
-                          {qty}
+                          {totalQty}
                         </div>
                       )}
                     </div>
@@ -248,7 +265,7 @@ export default function TableOrderMenu({ tableSlug }: Props) {
       {/* Cart sheet */}
       {showCart && (
         <div className="fixed inset-0 z-20 flex flex-col justify-end bg-black/50" onClick={() => setShowCart(false)}>
-          <div className="rounded-t-2xl bg-white p-4 max-h-[75vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+          <div className="rounded-t-2xl bg-white p-4 max-h-[75vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-base font-bold text-zinc-900">Your Order</h3>
               <button onClick={() => setShowCart(false)} className="rounded-full p-1 hover:bg-zinc-100">
@@ -256,19 +273,22 @@ export default function TableOrderMenu({ tableSlug }: Props) {
               </button>
             </div>
             <ul className="divide-y divide-zinc-100 mb-4">
-              {cart.map((item) => (
-                <li key={item.product_id} className="flex items-center justify-between py-2.5">
-                  <div className="min-w-0 flex-1 pr-4">
-                    <p className="text-sm font-medium text-zinc-900 truncate">{item.name}</p>
-                    <p className="text-xs text-zinc-400">RM {item.price.toFixed(2)} each</p>
+              {cart.map(item => (
+                <li key={item.key} className="flex items-start justify-between py-2.5 gap-3">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium text-zinc-900">{item.name}</p>
+                    {item.toppings.length > 0 && (
+                      <p className="text-xs text-zinc-400 mt-0.5">+{item.toppings.join(", ")}</p>
+                    )}
+                    <p className="text-xs text-zinc-400 mt-0.5">RM {item.unitPrice.toFixed(2)} each</p>
                   </div>
-                  <div className="flex items-center gap-2 shrink-0">
-                    <button onClick={() => remove(item.product_id)} className="flex h-6 w-6 items-center justify-center rounded-full border border-zinc-200 text-zinc-600 active:scale-95">
+                  <div className="flex items-center gap-2 shrink-0 mt-0.5">
+                    <button onClick={() => removeFromCart(item.key)} className="flex h-6 w-6 items-center justify-center rounded-full border border-zinc-200 text-zinc-600 active:scale-95">
                       <Minus className="h-3 w-3" />
                     </button>
                     <span className="w-5 text-center text-sm font-semibold tabular-nums">{item.quantity}</span>
                     <button
-                      onClick={() => { const p = products.find((x) => x.id === item.product_id); if (p) add(p); }}
+                      onClick={() => addToCart(products.find(p => p.id === item.product_id)!, item.toppings)}
                       className="flex h-6 w-6 items-center justify-center rounded-full bg-zinc-900 text-white active:scale-95"
                     >
                       <Plus className="h-3 w-3" />
@@ -309,10 +329,7 @@ export default function TableOrderMenu({ tableSlug }: Props) {
             <p className="text-sm font-bold text-amber-800">Please pay at the counter</p>
             <p className="mt-1 text-xs text-amber-700">When you are ready, head to the counter to settle your bill.</p>
           </div>
-          <button
-            onClick={() => setShowSuccess(false)}
-            className="mt-6 w-full rounded-xl bg-zinc-900 py-3 text-sm font-semibold text-white hover:bg-zinc-700"
-          >
+          <button onClick={() => setShowSuccess(false)} className="mt-6 w-full rounded-xl bg-zinc-900 py-3 text-sm font-semibold text-white hover:bg-zinc-700">
             Order more
           </button>
         </div>
@@ -321,7 +338,7 @@ export default function TableOrderMenu({ tableSlug }: Props) {
       {/* Product detail modal */}
       {detail && (
         <div className="fixed inset-0 z-40 flex flex-col justify-end bg-black/60" onClick={() => setDetail(null)}>
-          <div className="rounded-t-3xl bg-white overflow-hidden max-h-[85vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
+          <div className="rounded-t-3xl bg-white overflow-hidden max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}>
             {/* Image */}
             <div className="relative w-full aspect-video bg-zinc-100 shrink-0">
               {detail.image_url ? (
@@ -336,40 +353,72 @@ export default function TableOrderMenu({ tableSlug }: Props) {
               </button>
             </div>
 
-            {/* Content */}
+            {/* Scrollable content */}
             <div className="flex flex-col gap-4 p-5 overflow-y-auto">
+              {/* Name + price */}
               <div>
                 <h2 className="text-xl font-black text-zinc-900">{detail.name}</h2>
-                <p className="text-lg font-bold text-zinc-700 mt-0.5">RM {detail.price.toFixed(2)}</p>
+                <p className="text-lg font-bold text-zinc-700 mt-0.5">
+                  RM {detailTotalPrice.toFixed(2)}
+                  {detailToppingPrice > 0 && (
+                    <span className="ml-1.5 text-sm font-normal text-zinc-400">(+RM {detailToppingPrice.toFixed(2)} toppings)</span>
+                  )}
+                </p>
                 {detail.description && (
                   <p className="mt-2 text-base text-zinc-500 leading-relaxed">{detail.description}</p>
                 )}
               </div>
 
-              {/* Add/remove controls */}
+              {/* Toppings */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-sm font-bold text-zinc-900">Extra Toppings</p>
+                  <span className="text-xs text-zinc-400">+RM {TOPPING_PRICE.toFixed(2)} each</span>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  {TOPPINGS.map(t => {
+                    const selected = selectedToppings.includes(t);
+                    return (
+                      <button
+                        key={t}
+                        onClick={() => toggleTopping(t)}
+                        className={`flex items-center gap-2 rounded-xl border px-3 py-2.5 text-left text-sm transition-colors ${
+                          selected
+                            ? "border-zinc-900 bg-zinc-900 text-white"
+                            : "border-zinc-200 bg-white text-zinc-700 hover:border-zinc-400"
+                        }`}
+                      >
+                        <div className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full border ${selected ? "border-white bg-white" : "border-zinc-300"}`}>
+                          {selected && <Check className="h-2.5 w-2.5 text-zinc-900" />}
+                        </div>
+                        <span className="leading-tight">{t}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Qty controls */}
               <div className="flex items-center gap-3 rounded-2xl bg-zinc-50 px-4 py-3">
-                {getQty(detail.id) > 0 ? (
+                {detailQty > 0 ? (
                   <>
-                    <button onClick={() => remove(detail.id)} className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-zinc-300 text-zinc-600 active:scale-95">
+                    <button onClick={() => removeFromCart(toppingKey(detail.id, selectedToppings))} className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-zinc-300 text-zinc-600 active:scale-95">
                       <Minus className="h-4 w-4" />
                     </button>
-                    <span className="flex-1 text-center text-xl font-black tabular-nums">{getQty(detail.id)}</span>
-                    <button onClick={() => add(detail)} className="flex h-10 w-10 items-center justify-center rounded-full bg-zinc-900 text-white active:scale-95">
+                    <span className="flex-1 text-center text-xl font-black tabular-nums">{detailQty}</span>
+                    <button onClick={() => addToCart(detail, selectedToppings)} className="flex h-10 w-10 items-center justify-center rounded-full bg-zinc-900 text-white active:scale-95">
                       <Plus className="h-4 w-4" />
                     </button>
                   </>
                 ) : (
-                  <button onClick={() => add(detail)} className="flex w-full items-center justify-center gap-2 rounded-xl bg-zinc-900 py-3 text-sm font-bold text-white hover:bg-zinc-700 active:scale-95">
-                    <Plus className="h-4 w-4" /> Add to order
+                  <button onClick={() => addToCart(detail, selectedToppings)} className="flex w-full items-center justify-center gap-2 rounded-xl bg-zinc-900 py-3 text-sm font-bold text-white hover:bg-zinc-700 active:scale-95">
+                    <Plus className="h-4 w-4" /> Add to order · RM {detailTotalPrice.toFixed(2)}
                   </button>
                 )}
               </div>
 
-              {getQty(detail.id) > 0 && (
-                <button
-                  onClick={() => { setDetail(null); setShowCart(true); }}
-                  className="w-full rounded-xl bg-zinc-900 py-3 text-sm font-bold text-white hover:bg-zinc-700"
-                >
+              {totalItems > 0 && (
+                <button onClick={() => { setDetail(null); setShowCart(true); }} className="w-full rounded-xl border-2 border-zinc-900 py-3 text-sm font-bold text-zinc-900 hover:bg-zinc-50">
                   View order · RM {totalPrice.toFixed(2)}
                 </button>
               )}

@@ -161,7 +161,10 @@ export default function TableOrderMenu({ tableSlug }: Props) {
                       <div className="p-2.5 flex flex-col gap-1.5">
                         <button className="text-left" onClick={() => setDetail(product)}>
                           <p className="text-sm font-semibold text-zinc-900 line-clamp-2 leading-tight">{product.name}</p>
-                          <p className="text-xs font-semibold text-zinc-700 mt-0.5">RM {product.price.toFixed(2)}</p>
+                          {product.description && (
+                            <p className="text-xs text-zinc-400 mt-0.5 line-clamp-2 leading-snug">{product.description}</p>
+                          )}
+                          <p className="text-sm font-bold text-zinc-800 mt-1">RM {product.price.toFixed(2)}</p>
                         </button>
 
                         {/* Qty controls */}
@@ -308,7 +311,7 @@ export default function TableOrderMenu({ tableSlug }: Props) {
                 <h2 className="text-xl font-black text-zinc-900">{detail.name}</h2>
                 <p className="text-lg font-bold text-zinc-700 mt-0.5">RM {detail.price.toFixed(2)}</p>
                 {detail.description && (
-                  <p className="mt-2 text-sm text-zinc-500 leading-relaxed">{detail.description}</p>
+                  <p className="mt-2 text-base text-zinc-500 leading-relaxed">{detail.description}</p>
                 )}
               </div>
 

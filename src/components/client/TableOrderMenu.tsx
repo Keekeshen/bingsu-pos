@@ -1,10 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Link from "next/link";
-import { Plus, Minus, ShoppingCart, CheckCircle, ChefHat, X, Star, LogIn, Home } from "lucide-react";
+import Image from "next/image";
+import { Plus, Minus, ShoppingCart, CheckCircle, ChefHat, X } from "lucide-react";
 import { toast } from "sonner";
-import { createClient } from "@/lib/supabase/client";
 
 type Product = {
   id: string;
@@ -23,7 +22,6 @@ type CartItem = {
 };
 
 type Props = {
-  /** `tables.id` — never show human table_number in the URL */
   tableSlug: string;
 };
 
@@ -35,22 +33,13 @@ export default function TableOrderMenu({ tableSlug }: Props) {
   const [orderCount, setOrderCount] = useState(0);
   const [showCart, setShowCart] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
-  const [userId, setUserId] = useState<string | null>(null);
-  const [userName, setUserName] = useState<string | null>(null);
+  const [detail, setDetail] = useState<Product | null>(null);
 
   useEffect(() => {
     fetch("/api/menu")
       .then((r) => r.json())
       .then((d) => { setProducts(d.products ?? []); setLoading(false); })
       .catch(() => { toast.error("Failed to load menu"); setLoading(false); });
-
-    const supabase = createClient();
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) {
-        setUserId(session.user.id);
-        setUserName(session.user.user_metadata?.full_name || session.user.email || null);
-      }
-    });
   }, []);
 
   const categories = Array.from(new Set(products.map((p) => p.category ?? "Other")));
@@ -88,7 +77,7 @@ export default function TableOrderMenu({ tableSlug }: Props) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           table_slug: tableSlug,
-          customer_id: userId || null,
+          customer_id: null,
           items: cart.map(({ product_id, name, price, quantity }) => ({
             product_id,
             product_name: name,
@@ -123,6 +112,7 @@ export default function TableOrderMenu({ tableSlug }: Props) {
 
   return (
     <div className="min-h-screen bg-zinc-50 pb-32">
+      {/* Header */}
       <header className="sticky top-0 z-10 bg-white shadow-sm">
         <div className="mx-auto max-w-lg px-4 py-4 flex items-center justify-between">
           <div>
@@ -132,64 +122,70 @@ export default function TableOrderMenu({ tableSlug }: Props) {
             </div>
             <p className="text-xs text-zinc-500 mt-0.5">Dine-in order</p>
           </div>
-          <div className="flex items-center gap-2">
-            {orderCount > 0 && (
-              <div className="flex items-center gap-1.5 rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-700">
-                <CheckCircle className="h-3.5 w-3.5" />
-                {orderCount} round{orderCount > 1 ? "s" : ""} sent
-              </div>
-            )}
-            {userId ? (
-              <div className="flex items-center gap-1 rounded-full bg-zinc-100 px-2 py-1 text-xs text-zinc-600">
-                <Star className="h-3 w-3 text-amber-500 fill-amber-500" />
-                <span className="hidden sm:inline">{userName?.split(" ")[0] || "Member"}</span>
-              </div>
-            ) : (
-              <button
-                onClick={() => window.location.href = `/login?next=/order/${tableSlug}`}
-                className="flex items-center gap-1 rounded-full border border-zinc-200 px-2.5 py-1 text-xs text-zinc-500 hover:border-zinc-400 hover:text-zinc-700"
-              >
-                <LogIn className="h-3 w-3" /> Sign in
-              </button>
-            )}
-          </div>
+          {orderCount > 0 && (
+            <div className="flex items-center gap-1.5 rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-700">
+              <CheckCircle className="h-3.5 w-3.5" />
+              {orderCount} round{orderCount > 1 ? "s" : ""} sent
+            </div>
+          )}
         </div>
       </header>
 
+      {/* Menu */}
       <main className="mx-auto max-w-lg px-4 pt-4 space-y-6">
         {categories.map((cat) => (
           <section key={cat}>
             <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-zinc-400">{cat}</h2>
-            <div className="space-y-2">
+            <div className="grid grid-cols-2 gap-3">
               {products
                 .filter((p) => (p.category ?? "Other") === cat)
                 .map((product) => {
                   const qty = getQty(product.id);
                   return (
-                    <div key={product.id} className="flex items-center gap-3 rounded-xl bg-white p-3 shadow-sm">
-                      {product.image_url && (
-                        <img src={product.image_url} alt={product.name} className="h-16 w-16 rounded-lg object-cover shrink-0" />
-                      )}
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-zinc-900 truncate">{product.name}</p>
-                        {product.description && (
-                          <p className="text-xs text-zinc-400 mt-0.5 line-clamp-1">{product.description}</p>
+                    <div key={product.id} className="relative flex flex-col rounded-2xl bg-white shadow-sm overflow-hidden">
+                      {/* Image — tappable to open detail */}
+                      <button
+                        className="relative w-full aspect-square bg-zinc-100 overflow-hidden"
+                        onClick={() => setDetail(product)}
+                      >
+                        {product.image_url ? (
+                          <Image src={product.image_url} alt={product.name} fill className="object-cover" />
+                        ) : (
+                          <div className="flex h-full items-center justify-center">
+                            <ChefHat className="h-8 w-8 text-zinc-300" />
+                          </div>
                         )}
-                        <p className="mt-1 text-sm font-semibold text-zinc-700">RM {product.price.toFixed(2)}</p>
-                      </div>
-                      <div className="flex items-center gap-2 shrink-0">
-                        {qty > 0 && (
-                          <>
-                            <button onClick={() => remove(product.id)} className="flex h-7 w-7 items-center justify-center rounded-full border border-zinc-200 text-zinc-600 hover:border-zinc-400 active:scale-95">
-                              <Minus className="h-3.5 w-3.5" />
-                            </button>
-                            <span className="w-5 text-center text-sm font-semibold tabular-nums">{qty}</span>
-                          </>
-                        )}
-                        <button onClick={() => add(product)} className="flex h-7 w-7 items-center justify-center rounded-full bg-zinc-900 text-white hover:bg-zinc-700 active:scale-95">
-                          <Plus className="h-3.5 w-3.5" />
+                      </button>
+
+                      {/* Info */}
+                      <div className="p-2.5 flex flex-col gap-1.5">
+                        <button className="text-left" onClick={() => setDetail(product)}>
+                          <p className="text-sm font-semibold text-zinc-900 line-clamp-2 leading-tight">{product.name}</p>
+                          <p className="text-xs font-semibold text-zinc-700 mt-0.5">RM {product.price.toFixed(2)}</p>
                         </button>
+
+                        {/* Qty controls */}
+                        <div className="flex items-center justify-end gap-2 mt-0.5">
+                          {qty > 0 && (
+                            <>
+                              <button onClick={() => remove(product.id)} className="flex h-7 w-7 items-center justify-center rounded-full border border-zinc-200 text-zinc-600 hover:border-zinc-400 active:scale-95">
+                                <Minus className="h-3.5 w-3.5" />
+                              </button>
+                              <span className="w-5 text-center text-sm font-semibold tabular-nums">{qty}</span>
+                            </>
+                          )}
+                          <button onClick={() => add(product)} className="flex h-7 w-7 items-center justify-center rounded-full bg-zinc-900 text-white hover:bg-zinc-700 active:scale-95">
+                            <Plus className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
                       </div>
+
+                      {/* Cart badge */}
+                      {qty > 0 && (
+                        <div className="absolute top-2 right-2 h-5 w-5 flex items-center justify-center rounded-full bg-zinc-900 text-white text-[10px] font-bold">
+                          {qty}
+                        </div>
+                      )}
                     </div>
                   );
                 })}
@@ -204,6 +200,7 @@ export default function TableOrderMenu({ tableSlug }: Props) {
         )}
       </main>
 
+      {/* Cart FAB */}
       {totalItems > 0 && !showCart && (
         <button
           onClick={() => setShowCart(true)}
@@ -214,6 +211,7 @@ export default function TableOrderMenu({ tableSlug }: Props) {
         </button>
       )}
 
+      {/* Cart sheet */}
       {showCart && (
         <div className="fixed inset-0 z-20 flex flex-col justify-end bg-black/50" onClick={() => setShowCart(false)}>
           <div className="rounded-t-2xl bg-white p-4 max-h-[75vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
@@ -265,6 +263,7 @@ export default function TableOrderMenu({ tableSlug }: Props) {
         </div>
       )}
 
+      {/* Success screen */}
       {showSuccess && (
         <div className="fixed inset-0 z-30 flex flex-col items-center justify-center bg-white px-6 text-center">
           <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-emerald-100">
@@ -272,42 +271,75 @@ export default function TableOrderMenu({ tableSlug }: Props) {
           </div>
           <h2 className="text-2xl font-black text-zinc-900">Order Sent!</h2>
           <p className="mt-2 text-base text-zinc-500">Your order has been sent to the kitchen.</p>
-
           <div className="mt-6 w-full rounded-2xl bg-amber-50 border border-amber-200 px-5 py-4">
             <p className="text-sm font-bold text-amber-800">Please pay at the counter</p>
             <p className="mt-1 text-xs text-amber-700">When you are ready, head to the counter to settle your bill.</p>
           </div>
+          <button
+            onClick={() => setShowSuccess(false)}
+            className="mt-6 w-full rounded-xl bg-zinc-900 py-3 text-sm font-semibold text-white hover:bg-zinc-700"
+          >
+            Order more
+          </button>
+        </div>
+      )}
 
-          {!userId && (
-            <div className="mt-4 w-full rounded-2xl bg-zinc-50 border border-zinc-200 px-5 py-4">
-              <div className="flex items-center gap-2 mb-2">
-                <Star className="h-4 w-4 text-amber-500 fill-amber-500" />
-                <p className="text-sm font-bold text-zinc-800">Earn loyalty points!</p>
-              </div>
-              <p className="text-xs text-zinc-500 mb-3">Sign in to collect points on this order and redeem rewards.</p>
-              <button
-                onClick={() => { window.location.href = `/login?next=/order/${tableSlug}`; }}
-                className="w-full rounded-xl bg-zinc-900 py-2.5 text-sm font-bold text-white hover:bg-zinc-700"
-              >
-                Sign In / Register
+      {/* Product detail modal */}
+      {detail && (
+        <div className="fixed inset-0 z-40 flex flex-col justify-end bg-black/60" onClick={() => setDetail(null)}>
+          <div className="rounded-t-3xl bg-white overflow-hidden max-h-[85vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
+            {/* Image */}
+            <div className="relative w-full aspect-video bg-zinc-100 shrink-0">
+              {detail.image_url ? (
+                <Image src={detail.image_url} alt={detail.name} fill className="object-cover" />
+              ) : (
+                <div className="flex h-full items-center justify-center">
+                  <ChefHat className="h-12 w-12 text-zinc-300" />
+                </div>
+              )}
+              <button onClick={() => setDetail(null)} className="absolute top-3 right-3 flex h-8 w-8 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-sm">
+                <X className="h-4 w-4" />
               </button>
             </div>
-          )}
 
-          <div className="mt-6 grid w-full grid-cols-2 gap-3">
-            <Link
-              href="/dashboard"
-              className="flex items-center justify-center gap-2 rounded-xl border border-zinc-200 py-3 text-sm font-semibold text-zinc-800 hover:bg-zinc-50"
-            >
-              <Home className="h-4 w-4" />
-              Back to home
-            </Link>
-            <button
-              onClick={() => setShowSuccess(false)}
-              className="rounded-xl bg-zinc-900 py-3 text-sm font-semibold text-white hover:bg-zinc-700"
-            >
-              Order more
-            </button>
+            {/* Content */}
+            <div className="flex flex-col gap-4 p-5 overflow-y-auto">
+              <div>
+                <h2 className="text-xl font-black text-zinc-900">{detail.name}</h2>
+                <p className="text-lg font-bold text-zinc-700 mt-0.5">RM {detail.price.toFixed(2)}</p>
+                {detail.description && (
+                  <p className="mt-2 text-sm text-zinc-500 leading-relaxed">{detail.description}</p>
+                )}
+              </div>
+
+              {/* Add/remove controls */}
+              <div className="flex items-center gap-3 rounded-2xl bg-zinc-50 px-4 py-3">
+                {getQty(detail.id) > 0 ? (
+                  <>
+                    <button onClick={() => remove(detail.id)} className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-zinc-300 text-zinc-600 active:scale-95">
+                      <Minus className="h-4 w-4" />
+                    </button>
+                    <span className="flex-1 text-center text-xl font-black tabular-nums">{getQty(detail.id)}</span>
+                    <button onClick={() => add(detail)} className="flex h-10 w-10 items-center justify-center rounded-full bg-zinc-900 text-white active:scale-95">
+                      <Plus className="h-4 w-4" />
+                    </button>
+                  </>
+                ) : (
+                  <button onClick={() => add(detail)} className="flex w-full items-center justify-center gap-2 rounded-xl bg-zinc-900 py-3 text-sm font-bold text-white hover:bg-zinc-700 active:scale-95">
+                    <Plus className="h-4 w-4" /> Add to order
+                  </button>
+                )}
+              </div>
+
+              {getQty(detail.id) > 0 && (
+                <button
+                  onClick={() => { setDetail(null); setShowCart(true); }}
+                  className="w-full rounded-xl bg-zinc-900 py-3 text-sm font-bold text-white hover:bg-zinc-700"
+                >
+                  View order · RM {totalPrice.toFixed(2)}
+                </button>
+              )}
+            </div>
           </div>
         </div>
       )}

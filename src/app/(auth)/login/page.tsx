@@ -70,9 +70,12 @@ function LoginForm() {
             <Label htmlFor="password">Password</Label>
             <Input id="password" type="password" autoComplete="current-password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} required disabled={loading} />
           </div>
-          <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? "Signing in…" : "Sign in"}
-          </Button>
+            <div className="flex justify-end">
+              <Link href="/forgot-password" className="text-xs text-zinc-400 hover:text-zinc-700 underline-offset-4 hover:underline">Forgot password?</Link>
+            </div>
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading ? "Signing in…" : "Sign in"}
+            </Button>
         </form>
       </div>
 

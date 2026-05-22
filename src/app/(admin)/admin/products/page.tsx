@@ -91,7 +91,7 @@ const EMPTY_FORM: ProductForm = {
   imagePreview: null,
 };
 
-const CATEGORIES = ["bingsu", "topping", "drink", "other"] as const;
+const DEFAULT_CATEGORIES = ["bingsu", "topping", "drink", "other"];
 const STORAGE_BUCKET = "product-images";
 
 export default function ProductsPage() {
@@ -209,7 +209,7 @@ export default function ProductsPage() {
         </div>
       )}
 
-      <ProductFormDialog open={formOpen} editTarget={editTarget} onClose={() => setFormOpen(false)} onSaved={onSaved} nextSortOrder={products.length + 1} />
+      <ProductFormDialog open={formOpen} editTarget={editTarget} onClose={() => setFormOpen(false)} onSaved={onSaved} nextSortOrder={products.length + 1} existingCategories={Array.from(new Set([...DEFAULT_CATEGORIES, ...products.map(p => p.category).filter(Boolean)]))} />
       <DeleteConfirmDialog product={deleteTarget} onClose={() => setDeleteTarget(null)} onConfirm={handleDelete} />
     </div>
   );
@@ -248,13 +248,17 @@ function SortableRow({ product, onToggleAvailable, onEdit, onDelete }: { product
   );
 }
 
-function ProductFormDialog({ open, editTarget, onClose, onSaved, nextSortOrder }: { open: boolean; editTarget: Product | null; onClose: () => void; onSaved: (product: Product, isNew: boolean) => void; nextSortOrder: number; }) {
+function ProductFormDialog({ open, editTarget, onClose, onSaved, nextSortOrder, existingCategories }: { open: boolean; editTarget: Product | null; onClose: () => void; onSaved: (product: Product, isNew: boolean) => void; nextSortOrder: number; existingCategories: string[]; }) {
   const [form, setForm] = useState<ProductForm>(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
+  const [customCat, setCustomCat] = useState("");
+  const [showCustom, setShowCustom] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (open) {
+      setCustomCat("");
+      setShowCustom(false);
       if (editTarget) {
         setForm({ name: editTarget.name, description: editTarget.description ?? "", price: String(editTarget.price), category: editTarget.category, sort_order: String(editTarget.sort_order), is_available: editTarget.is_available, image_url: editTarget.image_url, imageFile: null, imagePreview: null });
       } else {
@@ -349,10 +353,36 @@ function ProductFormDialog({ open, editTarget, onClose, onSaved, nextSortOrder }
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="pCategory">Category</Label>
-              <Select value={form.category} onValueChange={(v) => setForm((f) => ({ ...f, category: v }))}>
-                <SelectTrigger id="pCategory"><SelectValue /></SelectTrigger>
-                <SelectContent>{CATEGORIES.map((c) => <SelectItem key={c} value={c} className="capitalize">{c}</SelectItem>)}</SelectContent>
-              </Select>
+              {showCustom ? (
+                <div className="flex gap-1.5">
+                  <Input
+                    autoFocus
+                    placeholder="e.g. special, set meal…"
+                    value={customCat}
+                    onChange={(e) => {
+                      setCustomCat(e.target.value);
+                      setForm((f) => ({ ...f, category: e.target.value.trim().toLowerCase() || "other" }));
+                    }}
+                  />
+                  <Button type="button" variant="outline" size="sm" className="shrink-0 px-2" onClick={() => { setShowCustom(false); setCustomCat(""); setForm((f) => ({ ...f, category: existingCategories[0] ?? "bingsu" })); }}>
+                    Cancel
+                  </Button>
+                </div>
+              ) : (
+                <Select
+                  value={form.category ?? ""}
+                  onValueChange={(v) => {
+                    if (v === "__new__") { setShowCustom(true); setCustomCat(""); }
+                    else setForm((f) => ({ ...f, category: v }));
+                  }}
+                >
+                  <SelectTrigger id="pCategory"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {existingCategories.map((c) => <SelectItem key={c} value={c} className="capitalize">{c}</SelectItem>)}
+                    <SelectItem value="__new__" className="text-zinc-400 italic">+ New category…</SelectItem>
+                  </SelectContent>
+                </Select>
+              )}
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3 items-end">

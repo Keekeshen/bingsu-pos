@@ -102,12 +102,14 @@ export default function SalesHistoryPage() {
     const discountAmt = order.discount_amount ?? 0;
     // For POS: derive service charge = total - (subtotal - all_discounts).
     // For table: use standard rate on original subtotal.
+    const discountedSubtotal = Math.max(0, +(order.subtotal - discountAmt).toFixed(2));
+    const theoreticalServiceCharge = +(discountedSubtotal * SERVICE_CHARGE_PCT / 100).toFixed(2);
     const serviceCharge = isTable
-      ? +(order.subtotal * SERVICE_CHARGE_PCT / 100).toFixed(2)
-      : Math.max(0, +(order.total_amount - Math.max(0, order.subtotal - discountAmt)).toFixed(2));
-    const rounding = isTable
-      ? +(order.total_amount - (order.subtotal - discountAmt) - serviceCharge).toFixed(2)
-      : undefined;
+      ? theoreticalServiceCharge
+      : theoreticalServiceCharge;
+    const preRoundTotal = +(discountedSubtotal + theoreticalServiceCharge).toFixed(2);
+    const roundingVal = +(order.total_amount - preRoundTotal).toFixed(2);
+    const rounding = Math.abs(roundingVal) <= 0.05 && roundingVal !== 0 ? roundingVal : undefined;
 
     const items: ReceiptLineItem[] = order.order_items.map(i => {
       const expected = +(i.unit_price * i.quantity).toFixed(2);

@@ -112,6 +112,7 @@ export function buildReceiptBytes(d: ThermalReceiptData): Uint8Array {
   if (d.tierDiscount && d.tierDiscount > 0) p.row("Member (" + (d.tierLabel ?? "") + ")", "-RM " + d.tierDiscount.toFixed(2));
   if (d.voucherDiscount && d.voucherDiscount > 0) p.row("Voucher discount", "-RM " + d.voucherDiscount.toFixed(2));
   if (d.serviceCharge && d.serviceCharge > 0) p.row("Service charge (10%)", "RM " + d.serviceCharge.toFixed(2));
+  if (d.rounding != null && d.rounding !== 0) p.row("Bill rounding", (d.rounding > 0 ? "+" : "") + "RM " + d.rounding.toFixed(2));
 
   p.dashes();
   p.bold(true).row("TOTAL (MYR)", "RM " + d.total.toFixed(2)).bold(false);

@@ -19,6 +19,7 @@ type CheckoutBody = {
   table_number?: string | null;
   discount_amount?: number;
   service_charge?: number;
+  rounding?: number;
 };
 
 function err(message: string, status: number) {
@@ -49,7 +50,7 @@ export async function POST(request: NextRequest) {
     try { body = await request.json(); } catch { return err("Invalid JSON body", 400); }
     if (!validateBody(body)) return err("Invalid request body", 400);
 
-    const { items, customer_id = null, points_redeemed = 0, payment_method = null, voucher_code = null, discount_amount = 0, service_charge = 0, table_number = null } = body;
+    const { items, customer_id = null, points_redeemed = 0, payment_method = null, voucher_code = null, discount_amount = 0, service_charge = 0, rounding = 0, table_number = null } = body;
 
     // Cookie-based auth — works reliably on all browsers including Android Chrome
     const supabase = await createClient();
@@ -70,7 +71,8 @@ export async function POST(request: NextRequest) {
     const pointsDiscountAmount = +(points_redeemed * POINT_VALUE_RM).toFixed(2);
     const voucherDiscountAmount = +(Number(discount_amount) || 0).toFixed(2);
     const serviceChargeAmount = +(Number(service_charge) || 0).toFixed(2);
-    const totalAmount = +(subtotal - pointsDiscountAmount - voucherDiscountAmount + serviceChargeAmount).toFixed(2);
+    const roundingAmount = +(Number(rounding) || 0).toFixed(2);
+    const totalAmount = +(subtotal - pointsDiscountAmount - voucherDiscountAmount + serviceChargeAmount + roundingAmount).toFixed(2);
     if (totalAmount < 0) return err("points_redeemed exceeds order value", 400);
 
     let customerProfile: { loyalty_points: number; redeem_points: number } | null = null;

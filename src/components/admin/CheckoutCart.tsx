@@ -153,6 +153,7 @@ export default function CheckoutCart({ items, subtotal, total, onUpdateQuantity,
         voucher_code: voucher?.code ?? null,
         discount_amount: totalDiscount,
         service_charge: serviceChargeAmt,
+        rounding: roundingAmt,
         table_number: tableNumber.trim() || null,
       }),
     });

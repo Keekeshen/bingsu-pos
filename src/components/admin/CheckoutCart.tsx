@@ -14,7 +14,7 @@ import ReceiptPrint, { type ReceiptOrder, type ReceiptLineItem } from "@/compone
 import CustomerScanner, { type ScannedCustomer } from "@/components/admin/CustomerScanner";
 import VoucherScanner from "@/components/admin/VoucherScanner";
 import { getTier } from "@/lib/tiers";
-import { TABLE_SERVICE_CHARGE_PCT } from "@/lib/voucher-utils";
+import { TABLE_SERVICE_CHARGE_PCT, round5sen } from "@/lib/voucher-utils";
 
 type Customer = { id: string; full_name: string; phone: string | null; loyalty_points: number };
 type VoucherData = { id: string; code: string; label: string; discount_type: string; discount_value: number; description: string | null; type: string };
@@ -30,6 +30,7 @@ type PendingReceipt = {
   tierDiscount?: number;
   tierLabel?: string;
   serviceCharge?: number;
+  rounding?: number;
 };
 
 type Props = {
@@ -86,7 +87,9 @@ export default function CheckoutCart({ items, subtotal, total, onUpdateQuantity,
   const totalDiscount = +(itemDiscountAmt + tierDiscountAmt + voucherDiscount).toFixed(2);
   const discountedTotal = Math.max(0, +(total - totalDiscount).toFixed(2));
   const serviceChargeAmt = +(discountedTotal * TABLE_SERVICE_CHARGE_PCT / 100).toFixed(2);
-  const chargeTotal = +(discountedTotal + serviceChargeAmt).toFixed(2);
+  const preRoundTotal = +(discountedTotal + serviceChargeAmt).toFixed(2);
+  const chargeTotal = +round5sen(preRoundTotal).toFixed(2);
+  const roundingAmt = +(chargeTotal - preRoundTotal).toFixed(2);
 
   const receivedNum = parseFloat(amountReceived);
   const change = paymentType === "cash" && !isNaN(receivedNum) && receivedNum >= chargeTotal
@@ -190,6 +193,7 @@ export default function CheckoutCart({ items, subtotal, total, onUpdateQuantity,
       change: paymentType === "cash" ? +(paid - chargeTotal).toFixed(2) : 0,
       tableNumber: tableNumber.trim() || undefined,
       serviceCharge: serviceChargeAmt,
+      rounding: roundingAmt !== 0 ? roundingAmt : undefined,
       tierDiscount: tierDiscountAmt > 0 ? tierDiscountAmt : undefined,
       tierLabel: tierDiscountAmt > 0 ? `${customerTier?.name} (${tierDiscountPct}%)` : undefined,
     });
@@ -392,6 +396,12 @@ export default function CheckoutCart({ items, subtotal, total, onUpdateQuantity,
               <span>Service charge ({TABLE_SERVICE_CHARGE_PCT}%)</span>
               <span>RM {serviceChargeAmt.toFixed(2)}</span>
             </div>
+            {roundingAmt !== 0 && (
+              <div className="flex justify-between text-zinc-400 text-xs">
+                <span>Bill rounding</span>
+                <span>{roundingAmt > 0 ? "+" : ""}RM {roundingAmt.toFixed(2)}</span>
+              </div>
+            )}
             <Separator />
             <div className="flex justify-between pt-1 text-base font-bold text-zinc-900">
               <span>Total</span>
@@ -422,6 +432,7 @@ export default function CheckoutCart({ items, subtotal, total, onUpdateQuantity,
           tierDiscount={pending.tierDiscount}
           tierLabel={pending.tierLabel}
           serviceCharge={pending.serviceCharge}
+          rounding={pending.rounding}
         />
       )}
     </>

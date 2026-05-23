@@ -14,21 +14,27 @@ export function computeVoucherDiscount(
   return 0;
 }
 
+/** Round to nearest 5 sen (Malaysian cash rounding). */
+export function round5sen(amount: number): number {
+  return Math.round(amount * 20) / 20;
+}
+
 export const TABLE_SERVICE_CHARGE_PCT = 10;
 
-/** Bill for table dine-in — basket subtotal, optional voucher discount, then 10% service charge. No rounding applied. */
+/** Bill for table dine-in — basket subtotal, optional voucher discount, then 10% service charge + 5-sen rounding. */
 export function tableBillTotals(basketSubtotal: number, voucherDiscountRaw: number) {
   const d = Math.max(0, Math.min(+Number(voucherDiscountRaw).toFixed(2), basketSubtotal));
   const taxableSubtotal = +(basketSubtotal - d).toFixed(2);
   const serviceCharge = +(taxableSubtotal * TABLE_SERVICE_CHARGE_PCT / 100).toFixed(2);
-  const total = +(taxableSubtotal + serviceCharge).toFixed(2);
+  const rawTotal = +(taxableSubtotal + serviceCharge).toFixed(2);
+  const roundedTotal = +round5sen(rawTotal).toFixed(2);
+  const rounding = +(roundedTotal - rawTotal).toFixed(2);
   return {
     voucherDiscountApplied: d,
     taxableSubtotal,
     serviceCharge,
-    rawTotal: total,
-    total,
-    rounding: 0,
+    rawTotal,
+    total: roundedTotal,
+    rounding,
   };
 }
-

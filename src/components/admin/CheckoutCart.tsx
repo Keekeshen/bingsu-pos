@@ -403,9 +403,9 @@ export default function CheckoutCart({ items, subtotal, total, onUpdateQuantity,
               </div>
             )}
             <Separator />
-            <div className="flex justify-between pt-1 text-base font-bold text-zinc-900">
-              <span>Total</span>
-              <span>RM {chargeTotal.toFixed(2)}</span>
+            <div className="flex items-center justify-between rounded-xl bg-zinc-900 px-4 py-3 mt-1">
+              <span className="text-sm font-semibold text-zinc-300">Total</span>
+              <span className="text-3xl font-black text-white tabular-nums tracking-tight">RM {chargeTotal.toFixed(2)}</span>
             </div>
           </div>
 

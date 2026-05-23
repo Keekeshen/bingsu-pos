@@ -139,10 +139,10 @@ export default function CheckoutCart({ items, subtotal, total, onUpdateQuantity,
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        items: items.map(({ product_id, name, price, quantity }) => {
+        items: items.map(({ product_id, base_product_id, name, price, quantity }) => {
           const pct = itemDiscounts[product_id] ?? 0;
           const effPrice = pct > 0 ? +(price * (1 - pct / 100)).toFixed(2) : price;
-          return { product_id, product_name: name, unit_price: price, quantity, subtotal: +(effPrice * quantity).toFixed(2) };
+          return { product_id: base_product_id ?? product_id, product_name: name, unit_price: price, quantity, subtotal: +(effPrice * quantity).toFixed(2) };
         }),
         customer_id: customer?.id ?? null,
         points_redeemed: 0,
@@ -182,7 +182,7 @@ export default function CheckoutCart({ items, subtotal, total, onUpdateQuantity,
       items: items.map(i => {
         const pct = itemDiscounts[i.product_id] ?? 0;
         const effPrice = pct > 0 ? +(i.price * (1 - pct / 100)).toFixed(2) : i.price;
-        return { product_id: i.product_id, name: i.name, unit_price: i.price, quantity: i.quantity, subtotal: +(effPrice * i.quantity).toFixed(2), discountPct: pct > 0 ? pct : undefined };
+        return { product_id: i.base_product_id ?? i.product_id, name: i.name, unit_price: i.price, quantity: i.quantity, subtotal: +(effPrice * i.quantity).toFixed(2), discountPct: pct > 0 ? pct : undefined };
       }),
       customerName: customer?.full_name,
       paymentMethod: paymentType === "cash" ? "Cash" : paymentType === "qr" ? "QR Code" : "Card",

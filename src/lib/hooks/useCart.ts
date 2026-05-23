@@ -1,10 +1,12 @@
 import { useReducer, useCallback, useMemo } from "react";
 
 export type CartItem = {
-  product_id: string;
-  name: string;
-  price: number;
+  product_id: string;       // composite key: "uuid" or "uuid|Topping1,Topping2"
+  base_product_id: string;  // always the original product UUID
+  name: string;             // display name, includes topping info
+  price: number;            // unit price including topping cost
   quantity: number;
+  toppings?: string[];
 };
 
 type CartState = { items: CartItem[] };

@@ -14,9 +14,9 @@ export function computeVoucherDiscount(
   return 0;
 }
 
-export const TABLE_SERVICE_CHARGE_PCT = 6;
+export const TABLE_SERVICE_CHARGE_PCT = 10;
 
-/** Bill for table dine-in — basket subtotal, optional voucher discount, then 6% service charge. No rounding applied. */
+/** Bill for table dine-in — basket subtotal, optional voucher discount, then 10% service charge. No rounding applied. */
 export function tableBillTotals(basketSubtotal: number, voucherDiscountRaw: number) {
   const d = Math.max(0, Math.min(+Number(voucherDiscountRaw).toFixed(2), basketSubtotal));
   const taxableSubtotal = +(basketSubtotal - d).toFixed(2);

@@ -95,7 +95,7 @@ export default function SalesHistoryPage() {
 
   useEffect(() => { fetchOrders(); }, [fetchOrders]);
 
-  const SERVICE_CHARGE_PCT = 6;
+  const SERVICE_CHARGE_PCT = 10;
 
   function openReceipt(order: Order) {
     const isTable = order.source === "table";

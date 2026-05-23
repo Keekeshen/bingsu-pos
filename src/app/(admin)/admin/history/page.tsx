@@ -264,26 +264,49 @@ export default function SalesHistoryPage() {
                       ))}
                     </div>
 
-                    {/* Voucher & discount summary */}
-                    <div className="space-y-1 border-t border-dashed border-zinc-200 pt-2 mb-3 text-sm">
-                      <div className="flex justify-between text-zinc-500">
-                        <span>Subtotal</span>
-                        <span>RM {order.subtotal.toFixed(2)}</span>
-                      </div>
-                      {order.voucher_code && (
-                        <div className="flex items-center justify-between text-violet-600">
-                          <span className="flex items-center gap-1">
-                            <Ticket className="h-3.5 w-3.5" />
-                            Voucher <span className="font-mono text-xs bg-violet-100 px-1.5 py-0.5 rounded">{order.voucher_code}</span>
-                          </span>
-                          <span className="font-medium">-RM {order.discount_amount.toFixed(2)}</span>
+                    {/* Order summary breakdown */}
+                    {(() => {
+                      const discountAmt = order.discount_amount ?? 0;
+                      const discountedSub = Math.max(0, +(order.subtotal - discountAmt).toFixed(2));
+                      const svcCharge = +(discountedSub * SERVICE_CHARGE_PCT / 100).toFixed(2);
+                      const preRound = +(discountedSub + svcCharge).toFixed(2);
+                      const roundingVal = +(order.total_amount - preRound).toFixed(2);
+                      const rounding = Math.abs(roundingVal) <= 0.05 && roundingVal !== 0 ? roundingVal : 0;
+                      return (
+                        <div className="space-y-1 border-t border-dashed border-zinc-200 pt-2 mb-3 text-sm">
+                          <div className="flex justify-between text-zinc-500">
+                            <span>Subtotal</span>
+                            <span className="tabular-nums">RM {order.subtotal.toFixed(2)}</span>
+                          </div>
+                          {discountAmt > 0 && (
+                            <div className="flex items-center justify-between text-rose-600">
+                              <span className="flex items-center gap-1">
+                                {order.voucher_code ? (
+                                  <><Ticket className="h-3.5 w-3.5" />Voucher <span className="font-mono text-xs bg-rose-50 px-1.5 py-0.5 rounded">{order.voucher_code}</span></>
+                                ) : (
+                                  "Discount"
+                                )}
+                              </span>
+                              <span className="font-medium tabular-nums">-RM {discountAmt.toFixed(2)}</span>
+                            </div>
+                          )}
+                          <div className="flex justify-between text-zinc-500">
+                            <span>Service charge ({SERVICE_CHARGE_PCT}%)</span>
+                            <span className="tabular-nums">RM {svcCharge.toFixed(2)}</span>
+                          </div>
+                          {rounding !== 0 && (
+                            <div className="flex justify-between text-zinc-400">
+                              <span>Bill rounding</span>
+                              <span className="tabular-nums">{rounding > 0 ? "+" : ""}RM {rounding.toFixed(2)}</span>
+                            </div>
+                          )}
+                          <div className="flex justify-between font-semibold text-zinc-900 border-t border-zinc-200 pt-1">
+                            <span>Total</span>
+                            <span className="tabular-nums">RM {order.total_amount.toFixed(2)}</span>
+                          </div>
                         </div>
-                      )}
-                      <div className="flex justify-between font-semibold text-zinc-900">
-                        <span>Total</span>
-                        <span>RM {order.total_amount.toFixed(2)}</span>
-                      </div>
-                    </div>
+                      );
+                    })()}
 
                     <div className="flex items-center justify-between border-t border-zinc-200 pt-2">
                       <div className="text-xs text-zinc-400">

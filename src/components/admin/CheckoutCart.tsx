@@ -232,6 +232,7 @@ export default function CheckoutCart({ items, subtotal, total, onUpdateQuantity,
         </div>
 
         <ScrollArea className="flex-1">
+          <div>
           {items.length === 0 ? (
             <div className="flex h-40 flex-col items-center justify-center gap-2 text-zinc-300 px-4">
               <ShoppingBagIcon />
@@ -424,6 +425,7 @@ export default function CheckoutCart({ items, subtotal, total, onUpdateQuantity,
               <span className="text-sm font-semibold text-zinc-300">Total</span>
               <span className="text-3xl font-black text-white tabular-nums tracking-tight">RM {chargeTotal.toFixed(2)}</span>
             </div>
+          </div>
           </div>
         </ScrollArea>
 

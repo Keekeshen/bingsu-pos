@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Plus, Trash2, QrCode, Download } from "lucide-react";
+import { Plus, Trash2, QrCode, Download, RefreshCw, XCircle } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
@@ -31,6 +31,8 @@ export default function TablesPage() {
   const [newLabel, setNewLabel] = useState("");
   const [newCapacity, setNewCapacity] = useState("4");
   const [qrTable, setQrTable] = useState<Table | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+  const [cancelling, setCancelling] = useState<string | null>(null);
   const origin = "https://kooridessert.com";
 
   const load = useCallback(async () => {
@@ -60,6 +62,34 @@ export default function TablesPage() {
     setNewNumber("");
     setNewLabel("");
     setNewCapacity("4");
+    load();
+  }
+
+  async function refresh() {
+    setRefreshing(true);
+    await load();
+    setRefreshing(false);
+    toast.success("Refreshed");
+  }
+
+  async function cancelPendingOrders(tableNumber: string) {
+    if (!confirm(`Cancel all pending (unpaid) orders for Table ${tableNumber}? This cannot be undone.`)) return;
+    setCancelling(tableNumber);
+    const supabase = createClient();
+    // First delete order_items, then delete orders
+    const { data: orders } = await supabase
+      .from("orders")
+      .select("id")
+      .eq("table_number", tableNumber)
+      .eq("source", "table")
+      .eq("status", "pending");
+    if (orders?.length) {
+      const ids = orders.map(o => o.id);
+      await supabase.from("order_items").delete().in("order_id", ids);
+      await supabase.from("orders").delete().in("id", ids);
+    }
+    setCancelling(null);
+    toast.success(`Pending orders for Table ${tableNumber} cancelled`);
     load();
   }
 
@@ -99,11 +129,17 @@ export default function TablesPage() {
 
   return (
     <div className="p-6 max-w-4xl">
-      <div className="mb-6">
-        <h1 className="text-xl font-bold text-zinc-900">Tables</h1>
-        <p className="text-sm text-zinc-500 mt-1">
-          Manage dining tables and generate QR codes for customers to scan and order.
-        </p>
+      <div className="mb-6 flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-xl font-bold text-zinc-900">Tables</h1>
+          <p className="text-sm text-zinc-500 mt-1">
+            Manage dining tables and generate QR codes for customers to scan and order.
+          </p>
+        </div>
+        <Button variant="outline" size="sm" onClick={refresh} disabled={refreshing} className="shrink-0 h-9 gap-1.5">
+          <RefreshCw className={`h-3.5 w-3.5 ${refreshing ? "animate-spin" : ""}`} />
+          Refresh
+        </Button>
       </div>
 
       <div className="mb-8 rounded-xl border border-zinc-200 bg-white p-4">
@@ -170,6 +206,16 @@ export default function TablesPage() {
                 >
                   <QrCode className="mr-1 h-3.5 w-3.5" />
                   QR Code
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  title="Cancel pending orders"
+                  onClick={() => cancelPendingOrders(table.table_number)}
+                  disabled={cancelling === table.table_number}
+                  className="h-8 w-8 p-0 text-amber-400 hover:text-amber-600 hover:bg-amber-50"
+                >
+                  <XCircle className="h-3.5 w-3.5" />
                 </Button>
                 <Button
                   size="sm"

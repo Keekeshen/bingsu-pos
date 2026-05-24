@@ -111,6 +111,25 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Apply per-item discount to order_items.subtotal so history/reprint shows correct prices
+    type ItemDiscountEntry = { id: string; discount_pct: number };
+    const itemDiscounts: ItemDiscountEntry[] = Array.isArray(body.item_discounts) ? body.item_discounts : [];
+    if (itemDiscounts.length > 0) {
+      for (const entry of itemDiscounts) {
+        const pct = Math.max(0, Math.min(100, Number(entry.discount_pct) || 0));
+        if (pct <= 0) continue;
+        // Fetch current item to get unit_price * quantity, then apply discount
+        const { data: item } = await admin
+          .from("order_items")
+          .select("unit_price, quantity")
+          .eq("id", String(entry.id))
+          .single();
+        if (!item) continue;
+        const discountedSubtotal = +(item.unit_price * item.quantity * (1 - pct / 100)).toFixed(2);
+        await admin.from("order_items").update({ subtotal: discountedSubtotal }).eq("id", String(entry.id));
+      }
+    }
+
     // Set to "served" = paid but awaiting food delivery. "completed" happens when admin marks delivered.
     for (const o of list) {
       const patch = {
@@ -118,6 +137,8 @@ export async function POST(request: NextRequest) {
         payment_method: paymentMethod,
         voucher_code: voucherCodeRaw ? voucherCodeRaw : null,
         discount_amount: +(allocations[o.id] ?? 0).toFixed(2),
+        total_amount: totals.total,
+        subtotal: basketSubtotal,
       };
       const { error: updErr } = await admin.from("orders").update(patch).eq("id", o.id);
       if (updErr) {

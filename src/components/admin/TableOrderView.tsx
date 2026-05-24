@@ -236,6 +236,9 @@ export default function TableOrderView({ tableNumber, onClose, onOrdersUpdated }
           voucher_code: voucher?.code ?? null,
           discount_amount: voucherDiscountRaw,
           item_discount_amount: itemDiscountAmt,
+          item_discounts: allItems
+            .filter(i => (itemDiscounts[i.id] ?? 0) > 0)
+            .map(i => ({ id: i.id, discount_pct: itemDiscounts[i.id] })),
           customer_id: linkedCustomer?.id ?? null,
         }),
       });

@@ -188,7 +188,7 @@ export default function CheckoutCart({ items, subtotal, total, onUpdateQuantity,
 
   return (
     <>
-      <div className="flex h-full flex-col bg-white">
+      <div className="flex h-full min-h-0 flex-col bg-white">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-zinc-200 px-4 py-3 shrink-0">
           <h2 className="text-sm font-semibold text-zinc-800">
@@ -228,7 +228,7 @@ export default function CheckoutCart({ items, subtotal, total, onUpdateQuantity,
         </ScrollArea>
 
         {/* Form + totals — scrollable */}
-        <ScrollArea className="flex-1">
+        <ScrollArea className="flex-1 min-h-0">
           <div className="px-0">
             {/* Table Number */}
             <div className="space-y-2 border-t border-zinc-200 px-4 py-3">

@@ -68,12 +68,12 @@ export default function POSPage() {
 
       {/* Sell tab */}
       {tab === "sell" && (
-        <div className="flex flex-1 overflow-hidden">
+        <div className="flex flex-1 overflow-hidden min-h-0">
           <section className="flex flex-[3] flex-col overflow-hidden p-4">
             <h1 className="mb-3 text-lg font-bold text-zinc-900">Point of Sale</h1>
             <POSGrid onAddItem={cart.addItem} />
           </section>
-          <aside className="flex flex-[2] flex-col border-l border-zinc-200 overflow-hidden">
+          <aside className="flex flex-[2] flex-col border-l border-zinc-200 overflow-hidden min-h-0">
             <CheckoutCart
               items={cart.items}
               subtotal={cart.subtotal}

@@ -214,7 +214,7 @@ export default function SalesHistoryPage() {
                     </span>
                   ) : (
                     <span className="flex items-center gap-1 rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-600 shrink-0">
-                      <Monitor className="h-3 w-3" /> POS
+                      <Monitor className="h-3 w-3" /> POS{order.table_number ? ` · T${order.table_number}` : ""}
                     </span>
                   )}
 

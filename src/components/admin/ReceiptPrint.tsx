@@ -39,6 +39,7 @@ type Props = {
   tierLabel?: string;
   serviceCharge?: number;
   rounding?: number;
+  notes?: string;
   tableBreakdown?: {
     voucherDiscount: number;
     serviceCharge: number;
@@ -53,7 +54,7 @@ const PAGE_STYLE = `
   * { box-sizing: border-box; }
 `;
 
-export default function ReceiptPrint({ open, onClose, order, items, customerName, paymentMethod, amountPaid, tableNumber, tierDiscount, tierLabel, serviceCharge, rounding, tableBreakdown }: Props) {
+export default function ReceiptPrint({ open, onClose, order, items, customerName, paymentMethod, amountPaid, tableNumber, tierDiscount, tierLabel, serviceCharge, rounding, notes, tableBreakdown }: Props) {
   const receiptRef = useRef<HTMLDivElement>(null);
   const { counter, kitchen } = usePrinter();
 
@@ -77,6 +78,7 @@ export default function ReceiptPrint({ open, onClose, order, items, customerName
       date: dateStr,
       tableNumber,
       customerName,
+      notes,
       items: items.map(i => ({ name: i.name, qty: i.quantity, unitPrice: i.unit_price, subtotal: i.subtotal, discountPct: i.discountPct })),
       subtotal: +items.reduce((s, i) => s + i.subtotal, 0).toFixed(2),
       tierDiscount,
@@ -124,6 +126,7 @@ export default function ReceiptPrint({ open, onClose, order, items, customerName
             tierLabel={tierLabel}
             serviceCharge={serviceCharge}
             rounding={rounding}
+            notes={notes}
             tableBreakdown={tableBreakdown}
           />
         </div>
@@ -162,11 +165,12 @@ type ContentProps = {
   tierLabel?: string;
   serviceCharge?: number;
   rounding?: number;
+  notes?: string;
   tableBreakdown?: Props["tableBreakdown"];
 };
 
 const ReceiptContent = forwardRef<HTMLDivElement, ContentProps>(
-  function ReceiptContent({ order, items, customerName, paymentMethod, amountPaid, tableNumber, tierDiscount, tierLabel, serviceCharge, rounding, tableBreakdown }, ref) {
+  function ReceiptContent({ order, items, customerName, paymentMethod, amountPaid, tableNumber, tierDiscount, tierLabel, serviceCharge, rounding, notes, tableBreakdown }, ref) {
     const dateStr = new Date(order.created_at).toLocaleString("en-MY", {
       day: "2-digit", month: "2-digit", year: "numeric",
       hour: "2-digit", minute: "2-digit", hour12: false,
@@ -238,6 +242,12 @@ const ReceiptContent = forwardRef<HTMLDivElement, ContentProps>(
               </div>
             ))}
           </div>
+          {notes && (
+            <>
+              <Dashes />
+              <p className="text-[9px] text-zinc-500 italic">Remark: {notes}</p>
+            </>
+          )}
           <Dashes />
 
           <div className="space-y-0.5">

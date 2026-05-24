@@ -28,6 +28,7 @@ type Order = {
   total_amount: number;
   created_at: string;
   customer_id: string | null;
+  notes: string | null;
   order_items: OrderItem[];
 };
 
@@ -85,7 +86,7 @@ export default function TableOrderView({ tableNumber, onClose, onOrdersUpdated }
     const supabase = createClient();
     const { data, error } = await supabase
       .from("orders")
-      .select("id, order_number, status, subtotal, total_amount, created_at, customer_id, order_items(id, product_name, quantity, unit_price, subtotal)")
+      .select("id, order_number, status, subtotal, total_amount, created_at, customer_id, notes, order_items(id, product_name, quantity, unit_price, subtotal)")
       .eq("source", "table")
       .eq("table_number", tableNumber)
       .in("status", ["pending", "served"])   // pending=unpaid, served=paid pending delivery
@@ -337,6 +338,11 @@ export default function TableOrderView({ tableNumber, onClose, onOrdersUpdated }
                             </li>
                           ))}
                         </ul>
+                        {order.notes && (
+                          <p className="mt-2 rounded-lg bg-amber-50 border border-amber-200 px-2.5 py-1.5 text-xs text-amber-800">
+                            <span className="font-semibold">Remark:</span> {order.notes}
+                          </p>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -361,6 +367,11 @@ export default function TableOrderView({ tableNumber, onClose, onOrdersUpdated }
                             </li>
                           ))}
                         </ul>
+                        {order.notes && (
+                          <p className="mb-2 rounded-lg bg-amber-50 border border-amber-200 px-2.5 py-1.5 text-xs text-amber-800">
+                            <span className="font-semibold">Remark:</span> {order.notes}
+                          </p>
+                        )}
                         <div className="flex items-center justify-between pt-1">
                           <span className="text-xs font-semibold text-zinc-700">RM {order.total_amount.toFixed(2)}</span>
                           <Button size="sm" disabled={markingId === order.id} onClick={() => markDelivered(order.id)}

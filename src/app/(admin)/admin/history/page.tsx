@@ -32,6 +32,7 @@ type Order = {
   payment_method: string | null;
   voucher_code: string | null;
   discount_amount: number;
+  notes: string | null;
   customer_name: string | null;
   order_items: OrderItem[];
 };
@@ -68,7 +69,7 @@ export default function SalesHistoryPage() {
       .select(`
         id, order_number, created_at, status, source, table_number,
         subtotal, total_amount, points_redeemed, payment_method,
-        voucher_code, discount_amount,
+        voucher_code, discount_amount, notes,
         profiles!customer_id(full_name),
         order_items(id, product_name, unit_price, quantity, subtotal)
       `)
@@ -263,6 +264,13 @@ export default function SalesHistoryPage() {
                         </div>
                       ))}
                     </div>
+
+                    {/* Remark */}
+                    {order.notes && (
+                      <div className="mb-3 rounded-lg bg-amber-50 border border-amber-200 px-3 py-2 text-sm text-amber-800">
+                        <span className="font-semibold">Remark:</span> {order.notes}
+                      </div>
+                    )}
 
                     {/* Order summary breakdown */}
                     {(() => {

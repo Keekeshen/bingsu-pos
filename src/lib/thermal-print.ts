@@ -54,6 +54,7 @@ export type ThermalReceiptData = {
   cashier?: string;
   tableNumber?: string;
   customerName?: string;
+  notes?: string;
   items: { name: string; qty: number; unitPrice: number; subtotal: number; discountPct?: number }[];
   subtotal: number;
   tierDiscount?: number;
@@ -105,6 +106,10 @@ export function buildReceiptBytes(d: ThermalReceiptData): Uint8Array {
     } else {
       p.line("   @ RM" + item.unitPrice.toFixed(2) + "/ea");
     }
+  }
+  if (d.notes) {
+    p.dashes();
+    p.align("left").line("Remark: " + d.notes);
   }
   p.dashes();
 

@@ -31,6 +31,7 @@ type PendingReceipt = {
   tierLabel?: string;
   serviceCharge?: number;
   rounding?: number;
+  notes?: string;
 };
 
 type Props = {
@@ -197,6 +198,7 @@ export default function CheckoutCart({ items, subtotal, total, onUpdateQuantity,
       tableNumber: tableNumber.trim() || undefined,
       serviceCharge: serviceChargeAmt,
       rounding: roundingAmt !== 0 ? roundingAmt : undefined,
+      notes: remark.trim() || undefined,
       tierDiscount: tierDiscountAmt > 0 ? tierDiscountAmt : undefined,
       tierLabel: tierDiscountAmt > 0 ? `${customerTier?.name} (${tierDiscountPct}%)` : undefined,
     });
@@ -449,6 +451,7 @@ export default function CheckoutCart({ items, subtotal, total, onUpdateQuantity,
           tierLabel={pending.tierLabel}
           serviceCharge={pending.serviceCharge}
           rounding={pending.rounding}
+          notes={pending.notes}
         />
       )}
     </>

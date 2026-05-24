@@ -231,14 +231,14 @@ export default function CheckoutCart({ items, subtotal, total, onUpdateQuantity,
           )}
         </div>
 
-        <ScrollArea className="flex-1 px-4">
+        <ScrollArea className="flex-1">
           {items.length === 0 ? (
-            <div className="flex h-40 flex-col items-center justify-center gap-2 text-zinc-300">
+            <div className="flex h-40 flex-col items-center justify-center gap-2 text-zinc-300 px-4">
               <ShoppingBagIcon />
               <span className="text-xs">Cart is empty</span>
             </div>
           ) : (
-            <ul className="divide-y divide-zinc-100 py-2">
+            <ul className="divide-y divide-zinc-100 py-2 px-4">
               {items.map((item) => (
                 <CartRow
                   key={item.product_id}
@@ -251,7 +251,6 @@ export default function CheckoutCart({ items, subtotal, total, onUpdateQuantity,
               ))}
             </ul>
           )}
-        </ScrollArea>
 
         {/* Table Number */}
         <div className="space-y-2 border-t border-zinc-200 px-4 py-3">
@@ -426,7 +425,10 @@ export default function CheckoutCart({ items, subtotal, total, onUpdateQuantity,
               <span className="text-3xl font-black text-white tabular-nums tracking-tight">RM {chargeTotal.toFixed(2)}</span>
             </div>
           </div>
+        </ScrollArea>
 
+        {/* Charge button — always pinned at bottom */}
+        <div className="border-t border-zinc-200 px-4 py-3 bg-white">
           <Button
             className="h-12 w-full text-base font-semibold"
             disabled={!canCharge || charging}

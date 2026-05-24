@@ -306,7 +306,7 @@ export default function TableOrderMenu({ tableSlug, tableNumber }: Props) {
               <span className="text-2xl font-black text-white tabular-nums">RM {totalPrice.toFixed(2)}</span>
             </div>
             {/* Remark */}
-            <div className="mb-3">
+            <div className="mb-3 mt-4">
               <label className="block text-xs font-medium text-zinc-500 mb-1.5">Remark / Special request (optional)</label>
               <textarea
                 rows={2}

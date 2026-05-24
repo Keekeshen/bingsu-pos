@@ -100,6 +100,7 @@ export default function ReceiptPrint({ open, onClose, order, items, customerName
       date: dateStr,
       tableNumber,
       items: items.map(i => ({ name: i.name, qty: i.quantity })),
+      note: notes,
     });
     await kitchen.print(bytes);
   }

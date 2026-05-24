@@ -301,9 +301,9 @@ export default function TableOrderMenu({ tableSlug, tableNumber }: Props) {
                 </li>
               ))}
             </ul>
-            <div className="flex items-center justify-between mb-4 border-t border-zinc-100 pt-3">
-              <span className="text-sm font-bold text-zinc-900">Total</span>
-              <span className="text-sm font-bold text-zinc-900">RM {totalPrice.toFixed(2)}</span>
+            <div className="flex items-center justify-between rounded-xl bg-zinc-900 px-4 py-3 mt-1">
+              <span className="text-sm font-semibold text-zinc-300">Total Due</span>
+              <span className="text-2xl font-black text-white tabular-nums">RM {totalPrice.toFixed(2)}</span>
             </div>
             {/* Remark */}
             <div className="mb-3">

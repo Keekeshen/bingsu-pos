@@ -73,7 +73,7 @@ export default function SalesHistoryPage() {
         profiles!customer_id(full_name),
         order_items(id, product_name, unit_price, quantity, subtotal)
       `)
-      .eq("status", "completed")
+      .in("status", ["completed", "served"])
       .gte("created_at", from)
       .lte("created_at", to)
       .order("created_at", { ascending: false });
@@ -216,6 +216,12 @@ export default function SalesHistoryPage() {
                   ) : (
                     <span className="flex items-center gap-1 rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-600 shrink-0">
                       <Monitor className="h-3 w-3" /> POS{order.table_number ? ` · T${order.table_number}` : ""}
+                    </span>
+                  )}
+                  {/* Pending serve badge */}
+                  {order.status === "served" && (
+                    <span className="flex items-center gap-1 rounded-full bg-violet-100 px-2 py-0.5 text-xs font-medium text-violet-700 shrink-0">
+                      Pending Serve
                     </span>
                   )}
 

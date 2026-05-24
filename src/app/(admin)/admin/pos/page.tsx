@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { ShoppingCart, LayoutGrid } from "lucide-react";
+import { useState, useCallback } from "react";
+import { ShoppingCart, LayoutGrid, RefreshCw } from "lucide-react";
 import { useCart } from "@/lib/hooks/useCart";
 import POSGrid from "@/components/admin/POSGrid";
 import CheckoutCart from "@/components/admin/CheckoutCart";
@@ -17,36 +17,57 @@ export default function POSPage() {
   const [selectedTable, setSelectedTable] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
 
+  const handleRefresh = useCallback(() => {
+    setRefreshKey((k) => k + 1);
+  }, []);
+
+  const handleOrdersUpdated = useCallback(() => {
+    setRefreshKey((k) => k + 1);
+  }, []);
+
   return (
     <div className="flex h-full flex-col overflow-hidden">
-      <div className="flex items-center gap-1 border-b border-zinc-200 bg-white px-4 py-2">
+      {/* Tab bar */}
+      <div className="flex items-center gap-1 border-b border-zinc-200 bg-white px-3 py-2 shrink-0">
         <button
           onClick={() => setTab("sell")}
           className={cn(
             "flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors",
             tab === "sell"
               ? "bg-zinc-900 text-white"
-              : "text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900"
+              : "text-zinc-500 hover:bg-zinc-100 hover:text-zinc-800"
           )}
         >
           <ShoppingCart className="h-4 w-4" />
           Sell
         </button>
         <button
-          onClick={() => { setTab("tables"); setSelectedTable(null); }}
+          onClick={() => setTab("tables")}
           className={cn(
             "flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors",
             tab === "tables"
               ? "bg-zinc-900 text-white"
-              : "text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900"
+              : "text-zinc-500 hover:bg-zinc-100 hover:text-zinc-800"
           )}
         >
           <LayoutGrid className="h-4 w-4" />
           Tables
         </button>
+
+        {tab === "tables" && (
+          <button
+            onClick={handleRefresh}
+            className="ml-auto flex items-center gap-1.5 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-xs font-medium text-zinc-500 transition-colors hover:border-zinc-300 hover:bg-zinc-50 hover:text-zinc-800"
+            title="Refresh table statuses"
+          >
+            <RefreshCw className="h-3.5 w-3.5" />
+            Refresh
+          </button>
+        )}
       </div>
 
-      {tab === "sell" ? (
+      {/* Sell tab */}
+      {tab === "sell" && (
         <div className="flex flex-1 overflow-hidden">
           <section className="flex flex-[3] flex-col overflow-hidden p-4">
             <h1 className="mb-3 text-lg font-bold text-zinc-900">Point of Sale</h1>
@@ -64,29 +85,36 @@ export default function POSPage() {
             />
           </aside>
         </div>
-      ) : (
+      )}
+
+      {/* Tables tab */}
+      {tab === "tables" && (
         <div className="flex flex-1 overflow-hidden">
-          <section className="flex-1 overflow-y-auto border-r border-zinc-200">
+          {/* Left: table grid */}
+          <div className="w-72 shrink-0 overflow-y-auto border-r border-zinc-200 bg-white">
             <TableGrid
               selectedTable={selectedTable}
               onSelectTable={setSelectedTable}
               refreshKey={refreshKey}
             />
-          </section>
-          <aside
-            className={cn(
-              "flex flex-col border-zinc-200 overflow-hidden transition-all duration-200",
-              selectedTable ? "w-80 border-l" : "w-0"
-            )}
-          >
-            {selectedTable && (
+          </div>
+
+          {/* Right: order view or empty state */}
+          <div className="flex flex-1 flex-col overflow-hidden bg-zinc-50">
+            {selectedTable ? (
               <TableOrderView
+                key={selectedTable}
                 tableNumber={selectedTable}
                 onClose={() => setSelectedTable(null)}
-                onOrdersUpdated={() => setRefreshKey((k) => k + 1)}
+                onOrdersUpdated={handleOrdersUpdated}
               />
+            ) : (
+              <div className="flex flex-1 flex-col items-center justify-center gap-3 text-zinc-300">
+                <LayoutGrid className="h-14 w-14" />
+                <p className="text-sm font-medium">Select a table to manage orders</p>
+              </div>
             )}
-          </aside>
+          </div>
         </div>
       )}
     </div>

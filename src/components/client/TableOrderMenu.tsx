@@ -259,10 +259,16 @@ export default function TableOrderMenu({ tableSlug, tableNumber }: Props) {
       {totalItems > 0 && !showCart && (
         <button
           onClick={() => setShowCart(true)}
-          className="fixed bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-3 rounded-full bg-zinc-900 px-6 py-3 text-white shadow-xl hover:bg-zinc-700 transition-colors active:scale-95"
+          className="fixed bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-4 rounded-2xl bg-zinc-900 px-6 py-4 text-white shadow-2xl hover:bg-zinc-700 transition-colors active:scale-95 border-2 border-white/20"
         >
-          <ShoppingCart className="h-4 w-4" />
-          <span className="text-sm font-semibold">{totalItems} item{totalItems !== 1 ? "s" : ""} · RM {totalPrice.toFixed(2)}</span>
+          <div className="relative">
+            <ShoppingCart className="h-5 w-5" />
+            <span className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-amber-400 text-[10px] font-black text-zinc-900">{totalItems}</span>
+          </div>
+          <div className="flex flex-col items-start">
+            <span className="text-xs text-zinc-400 leading-none mb-0.5">View order</span>
+            <span className="text-base font-black tabular-nums leading-none">RM {totalPrice.toFixed(2)}</span>
+          </div>
         </button>
       )}
 

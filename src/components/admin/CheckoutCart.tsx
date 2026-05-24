@@ -62,6 +62,7 @@ export default function CheckoutCart({ items, subtotal, total, onUpdateQuantity,
   const [itemDiscounts, setItemDiscounts] = useState<Record<string, number>>({});
   const [pending, setPending] = useState<PendingReceipt | null>(null);
   const [tableNumber, setTableNumber] = useState("");
+  const [remark, setRemark] = useState("");
   const phoneRef = useRef<HTMLInputElement>(null);
 
   const customerTier = customer ? getTier(customer.loyalty_points) : null;
@@ -155,6 +156,7 @@ export default function CheckoutCart({ items, subtotal, total, onUpdateQuantity,
         service_charge: serviceChargeAmt,
         rounding: roundingAmt,
         table_number: tableNumber.trim() || null,
+        notes: remark.trim() || null,
       }),
     });
 
@@ -200,6 +202,7 @@ export default function CheckoutCart({ items, subtotal, total, onUpdateQuantity,
     });
 
     onClearCart();
+    setRemark("");
     setCustomer(null);
     setPhone("");
     setPaymentType(null);
@@ -256,6 +259,18 @@ export default function CheckoutCart({ items, subtotal, total, onUpdateQuantity,
             value={tableNumber}
             onChange={(e) => setTableNumber(e.target.value)}
             className="h-9 text-sm"
+          />
+        </div>
+
+        {/* Remark */}
+        <div className="space-y-2 border-t border-zinc-200 px-4 py-3">
+          <p className="text-xs font-medium text-zinc-500">Remark (optional)</p>
+          <textarea
+            rows={2}
+            value={remark}
+            onChange={(e) => setRemark(e.target.value)}
+            placeholder="e.g. less sweet, no ice, special request…"
+            className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-800 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900 resize-none"
           />
         </div>
 

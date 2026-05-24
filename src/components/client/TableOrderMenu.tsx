@@ -36,13 +36,13 @@ type CartItem = {
   quantity: number;
 };
 
-type Props = { tableSlug: string };
+type Props = { tableSlug: string; tableNumber?: string };
 
 function toppingKey(productId: string, toppings: string[]) {
   return productId + (toppings.length ? "|" + [...toppings].sort().join(",") : "");
 }
 
-export default function TableOrderMenu({ tableSlug }: Props) {
+export default function TableOrderMenu({ tableSlug, tableNumber }: Props) {
   const [products, setProducts] = useState<Product[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -53,6 +53,7 @@ export default function TableOrderMenu({ tableSlug }: Props) {
   const [detail, setDetail] = useState<Product | null>(null);
   const [selectedToppings, setSelectedToppings] = useState<string[]>([]);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const [remark, setRemark] = useState("");
 
   useEffect(() => {
     fetch("/api/menu")
@@ -126,7 +127,7 @@ export default function TableOrderMenu({ tableSlug }: Props) {
       const res = await fetch("/api/table-order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ table_slug: tableSlug, customer_id: null, items }),
+        body: JSON.stringify({ table_slug: tableSlug, customer_id: null, items, notes: remark.trim() || null }),
       });
       if (!res.ok) {
         const e = await res.json().catch(() => ({}));
@@ -135,6 +136,7 @@ export default function TableOrderMenu({ tableSlug }: Props) {
       }
       setOrderCount(c => c + 1);
       setCart([]);
+      setRemark("");
       setShowCart(false);
       setShowSuccess(true);
     } catch {
@@ -162,7 +164,9 @@ export default function TableOrderMenu({ tableSlug }: Props) {
               <ChefHat className="h-5 w-5 text-zinc-700" />
               <span className="font-bold text-zinc-900">Koori Dessert</span>
             </div>
-            <p className="text-xs text-zinc-500 mt-0.5">Dine-in order</p>
+            <p className="text-xs text-zinc-500 mt-0.5">
+              Dine-in order{tableNumber ? ` · Table ${tableNumber}` : ""}
+            </p>
           </div>
           {orderCount > 0 && (
             <div className="flex items-center gap-1.5 rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-700">
@@ -301,6 +305,17 @@ export default function TableOrderMenu({ tableSlug }: Props) {
               <span className="text-sm font-bold text-zinc-900">Total</span>
               <span className="text-sm font-bold text-zinc-900">RM {totalPrice.toFixed(2)}</span>
             </div>
+            {/* Remark */}
+            <div className="mb-3">
+              <label className="block text-xs font-medium text-zinc-500 mb-1.5">Remark / Special request (optional)</label>
+              <textarea
+                rows={2}
+                value={remark}
+                onChange={e => setRemark(e.target.value)}
+                placeholder="e.g. less sweet, no ice, extra topping on the side…"
+                className="w-full rounded-xl border border-zinc-200 px-3 py-2 text-sm text-zinc-800 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900 resize-none"
+              />
+            </div>
             {orderCount > 0 && (
               <p className="mb-3 text-center text-xs text-green-600 font-medium">
                 {orderCount} previous round{orderCount > 1 ? "s" : ""} sent. Adding more?
@@ -311,7 +326,7 @@ export default function TableOrderMenu({ tableSlug }: Props) {
               disabled={submitting || cart.length === 0}
               className="w-full rounded-xl bg-zinc-900 py-3 text-sm font-bold text-white disabled:opacity-60 hover:bg-zinc-700 transition-colors active:scale-95"
             >
-              {submitting ? "Sending to kitchen..." : "Send to Kitchen"}
+              {submitting ? "Sending order..." : "Confirm Order"}
             </button>
           </div>
         </div>
@@ -323,11 +338,17 @@ export default function TableOrderMenu({ tableSlug }: Props) {
           <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-emerald-100">
             <CheckCircle className="h-10 w-10 text-emerald-500" />
           </div>
-          <h2 className="text-2xl font-black text-zinc-900">Order Sent!</h2>
-          <p className="mt-2 text-base text-zinc-500">Your order has been sent to the kitchen.</p>
-          <div className="mt-6 w-full rounded-2xl bg-amber-50 border border-amber-200 px-5 py-4">
+          <h2 className="text-2xl font-black text-zinc-900">Order Confirmed!</h2>
+          {tableNumber && (
+            <div className="mt-3 flex items-center gap-2 rounded-full bg-zinc-100 px-4 py-1.5">
+              <span className="text-xs text-zinc-500">Table</span>
+              <span className="text-lg font-black text-zinc-900">{tableNumber}</span>
+            </div>
+          )}
+          <p className="mt-2 text-base text-zinc-500">Your order has been sent to the counter.</p>
+          <div className="mt-4 w-full rounded-2xl bg-amber-50 border border-amber-200 px-5 py-4">
             <p className="text-sm font-bold text-amber-800">Please pay at the counter</p>
-            <p className="mt-1 text-xs text-amber-700">When you are ready, head to the counter to settle your bill.</p>
+            <p className="mt-1 text-xs text-amber-700">Head to the counter to settle your bill. Your order will be prepared after payment.</p>
           </div>
           <button onClick={() => setShowSuccess(false)} className="mt-6 w-full rounded-xl bg-zinc-900 py-3 text-sm font-semibold text-white hover:bg-zinc-700">
             Order more

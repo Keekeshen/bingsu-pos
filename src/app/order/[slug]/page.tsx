@@ -16,11 +16,11 @@ export default async function TableOrderSlugPage({
   const admin = createAdminClient();
   const { data: row } = await admin
     .from("tables")
-    .select("id")
+    .select("id, table_number")
     .eq("id", slug)
     .maybeSingle();
 
   if (!row) notFound();
 
-  return <TableOrderMenu tableSlug={slug} />;
+  return <TableOrderMenu tableSlug={slug} tableNumber={String(row.table_number ?? "")} />;
 }

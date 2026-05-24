@@ -20,6 +20,7 @@ type CheckoutBody = {
   discount_amount?: number;
   service_charge?: number;
   rounding?: number;
+  notes?: string | null;
 };
 
 function err(message: string, status: number) {
@@ -50,7 +51,7 @@ export async function POST(request: NextRequest) {
     try { body = await request.json(); } catch { return err("Invalid JSON body", 400); }
     if (!validateBody(body)) return err("Invalid request body", 400);
 
-    const { items, customer_id = null, points_redeemed = 0, payment_method = null, voucher_code = null, discount_amount = 0, service_charge = 0, rounding = 0, table_number = null } = body;
+    const { items, customer_id = null, points_redeemed = 0, payment_method = null, voucher_code = null, discount_amount = 0, service_charge = 0, rounding = 0, table_number = null, notes = null } = body;
 
     // Cookie-based auth — works reliably on all browsers including Android Chrome
     const supabase = await createClient();
@@ -89,7 +90,7 @@ export async function POST(request: NextRequest) {
     const orderNumber = await generateOrderNumber();
     const { data: order, error: orderError } = await admin
       .from("orders")
-      .insert({ order_number: orderNumber, admin_id: user.id, customer_id, subtotal, points_redeemed, total_amount: totalAmount, status: "completed", payment_method: payment_method ? String(payment_method) : null, voucher_code: voucher_code ? String(voucher_code) : null, discount_amount: voucherDiscountAmount, table_number: table_number ? String(table_number) : null })
+      .insert({ order_number: orderNumber, admin_id: user.id, customer_id, subtotal, points_redeemed, total_amount: totalAmount, status: "completed", payment_method: payment_method ? String(payment_method) : null, voucher_code: voucher_code ? String(voucher_code) : null, discount_amount: voucherDiscountAmount, table_number: table_number ? String(table_number) : null, notes: notes ? String(notes) : null })
       .select("id, order_number, created_at")
       .single();
 

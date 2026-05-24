@@ -43,6 +43,7 @@ export async function POST(request: NextRequest) {
     if (items.length === 0) return err("No valid items", 400);
 
     const customerId = body.customer_id ? String(body.customer_id) : null;
+    const notes = body.notes ? String(body.notes) : null;
     const admin = createAdminClient();
 
     const { data: tableRow } = await admin
@@ -69,6 +70,7 @@ export async function POST(request: NextRequest) {
         total_amount: subtotal,
         customer_id: customerId,
         points_redeemed: 0,
+        notes,
       })
       .select("id, order_number")
       .single();

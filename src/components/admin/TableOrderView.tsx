@@ -78,6 +78,7 @@ export default function TableOrderView({ tableNumber, onClose, onOrdersUpdated }
     guestLabel: string;
     paymentMethod: string;
     amountPaid: number;
+    notes?: string;
     tableBreakdown: { voucherDiscount: number; serviceCharge: number; rounding: number; payableTotal: number };
   } | null>(null);
 
@@ -260,6 +261,12 @@ export default function TableOrderView({ tableNumber, onClose, onOrdersUpdated }
 
       const guestLabel = allGuestLabels.length > 0 ? allGuestLabels.join(", ") : "Walk-in";
 
+      // Collect all non-empty remarks from all orders for this table
+      const allNotes = orders
+        .map(o => o.notes?.trim())
+        .filter(Boolean)
+        .join(" | ");
+
       const apiTotal = data.total as number;
       const paidAmt = paymentType === "cash" ? paid : apiTotal;
       setReceiptData({
@@ -275,6 +282,7 @@ export default function TableOrderView({ tableNumber, onClose, onOrdersUpdated }
         guestLabel,
         paymentMethod: paymentType === "cash" ? "CASH" : paymentType === "qr" ? "QR CODE" : "CARD",
         amountPaid: paidAmt,
+        notes: allNotes || undefined,
         tableBreakdown: {
           voucherDiscount: (data.voucher_discount ?? 0) as number,
           serviceCharge: (data.service_charge ?? 0) as number,
@@ -629,6 +637,7 @@ export default function TableOrderView({ tableNumber, onClose, onOrdersUpdated }
           paymentMethod={receiptData.paymentMethod}
           amountPaid={receiptData.amountPaid}
           tableNumber={tableNumber}
+          notes={receiptData.notes}
           tableBreakdown={receiptData.tableBreakdown}
         />
       )}

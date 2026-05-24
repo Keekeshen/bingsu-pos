@@ -426,7 +426,6 @@ export default function CheckoutCart({ items, subtotal, total, onUpdateQuantity,
               <span className="text-3xl font-black text-white tabular-nums tracking-tight">RM {chargeTotal.toFixed(2)}</span>
             </div>
           </div>
-          </div>
         </ScrollArea>
 
         {/* Charge button — always pinned at bottom */}

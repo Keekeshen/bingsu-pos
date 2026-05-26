@@ -62,6 +62,7 @@ export default function TableOrderView({ tableNumber, onClose, onOrdersUpdated }
   const [itemDiscounts, setItemDiscounts] = useState<Record<string, number>>({});
   const [editingDiscountId, setEditingDiscountId] = useState<string | null>(null);
   const [discountDraft, setDiscountDraft] = useState("");
+  const [discountMode, setDiscountMode] = useState<"pct" | "amt">("pct");
   const [voucherBusy, setVoucherBusy] = useState(false);
 
   // manually-linked customer (for loyalty / receipt name)
@@ -468,40 +469,74 @@ export default function TableOrderView({ tableNumber, onClose, onOrdersUpdated }
                       <div className="flex items-center gap-1.5 text-sm">
                         <span className="flex-1 text-zinc-700">{item.quantity}x {item.product_name}</span>
                         <button
-                          onClick={() => { setEditingDiscountId(isEditing ? null : item.id); setDiscountDraft(pct > 0 ? String(pct) : ""); }}
+                          onClick={() => {
+                            if (isEditing) { setEditingDiscountId(null); }
+                            else { setEditingDiscountId(item.id); setDiscountDraft(""); setDiscountMode("pct"); }
+                          }}
                           className={`flex h-5 w-5 shrink-0 items-center justify-center rounded border text-[10px] transition-colors ${pct > 0 ? "border-orange-300 bg-orange-100 text-orange-600" : "border-zinc-200 text-zinc-400 hover:border-zinc-400"}`}
                         ><Percent className="h-2.5 w-2.5" /></button>
                         <span className="tabular-nums text-zinc-600 w-14 text-right">RM {lineTotal.toFixed(2)}</span>
                       </div>
                       {pct > 0 && (
-                        <p className="text-[10px] text-orange-500 pl-0 mt-0.5">-{pct}% off · orig RM {(item.unit_price * item.quantity).toFixed(2)}</p>
+                        <p className="text-[10px] text-orange-500 pl-0 mt-0.5">
+                          -RM {(item.unit_price * item.quantity * pct / 100).toFixed(2)} (-{pct.toFixed(pct % 1 === 0 ? 0 : 1)}%) · orig RM {(item.unit_price * item.quantity).toFixed(2)}
+                        </p>
                       )}
                       {isEditing && (
-                        <div className="mt-1 flex items-center gap-1.5 rounded-lg border border-orange-200 bg-orange-50 px-2 py-1">
-                          <Percent className="h-3 w-3 text-orange-500 shrink-0" />
-                          <input
-                            type="number" min="0" max="100" step="1"
-                            value={discountDraft}
-                            onChange={e => setDiscountDraft(e.target.value)}
-                            onKeyDown={e => {
-                              if (e.key === "Enter") {
-                                const p = parseFloat(discountDraft);
-                                setItemDiscounts(prev => ({ ...prev, [item.id]: isNaN(p) ? 0 : Math.min(100, Math.max(0, p)) }));
-                                setEditingDiscountId(null);
+                        <div className="mt-1 rounded-lg border border-orange-200 bg-orange-50 px-2 py-1.5 space-y-1.5">
+                          {/* Mode toggle */}
+                          <div className="flex gap-1">
+                            <button
+                              onClick={() => { setDiscountMode("pct"); setDiscountDraft(""); }}
+                              className={`flex-1 rounded py-0.5 text-[10px] font-semibold transition-colors ${discountMode === "pct" ? "bg-orange-500 text-white" : "bg-white text-orange-500 border border-orange-300"}`}
+                            >% Off</button>
+                            <button
+                              onClick={() => { setDiscountMode("amt"); setDiscountDraft(""); }}
+                              className={`flex-1 rounded py-0.5 text-[10px] font-semibold transition-colors ${discountMode === "amt" ? "bg-orange-500 text-white" : "bg-white text-orange-500 border border-orange-300"}`}
+                            >RM Off</button>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-[10px] font-semibold text-orange-600 shrink-0">{discountMode === "pct" ? "%" : "RM"}</span>
+                            <input
+                              type="number" min="0" max={discountMode === "pct" ? 100 : item.unit_price * item.quantity} step={discountMode === "pct" ? 1 : 0.10}
+                              value={discountDraft}
+                              onChange={e => setDiscountDraft(e.target.value)}
+                              onKeyDown={e => {
+                                if (e.key === "Enter") {
+                                  const val = parseFloat(discountDraft);
+                                  let pctApply = 0;
+                                  if (!isNaN(val) && val > 0) {
+                                    pctApply = discountMode === "pct"
+                                      ? Math.min(100, Math.max(0, val))
+                                      : +Math.min(100, Math.max(0, (val / (item.unit_price * item.quantity)) * 100)).toFixed(4);
+                                  }
+                                  setItemDiscounts(prev => ({ ...prev, [item.id]: pctApply }));
+                                  setEditingDiscountId(null);
+                                }
+                                if (e.key === "Escape") setEditingDiscountId(null);
+                              }}
+                              placeholder={discountMode === "pct" ? "e.g. 50" : `max ${(item.unit_price * item.quantity).toFixed(2)}`}
+                              autoFocus
+                              className="flex-1 bg-transparent text-xs font-bold text-orange-700 focus:outline-none"
+                            />
+                            <button onClick={() => {
+                              const val = parseFloat(discountDraft);
+                              let pctApply = 0;
+                              if (!isNaN(val) && val > 0) {
+                                pctApply = discountMode === "pct"
+                                  ? Math.min(100, Math.max(0, val))
+                                  : +Math.min(100, Math.max(0, (val / (item.unit_price * item.quantity)) * 100)).toFixed(4);
                               }
-                              if (e.key === "Escape") setEditingDiscountId(null);
-                            }}
-                            placeholder="e.g. 50"
-                            autoFocus
-                            className="w-12 bg-transparent text-sm font-bold text-orange-700 focus:outline-none"
-                          />
-                          <span className="text-xs text-orange-600">%</span>
-                          <button onClick={() => {
-                            const p = parseFloat(discountDraft);
-                            setItemDiscounts(prev => ({ ...prev, [item.id]: isNaN(p) ? 0 : Math.min(100, Math.max(0, p)) }));
-                            setEditingDiscountId(null);
-                          }} className="ml-auto rounded bg-orange-500 px-2 py-0.5 text-xs font-bold text-white">Apply</button>
-                          {pct > 0 && <button onClick={() => { setItemDiscounts(prev => ({ ...prev, [item.id]: 0 })); setEditingDiscountId(null); }} className="text-xs text-zinc-400">Clear</button>}
+                              setItemDiscounts(prev => ({ ...prev, [item.id]: pctApply }));
+                              setEditingDiscountId(null);
+                            }} className="rounded bg-orange-500 px-1.5 py-0.5 text-[10px] font-bold text-white shrink-0">Apply</button>
+                            {pct > 0 && <button onClick={() => { setItemDiscounts(prev => ({ ...prev, [item.id]: 0 })); setEditingDiscountId(null); }} className="text-[10px] text-zinc-400 shrink-0">Clear</button>}
+                          </div>
+                          {discountMode === "amt" && discountDraft && !isNaN(parseFloat(discountDraft)) && parseFloat(discountDraft) > 0 && (
+                            <p className="text-[9px] text-orange-500">
+                              RM {(item.unit_price * item.quantity).toFixed(2)} → RM {Math.max(0, item.unit_price * item.quantity - parseFloat(discountDraft)).toFixed(2)} ({Math.min(100, (parseFloat(discountDraft) / (item.unit_price * item.quantity)) * 100).toFixed(1)}% off)
+                            </p>
+                          )}
                         </div>
                       )}
                     </div>

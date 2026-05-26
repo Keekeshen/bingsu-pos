@@ -102,7 +102,11 @@ export function buildReceiptBytes(d: ThermalReceiptData): Uint8Array {
     const descTrunc = desc.length > maxDesc ? desc.slice(0, maxDesc - 1) + "~" : desc;
     p.line(descTrunc + " ".repeat(W - descTrunc.length - priceStr.length) + priceStr);
     if (item.discountPct && item.discountPct > 0) {
-      p.line("   @ RM" + item.unitPrice.toFixed(2) + "/ea (-" + item.discountPct + "%)");
+      const discAmt = +(item.unitPrice - item.subtotal / item.qty).toFixed(2);
+      const pctDisplay = Number.isInteger(item.discountPct)
+        ? String(item.discountPct)
+        : item.discountPct.toFixed(1);
+      p.line("   @ RM" + item.unitPrice.toFixed(2) + "/ea (-RM" + discAmt.toFixed(2) + " / " + pctDisplay + "%)");
     } else {
       p.line("   @ RM" + item.unitPrice.toFixed(2) + "/ea");
     }

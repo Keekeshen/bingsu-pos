@@ -100,10 +100,14 @@ export default function POSGrid({ onAddItem }: Props) {
     <>
       <div className="flex flex-col gap-4 h-full overflow-hidden">
         <Tabs value={activeCategory} onValueChange={setActiveCategory}>
-          <TabsList className="flex-wrap h-auto gap-1 bg-zinc-100 p-1">
+          <TabsList className="flex-wrap h-auto gap-1.5 bg-zinc-100 p-1.5">
             {loading
-              ? Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-8 w-20 rounded-md" />)
-              : categories.map((cat) => <TabsTrigger key={cat} value={cat} className="text-xs">{cat}</TabsTrigger>)}
+              ? Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-10 w-24 rounded-lg" />)
+              : categories.map((cat) => (
+                  <TabsTrigger key={cat} value={cat} className="h-10 px-4 text-sm font-medium rounded-lg">
+                    {cat}
+                  </TabsTrigger>
+                ))}
           </TabsList>
         </Tabs>
 

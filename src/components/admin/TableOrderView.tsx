@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { CheckCheck, X, RefreshCw, Clock, ArrowLeft, Banknote, QrCode, CreditCard, Ticket, UserRound, UserSearch, Percent } from "lucide-react";
+import { CheckCheck, X, RefreshCw, Clock, ArrowLeft, Banknote, QrCode, CreditCard, Ticket, UserRound, UserSearch, Percent, ShoppingBag } from "lucide-react";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -56,6 +56,7 @@ export default function TableOrderView({ tableNumber, onClose, onOrdersUpdated }
   const [paymentType, setPaymentType] = useState<"cash" | "qr" | "card" | null>(null);
   const [amountPaid, setAmountPaid] = useState("");
   const [charging, setCharging] = useState(false);
+  const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [receiptOpen, setReceiptOpen] = useState(false);
   const [voucherInput, setVoucherInput] = useState("");
   const [voucher, setVoucher] = useState<VoucherData | null>(null);
@@ -291,6 +292,7 @@ export default function TableOrderView({ tableNumber, onClose, onOrdersUpdated }
           payableTotal: apiTotal,
         },
       });
+      setCheckoutOpen(false);
       setReceiptOpen(true);
       toast.success("Payment processed!");
       setVoucher(null);
@@ -622,43 +624,131 @@ export default function TableOrderView({ tableNumber, onClose, onOrdersUpdated }
               )}
             </div>
 
-            {/* Payment method */}
-            <div>
-              <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-zinc-400">Payment Method</p>
-              <div className="grid grid-cols-3 gap-2">
-                {(["cash", "qr", "card"] as const).map(t => (
-                  <button key={t} type="button" onClick={() => setPaymentType(t)}
-                    className={`flex flex-col items-center gap-1.5 rounded-xl border-2 py-3 transition-all ${paymentType === t ? "border-zinc-900 bg-zinc-900 text-white" : "border-zinc-200 bg-white text-zinc-600 hover:border-zinc-400"}`}>
-                    {t === "cash" ? <Banknote className="h-5 w-5" /> : t === "qr" ? <QrCode className="h-5 w-5" /> : <CreditCard className="h-5 w-5" />}
-                    <span className="text-xs font-medium">{t === "cash" ? "Cash" : t === "qr" ? "QR Code" : "Card"}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Cash amount */}
-            {paymentType === "cash" && (
-              <div className="space-y-2">
-                <p className="text-xs font-semibold uppercase tracking-wider text-zinc-400">Amount Received (RM)</p>
-                <Input type="number" min={total} step="0.10" value={amountPaid}
-                  onChange={e => setAmountPaid(e.target.value)} placeholder={total.toFixed(2)} className="text-xl font-bold" />
-                {change !== null && (
-                  <div className="flex items-center justify-between rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2.5">
-                    <span className="text-sm font-semibold text-emerald-700">Change</span>
-                    <span className="text-lg font-bold text-emerald-700">RM {change.toFixed(2)}</span>
-                  </div>
-                )}
-              </div>
-            )}
           </>
         )}
       </div>
 
       {orders.length > 0 && (
         <div className="border-t border-zinc-200 px-4 py-3">
-          <Button className="w-full h-12 text-base font-semibold" disabled={!canCharge || charging} onClick={processPayment}>
-            {charging ? "Processing…" : `Charge RM ${total.toFixed(2)}`}
+          <div className="flex items-center justify-between mb-2 px-1">
+            <span className="text-sm text-zinc-500">Total Due</span>
+            <span className="text-2xl font-black text-zinc-900 tabular-nums">RM {total.toFixed(2)}</span>
+          </div>
+          <Button className="w-full h-12 text-base font-semibold gap-2" onClick={() => { setPaymentType(null); setAmountPaid(""); setCheckoutOpen(true); }}>
+            <ShoppingBag className="h-5 w-5" />
+            Checkout
           </Button>
+        </div>
+      )}
+
+      {/* ── Full-screen customer-facing checkout overlay ─────────────────── */}
+      {checkoutOpen && (
+        <div className="fixed inset-0 z-50 flex flex-col bg-white">
+          {/* Top bar */}
+          <div className="flex items-center justify-between border-b border-zinc-200 bg-white px-6 py-3 shrink-0">
+            <button
+              onClick={() => setCheckoutOpen(false)}
+              className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-zinc-600 hover:bg-zinc-100 transition-colors"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back
+            </button>
+            <span className="text-base font-bold text-zinc-900">Koori Dessert — Table {tableNumber}</span>
+            <div className="w-20" />
+          </div>
+
+          <div className="flex flex-1 overflow-hidden">
+            {/* Left: Item list */}
+            <div className="flex-1 overflow-y-auto bg-zinc-50 p-6 border-r border-zinc-200">
+              <h2 className="text-xl font-bold text-zinc-700 mb-4">Your Order</h2>
+              <div className="space-y-3">
+                {allItems.map((item, idx) => {
+                  const pct = itemDiscounts[item.id] ?? 0;
+                  const effPrice = pct > 0 ? +(item.unit_price * (1 - pct / 100)).toFixed(2) : item.unit_price;
+                  const lineTotal = +(effPrice * item.quantity).toFixed(2);
+                  const discAmt = +(item.unit_price * item.quantity - lineTotal).toFixed(2);
+                  return (
+                    <div key={`${item.id}-${idx}`} className="flex items-center justify-between rounded-xl border border-zinc-200 bg-white px-5 py-4">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-base font-semibold text-zinc-900 truncate">{item.quantity}× {item.product_name}</p>
+                        <p className="text-sm text-zinc-500 mt-0.5">
+                          RM {effPrice.toFixed(2)} each
+                          {pct > 0 && <span className="ml-2 text-orange-500 font-medium">-RM {discAmt.toFixed(2)}</span>}
+                        </p>
+                      </div>
+                      <span className="text-xl font-bold text-zinc-900 tabular-nums ml-4">RM {lineTotal.toFixed(2)}</span>
+                    </div>
+                  );
+                })}
+              </div>
+              {/* Remarks */}
+              {orders.some(o => o.notes) && (
+                <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
+                  <p className="text-xs font-semibold text-amber-700 mb-1">Remarks</p>
+                  {orders.filter(o => o.notes).map(o => (
+                    <p key={o.id} className="text-sm text-amber-800">{o.notes}</p>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Right: Total + Payment */}
+            <div className="w-[400px] shrink-0 flex flex-col overflow-y-auto p-6 bg-white">
+              {/* Bill breakdown */}
+              <div className="space-y-1.5 text-sm mb-5">
+                <div className="flex justify-between text-zinc-500"><span>Subtotal</span><span>RM {(basketSubtotal + itemDiscountAmt).toFixed(2)}</span></div>
+                {itemDiscountAmt > 0 && <div className="flex justify-between text-orange-600 font-medium"><span>Item discount</span><span>-RM {itemDiscountAmt.toFixed(2)}</span></div>}
+                {voucherDiscountRaw > 0 && <div className="flex justify-between text-violet-600 font-medium"><span>Voucher</span><span>-RM {voucherDiscountRaw.toFixed(2)}</span></div>}
+                <div className="flex justify-between text-zinc-500"><span>Service charge ({TABLE_SERVICE_CHARGE_PCT}%)</span><span>RM {bill.serviceCharge.toFixed(2)}</span></div>
+                {bill.rounding !== 0 && <div className="flex justify-between text-zinc-400 text-xs"><span>Bill rounding</span><span>{bill.rounding > 0 ? "+" : ""}RM {bill.rounding.toFixed(2)}</span></div>}
+              </div>
+
+              {/* Big total */}
+              <div className="rounded-2xl bg-zinc-900 px-6 py-6 text-center mb-6">
+                <p className="text-zinc-400 text-sm mb-2">Total Due</p>
+                <p className="text-6xl font-black text-white tabular-nums tracking-tight">RM {total.toFixed(2)}</p>
+              </div>
+
+              {/* Payment method */}
+              <p className="text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-3">Payment Method</p>
+              <div className="grid grid-cols-3 gap-2 mb-5">
+                {(["cash", "qr", "card"] as const).map(t => (
+                  <button key={t} type="button" onClick={() => { setPaymentType(t); setAmountPaid(""); }}
+                    className={`flex flex-col items-center gap-2 rounded-xl border-2 py-4 transition-all ${paymentType === t ? "border-zinc-900 bg-zinc-900 text-white" : "border-zinc-200 bg-white text-zinc-600 hover:border-zinc-400"}`}>
+                    {t === "cash" ? <Banknote className="h-6 w-6" /> : t === "qr" ? <QrCode className="h-6 w-6" /> : <CreditCard className="h-6 w-6" />}
+                    <span className="text-sm font-medium">{t === "cash" ? "Cash" : t === "qr" ? "QR Code" : "Card"}</span>
+                  </button>
+                ))}
+              </div>
+
+              {/* Cash input */}
+              {paymentType === "cash" && (
+                <div className="mb-5 space-y-2">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-zinc-400">Amount Received (RM)</p>
+                  <input
+                    type="number" min={total} step="0.10" value={amountPaid}
+                    onChange={e => setAmountPaid(e.target.value)}
+                    placeholder={total.toFixed(2)} autoFocus
+                    className="w-full rounded-xl border-2 border-zinc-300 px-4 py-3 text-3xl font-bold focus:outline-none focus:border-zinc-900"
+                  />
+                  {change !== null && (
+                    <div className="flex items-center justify-between rounded-xl bg-emerald-50 border border-emerald-200 px-5 py-4">
+                      <span className="text-base font-semibold text-emerald-700">Change</span>
+                      <span className="text-3xl font-bold text-emerald-700 tabular-nums">RM {change.toFixed(2)}</span>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <Button
+                className="h-14 w-full text-lg font-bold mt-auto"
+                disabled={!canCharge || charging}
+                onClick={processPayment}
+              >
+                {charging ? "Processing…" : `Charge RM ${total.toFixed(2)}`}
+              </Button>
+            </div>
+          </div>
         </div>
       )}
 

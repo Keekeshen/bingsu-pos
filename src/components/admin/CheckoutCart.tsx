@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { Minus, Plus, Trash2, UserSearch, X, Banknote, QrCode, CreditCard, Ticket, Percent } from "lucide-react";
+import { Minus, Plus, Trash2, UserSearch, X, Banknote, QrCode, CreditCard, Ticket, Percent, ArrowLeft, ShoppingBag } from "lucide-react";
 import { toast } from "sonner";
 import type { CartItem } from "@/lib/hooks/useCart";
 import { createClient } from "@/lib/supabase/client";
@@ -55,6 +55,7 @@ export default function CheckoutCart({ items, subtotal, total, onUpdateQuantity,
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [lookingUp, setLookingUp] = useState(false);
   const [charging, setCharging] = useState(false);
+  const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [paymentType, setPaymentType] = useState<"cash" | "qr" | "card" | null>(null);
   const [amountReceived, setAmountReceived] = useState("");
   const [voucherCode, setVoucherCode] = useState("");
@@ -176,6 +177,7 @@ export default function CheckoutCart({ items, subtotal, total, onUpdateQuantity,
       tierLabel: tierDiscountAmt > 0 ? `${customerTier?.name} (${tierDiscountPct}%)` : undefined,
     });
     onClearCart();
+    setCheckoutOpen(false);
     setRemark("");
     setCustomer(null);
     setPhone("");
@@ -291,62 +293,138 @@ export default function CheckoutCart({ items, subtotal, total, onUpdateQuantity,
               )}
             </div>
 
-            {/* Payment + Totals */}
-            <div className="space-y-3 border-t border-zinc-200 px-4 py-4">
-              {items.length > 0 && (
-                <div className="space-y-1.5">
-                  <p className="text-xs font-medium text-zinc-500">Payment Method</p>
-                  <div className="grid grid-cols-3 gap-1.5">
-                    {PAYMENT_OPTIONS.map(({ id, label, icon: Icon }) => (
-                      <button key={id} onClick={() => { setPaymentType(id); setAmountReceived(""); }}
-                        className={cn("flex flex-col items-center gap-1 rounded-lg border-2 py-2 text-xs font-medium transition-all",
-                          paymentType === id ? "border-zinc-900 bg-zinc-900 text-white" : "border-zinc-200 text-zinc-600 hover:border-zinc-400")}>
-                        <Icon className="h-4 w-4" />
-                        {label}
-                      </button>
-                    ))}
-                  </div>
+            {/* Quick totals preview */}
+            <div className="border-t border-zinc-200 px-4 py-3 space-y-1 text-sm">
+              <div className="flex justify-between text-zinc-400"><span>Subtotal</span><span>RM {subtotal.toFixed(2)}</span></div>
+              {totalDiscount > 0 && <div className="flex justify-between text-orange-500 font-medium"><span>Discounts</span><span>-RM {totalDiscount.toFixed(2)}</span></div>}
+              <div className="flex justify-between text-zinc-400"><span>Service charge ({TABLE_SERVICE_CHARGE_PCT}%)</span><span>RM {serviceChargeAmt.toFixed(2)}</span></div>
+            </div>
+          </div>
+        </ScrollArea>
+
+        {/* Checkout button — always pinned at bottom */}
+        <div className="border-t border-zinc-200 px-4 py-3 bg-white shrink-0">
+          <div className="flex items-center justify-between mb-2 px-1">
+            <span className="text-sm text-zinc-500">Total</span>
+            <span className="text-2xl font-black text-zinc-900 tabular-nums">RM {chargeTotal.toFixed(2)}</span>
+          </div>
+          <Button className="h-12 w-full text-base font-semibold gap-2" disabled={items.length === 0} onClick={() => { setPaymentType(null); setAmountReceived(""); setCheckoutOpen(true); }}>
+            <ShoppingBag className="h-5 w-5" />
+            Checkout
+          </Button>
+        </div>
+      </div>
+
+      {/* ── Full-screen customer-facing checkout overlay ─────────────────── */}
+      {checkoutOpen && (
+        <div className="fixed inset-0 z-50 flex flex-col bg-white">
+          {/* Top bar */}
+          <div className="flex items-center justify-between border-b border-zinc-200 bg-white px-6 py-3 shrink-0">
+            <button
+              onClick={() => setCheckoutOpen(false)}
+              className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-zinc-600 hover:bg-zinc-100 transition-colors"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back to Cart
+            </button>
+            <span className="text-base font-bold text-zinc-900">Koori Dessert</span>
+            <div className="w-28" />
+          </div>
+
+          <div className="flex flex-1 overflow-hidden">
+            {/* Left: Item list */}
+            <div className="flex-1 overflow-y-auto bg-zinc-50 p-6 border-r border-zinc-200">
+              <h2 className="text-xl font-bold text-zinc-700 mb-4">Your Order</h2>
+              <div className="space-y-3">
+                {items.map((item) => {
+                  const pct = itemDiscounts[item.product_id] ?? 0;
+                  const effPrice = pct > 0 ? +(item.price * (1 - pct / 100)).toFixed(2) : item.price;
+                  const lineTotal = +(effPrice * item.quantity).toFixed(2);
+                  const discAmt = +(item.price - effPrice).toFixed(2);
+                  return (
+                    <div key={item.product_id} className="flex items-center justify-between rounded-xl border border-zinc-200 bg-white px-5 py-4">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-base font-semibold text-zinc-900 truncate">{item.name}</p>
+                        <p className="text-sm text-zinc-500 mt-0.5">
+                          {item.quantity} × RM {effPrice.toFixed(2)}
+                          {pct > 0 && <span className="ml-2 text-orange-500 font-medium">-RM {discAmt.toFixed(2)}</span>}
+                        </p>
+                      </div>
+                      <span className="text-xl font-bold text-zinc-900 tabular-nums ml-4">RM {lineTotal.toFixed(2)}</span>
+                    </div>
+                  );
+                })}
+              </div>
+              {remark && (
+                <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
+                  <p className="text-xs font-semibold text-amber-700 mb-0.5">Remark</p>
+                  <p className="text-sm text-amber-800">{remark}</p>
                 </div>
               )}
+            </div>
 
+            {/* Right: Total + Payment */}
+            <div className="w-[400px] shrink-0 flex flex-col overflow-y-auto p-6 bg-white">
+              {/* Bill breakdown */}
+              <div className="space-y-1.5 text-sm mb-5">
+                <div className="flex justify-between text-zinc-500"><span>Subtotal</span><span>RM {subtotal.toFixed(2)}</span></div>
+                {itemDiscountAmt > 0 && <div className="flex justify-between text-orange-600 font-medium"><span>Item discount</span><span>-RM {itemDiscountAmt.toFixed(2)}</span></div>}
+                {tierDiscountAmt > 0 && <div className="flex justify-between text-emerald-600 font-medium"><span>{customerTier?.name} ({tierDiscountPct}%)</span><span>-RM {tierDiscountAmt.toFixed(2)}</span></div>}
+                {voucherDiscount > 0 && <div className="flex justify-between text-violet-600 font-medium"><span>Voucher</span><span>-RM {voucherDiscount.toFixed(2)}</span></div>}
+                <div className="flex justify-between text-zinc-500"><span>Service charge ({TABLE_SERVICE_CHARGE_PCT}%)</span><span>RM {serviceChargeAmt.toFixed(2)}</span></div>
+                {roundingAmt !== 0 && <div className="flex justify-between text-zinc-400 text-xs"><span>Bill rounding</span><span>{roundingAmt > 0 ? "+" : ""}RM {roundingAmt.toFixed(2)}</span></div>}
+              </div>
+
+              {/* Big total */}
+              <div className="rounded-2xl bg-zinc-900 px-6 py-6 text-center mb-6">
+                <p className="text-zinc-400 text-sm mb-2">Total Due</p>
+                <p className="text-6xl font-black text-white tabular-nums tracking-tight">RM {chargeTotal.toFixed(2)}</p>
+              </div>
+
+              {/* Payment method */}
+              <p className="text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-3">Payment Method</p>
+              <div className="grid grid-cols-3 gap-2 mb-5">
+                {PAYMENT_OPTIONS.map(({ id, label, icon: Icon }) => (
+                  <button key={id} onClick={() => { setPaymentType(id); setAmountReceived(""); }}
+                    className={cn("flex flex-col items-center gap-2 rounded-xl border-2 py-4 transition-all",
+                      paymentType === id ? "border-zinc-900 bg-zinc-900 text-white" : "border-zinc-200 text-zinc-600 hover:border-zinc-400")}>
+                    <Icon className="h-6 w-6" />
+                    <span className="text-sm font-medium">{label}</span>
+                  </button>
+                ))}
+              </div>
+
+              {/* Cash input */}
               {paymentType === "cash" && (
-                <div className="space-y-2">
-                  <p className="text-xs font-medium text-zinc-500">Amount Received (RM)</p>
-                  <input type="number" min={discountedTotal} step="0.10" value={amountReceived} onChange={(e) => setAmountReceived(e.target.value)} placeholder={chargeTotal.toFixed(2)} autoFocus className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-xl font-bold focus:outline-none focus:ring-2 focus:ring-zinc-900" />
+                <div className="mb-5 space-y-2">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-zinc-400">Amount Received (RM)</p>
+                  <input
+                    type="number" min={chargeTotal} step="0.10" value={amountReceived}
+                    onChange={(e) => setAmountReceived(e.target.value)}
+                    placeholder={chargeTotal.toFixed(2)} autoFocus
+                    className="w-full rounded-xl border-2 border-zinc-300 px-4 py-3 text-3xl font-bold focus:outline-none focus:border-zinc-900"
+                  />
                   {change !== null && (
-                    <div className="flex items-center justify-between rounded-lg bg-emerald-50 border border-emerald-200 px-3 py-2">
-                      <span className="text-sm font-semibold text-emerald-700">Change</span>
-                      <span className="text-lg font-bold text-emerald-700">RM {change.toFixed(2)}</span>
+                    <div className="flex items-center justify-between rounded-xl bg-emerald-50 border border-emerald-200 px-5 py-4">
+                      <span className="text-base font-semibold text-emerald-700">Change</span>
+                      <span className="text-3xl font-bold text-emerald-700 tabular-nums">RM {change.toFixed(2)}</span>
                     </div>
                   )}
                 </div>
               )}
 
-              <div className="space-y-1 text-sm">
-                <div className="flex justify-between text-zinc-500"><span>Subtotal</span><span>RM {subtotal.toFixed(2)}</span></div>
-                {itemDiscountAmt > 0 && <div className="flex justify-between text-orange-600 font-medium"><span>Item discount</span><span>-RM {itemDiscountAmt.toFixed(2)}</span></div>}
-                {tierDiscountAmt > 0 && <div className="flex justify-between text-emerald-600 font-medium"><span>{customerTier?.name} discount ({tierDiscountPct}%)</span><span>-RM {tierDiscountAmt.toFixed(2)}</span></div>}
-                {voucherDiscount > 0 && <div className="flex justify-between text-violet-600 font-medium"><span>Voucher ({voucher?.label})</span><span>-RM {voucherDiscount.toFixed(2)}</span></div>}
-                {isFreeItem && <div className="text-xs text-pink-600 font-medium">Free item — confirm with customer</div>}
-                <div className="flex justify-between text-zinc-500"><span>Service charge ({TABLE_SERVICE_CHARGE_PCT}%)</span><span>RM {serviceChargeAmt.toFixed(2)}</span></div>
-                {roundingAmt !== 0 && <div className="flex justify-between text-zinc-400 text-xs"><span>Bill rounding</span><span>{roundingAmt > 0 ? "+" : ""}RM {roundingAmt.toFixed(2)}</span></div>}
-                <Separator />
-                <div className="flex items-center justify-between rounded-xl bg-zinc-900 px-4 py-3 mt-1">
-                  <span className="text-sm font-semibold text-zinc-300">Total</span>
-                  <span className="text-3xl font-black text-white tabular-nums tracking-tight">RM {chargeTotal.toFixed(2)}</span>
-                </div>
-              </div>
+              {/* Charge button */}
+              <Button
+                className="h-14 w-full text-lg font-bold mt-auto"
+                disabled={!canCharge || charging}
+                onClick={handleCharge}
+              >
+                {charging ? "Processing..." : `Charge RM ${chargeTotal.toFixed(2)}`}
+              </Button>
             </div>
           </div>
-        </ScrollArea>
-
-        {/* Charge button — always pinned at bottom */}
-        <div className="border-t border-zinc-200 px-4 py-3 bg-white shrink-0">
-          <Button className="h-12 w-full text-base font-semibold" disabled={!canCharge || charging} onClick={handleCharge}>
-            {charging ? "Processing..." : `Charge RM ${chargeTotal.toFixed(2)}`}
-          </Button>
         </div>
-      </div>
+      )}
 
       {pending && (
         <ReceiptPrint

@@ -695,17 +695,17 @@ export default function TableOrderView({ tableNumber, onClose, onOrdersUpdated }
             {/* Right: Total + Payment */}
             <div className="w-[400px] shrink-0 flex flex-col overflow-y-auto p-6 bg-white">
               {/* Bill breakdown */}
-              <div className="space-y-1.5 text-sm mb-5">
-                <div className="flex justify-between text-zinc-500"><span>Subtotal</span><span>RM {(basketSubtotal + itemDiscountAmt).toFixed(2)}</span></div>
-                {itemDiscountAmt > 0 && <div className="flex justify-between text-orange-600 font-medium"><span>Item discount</span><span>-RM {itemDiscountAmt.toFixed(2)}</span></div>}
-                {voucherDiscountRaw > 0 && <div className="flex justify-between text-violet-600 font-medium"><span>Voucher</span><span>-RM {voucherDiscountRaw.toFixed(2)}</span></div>}
-                <div className="flex justify-between text-zinc-500"><span>Service charge ({TABLE_SERVICE_CHARGE_PCT}%)</span><span>RM {bill.serviceCharge.toFixed(2)}</span></div>
-                {bill.rounding !== 0 && <div className="flex justify-between text-zinc-400 text-xs"><span>Bill rounding</span><span>{bill.rounding > 0 ? "+" : ""}RM {bill.rounding.toFixed(2)}</span></div>}
+              <div className="space-y-2 text-base mb-5">
+                <div className="flex justify-between text-zinc-500"><span>Subtotal</span><span className="font-medium">RM {(basketSubtotal + itemDiscountAmt).toFixed(2)}</span></div>
+                {itemDiscountAmt > 0 && <div className="flex justify-between text-orange-600 font-semibold"><span>Item discount</span><span>-RM {itemDiscountAmt.toFixed(2)}</span></div>}
+                {voucherDiscountRaw > 0 && <div className="flex justify-between text-violet-600 font-semibold"><span>Voucher</span><span>-RM {voucherDiscountRaw.toFixed(2)}</span></div>}
+                <div className="flex justify-between text-zinc-500"><span>Service charge ({TABLE_SERVICE_CHARGE_PCT}%)</span><span className="font-medium">RM {bill.serviceCharge.toFixed(2)}</span></div>
+                {bill.rounding !== 0 && <div className="flex justify-between text-zinc-400 text-sm"><span>Bill rounding</span><span>{bill.rounding > 0 ? "+" : ""}RM {bill.rounding.toFixed(2)}</span></div>}
               </div>
 
               {/* Big total */}
               <div className="rounded-2xl bg-zinc-900 px-6 py-6 text-center mb-6">
-                <p className="text-zinc-400 text-sm mb-2">Total Due</p>
+                <p className="text-4xl font-black text-white mb-1">Total</p>
                 <p className="text-6xl font-black text-white tabular-nums tracking-tight">RM {total.toFixed(2)}</p>
               </div>
 

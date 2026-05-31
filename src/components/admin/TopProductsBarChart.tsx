@@ -9,7 +9,6 @@ import {
   CartesianGrid,
   Tooltip,
   Cell,
-  type TooltipProps,
 } from "recharts";
 
 export type TopProduct = { name: string; quantity: number };
@@ -17,7 +16,7 @@ type Props = { data: TopProduct[] };
 
 const BAR_COLORS = ["#18181b", "#3f3f46", "#52525b", "#71717a", "#a1a1aa"];
 
-function CustomTooltip({ active, payload }: TooltipProps<number, string>) {
+function CustomTooltip({ active, payload }: { active?: boolean; payload?: Array<{ value?: number; payload: { name: string } }> }) {
   if (!active || !payload?.length) return null;
   return (
     <div className="rounded-lg border border-zinc-200 bg-white px-3 py-2 shadow-md text-xs">

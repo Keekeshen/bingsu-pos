@@ -8,7 +8,6 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  type TooltipProps,
 } from "recharts";
 
 export type DailyRevenue = {
@@ -23,7 +22,7 @@ function formatDateLabel(dateStr: string) {
   return d.toLocaleDateString("en-MY", { month: "short", day: "numeric" });
 }
 
-function CustomTooltip({ active, payload, label }: TooltipProps<number, string>) {
+function CustomTooltip({ active, payload, label }: { active?: boolean; payload?: Array<{ value?: number }>; label?: string }) {
   if (!active || !payload?.length) return null;
   return (
     <div className="rounded-lg border border-zinc-200 bg-white px-3 py-2 shadow-md text-xs">

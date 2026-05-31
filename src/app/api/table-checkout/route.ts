@@ -81,7 +81,12 @@ export async function POST(request: NextRequest) {
       return err("Discount supplied without voucher", 400);
     }
 
-    const totals = tableBillTotals(basketSubtotal, voucherDiscountApplied);
+    const afterVoucher = Math.max(0, basketSubtotal - voucherDiscountApplied);
+    const globalDiscountAmount = +Math.min(
+      Math.max(0, +(Number(body.global_discount_amount) || 0).toFixed(2)),
+      afterVoucher,
+    ).toFixed(2);
+    const totals = tableBillTotals(basketSubtotal, +(voucherDiscountApplied + globalDiscountAmount).toFixed(2));
 
     const paid = paymentMethod === "cash"
       ? +(parseFloat(String(body.amount_paid ?? "")) || 0).toFixed(2)
@@ -210,7 +215,8 @@ export async function POST(request: NextRequest) {
       orders_paid: list.length,
       subtotal_before_discount: rawBasketSubtotal,
       item_discount: itemDiscountAmount,
-      voucher_discount: totals.voucherDiscountApplied,
+      voucher_discount: voucherDiscountApplied,
+      global_discount: globalDiscountAmount,
       subtotal_after_discount: totals.taxableSubtotal,
       service_charge: totals.serviceCharge,
       rounding_adjustment: totals.rounding,

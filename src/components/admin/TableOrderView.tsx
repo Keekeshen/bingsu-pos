@@ -11,6 +11,7 @@ import ReceiptPrint, { ReceiptOrder, ReceiptLineItem } from "@/components/admin/
 import VoucherScanner from "@/components/admin/VoucherScanner";
 import CustomerScanner, { ScannedCustomer } from "@/components/admin/CustomerScanner";
 import { computeVoucherDiscount, tableBillTotals, TABLE_SERVICE_CHARGE_PCT } from "@/lib/voucher-utils";
+import { cn } from "@/lib/utils";
 
 type OrderItem = {
   id: string;
@@ -58,6 +59,8 @@ export default function TableOrderView({ tableNumber, onClose, onOrdersUpdated }
   const [charging, setCharging] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [receiptOpen, setReceiptOpen] = useState(false);
+  const [globalDiscountPct, setGlobalDiscountPct] = useState(0);
+  const [globalDiscountInput, setGlobalDiscountInput] = useState("");
   const [voucherInput, setVoucherInput] = useState("");
   const [voucher, setVoucher] = useState<VoucherData | null>(null);
   const [itemDiscounts, setItemDiscounts] = useState<Record<string, number>>({});
@@ -154,7 +157,9 @@ export default function TableOrderView({ tableNumber, onClose, onOrdersUpdated }
   const voucherDiscountRaw = voucher
     ? computeVoucherDiscount(basketSubtotal, { discount_type: voucher.discount_type, discount_value: voucher.discount_value })
     : 0;
-  const bill = tableBillTotals(basketSubtotal, voucherDiscountRaw);
+  const afterVoucherSubtotal = Math.max(0, basketSubtotal - voucherDiscountRaw);
+  const globalDiscountAmt = globalDiscountPct > 0 ? +(afterVoucherSubtotal * globalDiscountPct / 100).toFixed(2) : 0;
+  const bill = tableBillTotals(basketSubtotal, +(voucherDiscountRaw + globalDiscountAmt).toFixed(2));
   const total = bill.total;
 
   // All known guest names (from orders + manually linked)
@@ -238,6 +243,7 @@ export default function TableOrderView({ tableNumber, onClose, onOrdersUpdated }
           amount_paid: paid,
           voucher_code: voucher?.code ?? null,
           discount_amount: voucherDiscountRaw,
+          global_discount_amount: globalDiscountAmt,
           item_discount_amount: itemDiscountAmt,
           item_discounts: allItems
             .filter(i => (itemDiscounts[i.id] ?? 0) > 0)
@@ -297,6 +303,8 @@ export default function TableOrderView({ tableNumber, onClose, onOrdersUpdated }
       toast.success("Payment processed!");
       setVoucher(null);
       setVoucherInput("");
+      setGlobalDiscountPct(0);
+      setGlobalDiscountInput("");
       onOrdersUpdated();
     } finally {
       setCharging(false);
@@ -659,7 +667,7 @@ export default function TableOrderView({ tableNumber, onClose, onOrdersUpdated }
 
           <div className="flex flex-1 overflow-hidden">
             {/* Left: Item list */}
-            <div className="flex-1 overflow-y-auto bg-zinc-50 p-6 border-r border-zinc-200">
+            <div className="w-1/2 overflow-y-auto bg-zinc-50 p-6 border-r border-zinc-200">
               <h2 className="text-xl font-bold text-zinc-700 mb-4">Your Order</h2>
               <div className="space-y-3">
                 {allItems.map((item, idx) => {
@@ -693,12 +701,13 @@ export default function TableOrderView({ tableNumber, onClose, onOrdersUpdated }
             </div>
 
             {/* Right: Total + Payment */}
-            <div className="w-[400px] shrink-0 flex flex-col overflow-y-auto p-6 bg-white">
+            <div className="w-1/2 flex flex-col overflow-y-auto p-6 bg-white">
               {/* Bill breakdown */}
               <div className="space-y-2 text-base mb-5">
                 <div className="flex justify-between text-zinc-500"><span>Subtotal</span><span className="font-medium">RM {(basketSubtotal + itemDiscountAmt).toFixed(2)}</span></div>
                 {itemDiscountAmt > 0 && <div className="flex justify-between text-orange-600 font-semibold"><span>Item discount</span><span>-RM {itemDiscountAmt.toFixed(2)}</span></div>}
                 {voucherDiscountRaw > 0 && <div className="flex justify-between text-violet-600 font-semibold"><span>Voucher</span><span>-RM {voucherDiscountRaw.toFixed(2)}</span></div>}
+                {globalDiscountAmt > 0 && <div className="flex justify-between text-rose-600 font-semibold"><span>Overall discount ({globalDiscountPct}%)</span><span>-RM {globalDiscountAmt.toFixed(2)}</span></div>}
                 <div className="flex justify-between text-zinc-500"><span>Service charge ({TABLE_SERVICE_CHARGE_PCT}%)</span><span className="font-medium">RM {bill.serviceCharge.toFixed(2)}</span></div>
                 {bill.rounding !== 0 && <div className="flex justify-between text-zinc-400 text-sm"><span>Bill rounding</span><span>{bill.rounding > 0 ? "+" : ""}RM {bill.rounding.toFixed(2)}</span></div>}
               </div>
@@ -707,6 +716,37 @@ export default function TableOrderView({ tableNumber, onClose, onOrdersUpdated }
               <div className="rounded-2xl bg-zinc-900 px-6 py-6 text-center mb-6">
                 <p className="text-4xl font-black text-white mb-1">Total</p>
                 <p className="text-6xl font-black text-white tabular-nums tracking-tight">RM {total.toFixed(2)}</p>
+              </div>
+
+              {/* Overall discount presets */}
+              <div className="mb-5">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-zinc-400">Overall Discount</p>
+                  {globalDiscountPct > 0 && (
+                    <button onClick={() => { setGlobalDiscountPct(0); setGlobalDiscountInput(""); }} className="text-xs text-zinc-400 hover:text-zinc-600">Clear</button>
+                  )}
+                </div>
+                <div className="grid grid-cols-3 gap-1.5 mb-2">
+                  {[10, 15, 20, 25, 50, 100].map(p => (
+                    <button key={p} onClick={() => { setGlobalDiscountPct(p); setGlobalDiscountInput(String(p)); }}
+                      className={cn("rounded-lg border-2 py-2 text-sm font-semibold transition-all",
+                        globalDiscountPct === p ? "border-rose-600 bg-rose-600 text-white" : "border-zinc-200 text-zinc-600 hover:border-rose-300 hover:text-rose-600")}>
+                      {p}%
+                    </button>
+                  ))}
+                </div>
+                <div className="flex items-center gap-2">
+                  <input type="number" min="0" max="100" step="1" value={globalDiscountInput}
+                    onChange={e => {
+                      setGlobalDiscountInput(e.target.value);
+                      const v = parseFloat(e.target.value);
+                      setGlobalDiscountPct(!isNaN(v) ? Math.min(100, Math.max(0, v)) : 0);
+                    }}
+                    placeholder="Custom %"
+                    className="flex-1 rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:outline-none focus:border-zinc-900"
+                  />
+                  <span className="text-sm text-zinc-400 shrink-0">% off all</span>
+                </div>
               </div>
 
               {/* Payment method */}

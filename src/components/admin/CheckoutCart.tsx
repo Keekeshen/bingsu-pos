@@ -62,6 +62,8 @@ export default function CheckoutCart({ items, subtotal, total, onUpdateQuantity,
   const [voucher, setVoucher] = useState<VoucherData | null>(null);
   const [lookingUpVoucher, setLookingUpVoucher] = useState(false);
   const [itemDiscounts, setItemDiscounts] = useState<Record<string, number>>({});
+  const [globalDiscountPct, setGlobalDiscountPct] = useState(0);
+  const [globalDiscountInput, setGlobalDiscountInput] = useState("");
   const [pending, setPending] = useState<PendingReceipt | null>(null);
   const [tableNumber, setTableNumber] = useState("");
   const [remark, setRemark] = useState("");
@@ -83,8 +85,10 @@ export default function CheckoutCart({ items, subtotal, total, onUpdateQuantity,
   const isFreeItem = voucher?.discount_type === "free_item";
   const totalDiscount = +(itemDiscountAmt + tierDiscountAmt + voucherDiscount).toFixed(2);
   const discountedTotal = Math.max(0, +(total - totalDiscount).toFixed(2));
-  const serviceChargeAmt = +(discountedTotal * TABLE_SERVICE_CHARGE_PCT / 100).toFixed(2);
-  const preRoundTotal = +(discountedTotal + serviceChargeAmt).toFixed(2);
+  const globalDiscountAmt = globalDiscountPct > 0 ? +(discountedTotal * globalDiscountPct / 100).toFixed(2) : 0;
+  const afterGlobalDiscount = Math.max(0, +(discountedTotal - globalDiscountAmt).toFixed(2));
+  const serviceChargeAmt = +(afterGlobalDiscount * TABLE_SERVICE_CHARGE_PCT / 100).toFixed(2);
+  const preRoundTotal = +(afterGlobalDiscount + serviceChargeAmt).toFixed(2);
   const chargeTotal = +round5sen(preRoundTotal).toFixed(2);
   const roundingAmt = +(chargeTotal - preRoundTotal).toFixed(2);
 
@@ -140,7 +144,7 @@ export default function CheckoutCart({ items, subtotal, total, onUpdateQuantity,
         points_redeemed: 0,
         payment_method: paymentType,
         voucher_code: voucher?.code ?? null,
-        discount_amount: totalDiscount,
+        discount_amount: +(totalDiscount + globalDiscountAmt).toFixed(2),
         service_charge: serviceChargeAmt,
         rounding: roundingAmt,
         table_number: tableNumber.trim() || null,
@@ -186,6 +190,8 @@ export default function CheckoutCart({ items, subtotal, total, onUpdateQuantity,
     setItemDiscounts({});
     setVoucher(null);
     setVoucherCode("");
+    setGlobalDiscountPct(0);
+    setGlobalDiscountInput("");
   }
 
   return (
@@ -333,7 +339,7 @@ export default function CheckoutCart({ items, subtotal, total, onUpdateQuantity,
 
           <div className="flex flex-1 overflow-hidden">
             {/* Left: Item list */}
-            <div className="flex-1 overflow-y-auto bg-zinc-50 p-6 border-r border-zinc-200">
+            <div className="w-1/2 overflow-y-auto bg-zinc-50 p-6 border-r border-zinc-200">
               <h2 className="text-xl font-bold text-zinc-700 mb-4">Your Order</h2>
               <div className="space-y-3">
                 {items.map((item) => {
@@ -364,13 +370,14 @@ export default function CheckoutCart({ items, subtotal, total, onUpdateQuantity,
             </div>
 
             {/* Right: Total + Payment */}
-            <div className="w-[400px] shrink-0 flex flex-col overflow-y-auto p-6 bg-white">
+            <div className="w-1/2 flex flex-col overflow-y-auto p-6 bg-white">
               {/* Bill breakdown */}
               <div className="space-y-2 text-base mb-5">
                 <div className="flex justify-between text-zinc-500"><span>Subtotal</span><span className="font-medium">RM {subtotal.toFixed(2)}</span></div>
                 {itemDiscountAmt > 0 && <div className="flex justify-between text-orange-600 font-semibold"><span>Item discount</span><span>-RM {itemDiscountAmt.toFixed(2)}</span></div>}
                 {tierDiscountAmt > 0 && <div className="flex justify-between text-emerald-600 font-semibold"><span>{customerTier?.name} ({tierDiscountPct}%)</span><span>-RM {tierDiscountAmt.toFixed(2)}</span></div>}
                 {voucherDiscount > 0 && <div className="flex justify-between text-violet-600 font-semibold"><span>Voucher</span><span>-RM {voucherDiscount.toFixed(2)}</span></div>}
+                {globalDiscountAmt > 0 && <div className="flex justify-between text-rose-600 font-semibold"><span>Overall discount ({globalDiscountPct}%)</span><span>-RM {globalDiscountAmt.toFixed(2)}</span></div>}
                 <div className="flex justify-between text-zinc-500"><span>Service charge ({TABLE_SERVICE_CHARGE_PCT}%)</span><span className="font-medium">RM {serviceChargeAmt.toFixed(2)}</span></div>
                 {roundingAmt !== 0 && <div className="flex justify-between text-zinc-400 text-sm"><span>Bill rounding</span><span>{roundingAmt > 0 ? "+" : ""}RM {roundingAmt.toFixed(2)}</span></div>}
               </div>
@@ -379,6 +386,37 @@ export default function CheckoutCart({ items, subtotal, total, onUpdateQuantity,
               <div className="rounded-2xl bg-zinc-900 px-6 py-6 text-center mb-6">
                 <p className="text-4xl font-black text-white mb-1">Total</p>
                 <p className="text-6xl font-black text-white tabular-nums tracking-tight">RM {chargeTotal.toFixed(2)}</p>
+              </div>
+
+              {/* Overall discount presets */}
+              <div className="mb-5">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-zinc-400">Overall Discount</p>
+                  {globalDiscountPct > 0 && (
+                    <button onClick={() => { setGlobalDiscountPct(0); setGlobalDiscountInput(""); }} className="text-xs text-zinc-400 hover:text-zinc-600">Clear</button>
+                  )}
+                </div>
+                <div className="grid grid-cols-3 gap-1.5 mb-2">
+                  {[10, 15, 20, 25, 50, 100].map(p => (
+                    <button key={p} onClick={() => { setGlobalDiscountPct(p); setGlobalDiscountInput(String(p)); }}
+                      className={cn("rounded-lg border-2 py-2 text-sm font-semibold transition-all",
+                        globalDiscountPct === p ? "border-rose-600 bg-rose-600 text-white" : "border-zinc-200 text-zinc-600 hover:border-rose-300 hover:text-rose-600")}>
+                      {p}%
+                    </button>
+                  ))}
+                </div>
+                <div className="flex items-center gap-2">
+                  <input type="number" min="0" max="100" step="1" value={globalDiscountInput}
+                    onChange={e => {
+                      setGlobalDiscountInput(e.target.value);
+                      const v = parseFloat(e.target.value);
+                      setGlobalDiscountPct(!isNaN(v) ? Math.min(100, Math.max(0, v)) : 0);
+                    }}
+                    placeholder="Custom %"
+                    className="flex-1 rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:outline-none focus:border-zinc-900"
+                  />
+                  <span className="text-sm text-zinc-400 shrink-0">% off all</span>
+                </div>
               </div>
 
               {/* Payment method */}

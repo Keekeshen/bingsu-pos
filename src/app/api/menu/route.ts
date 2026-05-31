@@ -8,6 +8,7 @@ export async function GET() {
       .from("products")
       .select("id, name, description, price, category, image_url")
       .eq("is_available", true)
+      .neq("pos_only", true)
       .order("category")
       .order("name");
 

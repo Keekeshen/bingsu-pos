@@ -98,7 +98,8 @@ export default function POSGrid({ onAddItem }: Props) {
 
   return (
     <>
-      <div className="flex flex-col gap-4 h-full overflow-hidden">
+      <div className="flex flex-col h-full overflow-hidden">
+        <div className="shrink-0 pb-3">
         <Tabs value={activeCategory} onValueChange={setActiveCategory}>
           <TabsList className="flex-wrap h-auto gap-2 bg-zinc-100 p-2">
             {loading
@@ -110,8 +111,9 @@ export default function POSGrid({ onAddItem }: Props) {
                 ))}
           </TabsList>
         </Tabs>
+        </div>
 
-        <div className="flex-1 overflow-y-auto pb-4 pt-1">
+        <div className="flex-1 min-h-0 overflow-y-auto pb-4">
           {loading ? (
             <div className="grid grid-cols-3 xl:grid-cols-4 gap-3">
               {Array.from({ length: 12 }).map((_, i) => <Skeleton key={i} className="aspect-[3/4] rounded-xl" />)}

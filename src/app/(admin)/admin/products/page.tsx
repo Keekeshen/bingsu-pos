@@ -64,6 +64,7 @@ type Product = {
   category: string;
   sort_order: number;
   is_available: boolean;
+  pos_only: boolean;
   image_url: string | null;
 };
 
@@ -74,6 +75,7 @@ type ProductForm = {
   category: string | null;
   sort_order: string;
   is_available: boolean;
+  pos_only: boolean;
   image_url: string | null;
   imageFile: File | null;
   imagePreview: string | null;
@@ -86,6 +88,7 @@ const EMPTY_FORM: ProductForm = {
   category: "bingsu",
   sort_order: "",
   is_available: true,
+  pos_only: false,
   image_url: null,
   imageFile: null,
   imagePreview: null,
@@ -113,7 +116,7 @@ export default function ProductsPage() {
     const supabase = createClient();
     const { data } = await supabase
       .from("products")
-      .select("id, name, description, price, category, sort_order, is_available, image_url")
+      .select("id, name, description, price, category, sort_order, is_available, pos_only, image_url")
       .order("sort_order", { ascending: true })
       .order("name", { ascending: true });
     setProducts(data ?? []);
@@ -140,6 +143,17 @@ export default function ProductsPage() {
 
     setReordering(false);
     if (failed) { toast.error("Failed to save new order"); fetchProducts(); }
+  }
+
+  async function togglePosOnly(product: Product) {
+    const next = !product.pos_only;
+    setProducts((prev) => prev.map((p) => p.id === product.id ? { ...p, pos_only: next } : p));
+    const supabase = createClient();
+    const { error } = await supabase.from("products").update({ pos_only: next }).eq("id", product.id);
+    if (error) {
+      setProducts((prev) => prev.map((p) => p.id === product.id ? { ...p, pos_only: !next } : p));
+      toast.error("Failed to update product");
+    }
   }
 
   async function toggleAvailable(product: Product) {
@@ -195,14 +209,14 @@ export default function ProductsPage() {
         </div>
       ) : (
         <div className="overflow-hidden rounded-xl border border-zinc-200 bg-white">
-          <div className="grid grid-cols-[2rem_3.5rem_1fr_7rem_6rem_5rem_6rem] items-center gap-3 border-b border-zinc-100 bg-zinc-50 px-4 py-2 text-xs font-medium uppercase tracking-wide text-zinc-400">
+          <div className="grid grid-cols-[2rem_3.5rem_1fr_7rem_6rem_5rem_5rem_6rem] items-center gap-3 border-b border-zinc-100 bg-zinc-50 px-4 py-2 text-xs font-medium uppercase tracking-wide text-zinc-400">
             <span /><span>Image</span><span>Name</span><span>Category</span>
-            <span className="text-right">Price</span><span className="text-center">Available</span><span className="text-right">Actions</span>
+            <span className="text-right">Price</span><span className="text-center">Available</span><span className="text-center">POS Only</span><span className="text-right">Actions</span>
           </div>
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
             <SortableContext items={products.map((p) => p.id)} strategy={verticalListSortingStrategy}>
               {products.map((product) => (
-                <SortableRow key={product.id} product={product} onToggleAvailable={() => toggleAvailable(product)} onEdit={() => openEdit(product)} onDelete={() => setDeleteTarget(product)} />
+                <SortableRow key={product.id} product={product} onToggleAvailable={() => toggleAvailable(product)} onTogglePosOnly={() => togglePosOnly(product)} onEdit={() => openEdit(product)} onDelete={() => setDeleteTarget(product)} />
               ))}
             </SortableContext>
           </DndContext>
@@ -215,12 +229,12 @@ export default function ProductsPage() {
   );
 }
 
-function SortableRow({ product, onToggleAvailable, onEdit, onDelete }: { product: Product; onToggleAvailable: () => void; onEdit: () => void; onDelete: () => void; }) {
+function SortableRow({ product, onToggleAvailable, onTogglePosOnly, onEdit, onDelete }: { product: Product; onToggleAvailable: () => void; onTogglePosOnly: () => void; onEdit: () => void; onDelete: () => void; }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: product.id });
   const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1, zIndex: isDragging ? 10 : undefined };
 
   return (
-    <div ref={setNodeRef} style={style} className="grid grid-cols-[2rem_3.5rem_1fr_7rem_6rem_5rem_6rem] items-center gap-3 border-b border-zinc-100 px-4 py-3 last:border-0 bg-white">
+    <div ref={setNodeRef} style={style} className="grid grid-cols-[2rem_3.5rem_1fr_7rem_6rem_5rem_5rem_6rem] items-center gap-3 border-b border-zinc-100 px-4 py-3 last:border-0 bg-white">
       <button {...attributes} {...listeners} className="flex cursor-grab items-center justify-center text-zinc-300 hover:text-zinc-500 active:cursor-grabbing focus:outline-none" aria-label="Drag to reorder">
         <GripVertical className="h-4 w-4" />
       </button>
@@ -232,13 +246,18 @@ function SortableRow({ product, onToggleAvailable, onEdit, onDelete }: { product
         )}
       </div>
       <div className="min-w-0">
-        <p className="truncate text-sm font-medium text-zinc-900">{product.name}</p>
+        <p className="truncate text-sm font-medium text-zinc-900">{product.name}
+          {product.pos_only && <span className="ml-1.5 text-[10px] font-semibold uppercase tracking-wide text-amber-600 bg-amber-50 border border-amber-200 rounded px-1">POS only</span>}
+        </p>
         {product.description && <p className="truncate text-xs text-zinc-400">{product.description}</p>}
       </div>
       <Badge variant="secondary" className="capitalize w-fit text-xs">{product.category}</Badge>
       <p className="text-right text-sm font-semibold tabular-nums text-zinc-800">RM {product.price.toFixed(2)}</p>
       <div className="flex justify-center">
         <Switch checked={product.is_available} onCheckedChange={onToggleAvailable} aria-label={`Toggle availability for ${product.name}`} />
+      </div>
+      <div className="flex justify-center">
+        <Switch checked={product.pos_only} onCheckedChange={onTogglePosOnly} aria-label={`Toggle POS-only for ${product.name}`} />
       </div>
       <div className="flex items-center justify-end gap-1">
         <Button variant="ghost" size="icon" className="h-8 w-8 text-zinc-400 hover:text-zinc-700" onClick={onEdit} aria-label={`Edit ${product.name}`}><Pencil className="h-3.5 w-3.5" /></Button>
@@ -260,7 +279,7 @@ function ProductFormDialog({ open, editTarget, onClose, onSaved, nextSortOrder, 
       setCustomCat("");
       setShowCustom(false);
       if (editTarget) {
-        setForm({ name: editTarget.name, description: editTarget.description ?? "", price: String(editTarget.price), category: editTarget.category, sort_order: String(editTarget.sort_order), is_available: editTarget.is_available, image_url: editTarget.image_url, imageFile: null, imagePreview: null });
+        setForm({ name: editTarget.name, description: editTarget.description ?? "", price: String(editTarget.price), category: editTarget.category, sort_order: String(editTarget.sort_order), is_available: editTarget.is_available, pos_only: editTarget.pos_only ?? false, image_url: editTarget.image_url, imageFile: null, imagePreview: null });
       } else {
         setForm({ ...EMPTY_FORM, sort_order: String(nextSortOrder) });
       }
@@ -303,7 +322,7 @@ function ProductFormDialog({ open, editTarget, onClose, onSaved, nextSortOrder, 
       image_url = url;
     }
 
-    const payload = { name: form.name.trim(), description: form.description.trim() || null, price, category: form.category, sort_order, is_available: form.is_available, image_url };
+    const payload = { name: form.name.trim(), description: form.description.trim() || null, price, category: form.category, sort_order, is_available: form.is_available, pos_only: form.pos_only, image_url };
 
     if (editTarget) {
       const { data, error } = await supabase.from("products").update(payload).eq("id", editTarget.id).select().single();
@@ -393,6 +412,13 @@ function ProductFormDialog({ open, editTarget, onClose, onSaved, nextSortOrder, 
             <div className="flex items-center gap-3 pb-1">
               <Switch id="pAvailable" checked={form.is_available} onCheckedChange={(v) => setForm((f) => ({ ...f, is_available: v }))} />
               <Label htmlFor="pAvailable" className="cursor-pointer">Available for sale</Label>
+            </div>
+          </div>
+          <div className="flex items-center gap-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5">
+            <Switch id="pPosOnly" checked={form.pos_only} onCheckedChange={(v) => setForm((f) => ({ ...f, pos_only: v }))} />
+            <div>
+              <Label htmlFor="pPosOnly" className="cursor-pointer text-sm font-medium text-amber-800">POS only (hidden from QR scan menu)</Label>
+              <p className="text-xs text-amber-600">Use for items like takeaway box, extra topping</p>
             </div>
           </div>
           <DialogFooter>

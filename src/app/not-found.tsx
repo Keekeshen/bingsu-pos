@@ -18,12 +18,12 @@ export default function NotFound() {
       </div>
 
       <div className="flex flex-col gap-2 sm:flex-row">
-        <Button asChild variant="outline">
-          <Link href="/dashboard">Go to Dashboard</Link>
-        </Button>
-        <Button asChild>
-          <Link href="/admin/pos">Go to POS</Link>
-        </Button>
+        <Link href="/dashboard">
+          <Button variant="outline">Go to Dashboard</Button>
+        </Link>
+        <Link href="/admin/pos">
+          <Button>Go to POS</Button>
+        </Link>
       </div>
     </div>
   );

@@ -42,6 +42,7 @@ type Props = {
   notes?: string;
   tableBreakdown?: {
     voucherDiscount: number;
+    globalDiscount?: number;
     serviceCharge: number;
     rounding: number;
     payableTotal: number;
@@ -84,6 +85,7 @@ export default function ReceiptPrint({ open, onClose, order, items, customerName
       tierDiscount,
       tierLabel,
       voucherDiscount: tableBreakdown?.voucherDiscount,
+      globalDiscount: tableBreakdown?.globalDiscount,
       serviceCharge: tableBreakdown?.serviceCharge ?? serviceCharge,
       rounding: tableBreakdown?.rounding ?? rounding,
       total,
@@ -257,6 +259,9 @@ const ReceiptContent = forwardRef<HTMLDivElement, ContentProps>(
               <>
                 {tableBreakdown.voucherDiscount > 0 && (
                   <Row label="Voucher discount" value={"-" + tableBreakdown.voucherDiscount.toFixed(2)} />
+                )}
+                {(tableBreakdown.globalDiscount ?? 0) > 0 && (
+                  <Row label={"Overall discount"} value={"-" + (tableBreakdown.globalDiscount ?? 0).toFixed(2)} />
                 )}
                 <Row label="SERVICE CHARGE (10%)" value={tableBreakdown.serviceCharge.toFixed(2)} />
                 {tableBreakdown.rounding !== 0 && (

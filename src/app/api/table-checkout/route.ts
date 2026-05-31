@@ -123,7 +123,6 @@ export async function POST(request: NextRequest) {
       for (const entry of itemDiscounts) {
         const pct = Math.max(0, Math.min(100, Number(entry.discount_pct) || 0));
         if (pct <= 0) continue;
-        // Fetch current item to get unit_price * quantity, then apply discount
         const { data: item } = await admin
           .from("order_items")
           .select("unit_price, quantity")
@@ -135,6 +134,28 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Fetch each order's real subtotal from its items (after item-level discounts applied above)
+    const orderSubtotals: Record<string, number> = {};
+    for (const o of list) {
+      const { data: oi } = await admin.from("order_items").select("subtotal").eq("order_id", o.id);
+      orderSubtotals[o.id] = +((oi ?? []).reduce((s: number, i: { subtotal: number }) => s + Number(i.subtotal), 0)).toFixed(2);
+    }
+
+    // Compute each order's proportional share of the final total
+    const orderFinals: Record<string, number> = {};
+    let assignedTotal = 0;
+    for (let idx = 0; idx < list.length; idx++) {
+      const o = list[idx];
+      if (idx === list.length - 1) {
+        // Last order absorbs rounding remainder
+        orderFinals[o.id] = +Math.max(0, totals.total - assignedTotal).toFixed(2);
+      } else {
+        const share = basketSubtotal > 0 ? orderSubtotals[o.id] / basketSubtotal : 1 / list.length;
+        orderFinals[o.id] = +(share * totals.total).toFixed(2);
+        assignedTotal += orderFinals[o.id];
+      }
+    }
+
     // Set to "served" = paid but awaiting food delivery. "completed" happens when admin marks delivered.
     for (const o of list) {
       const patch = {
@@ -142,8 +163,8 @@ export async function POST(request: NextRequest) {
         payment_method: paymentMethod,
         voucher_code: voucherCodeRaw ? voucherCodeRaw : null,
         discount_amount: +(allocations[o.id] ?? 0).toFixed(2),
-        total_amount: totals.total,
-        subtotal: basketSubtotal,
+        total_amount: orderFinals[o.id],
+        subtotal: orderSubtotals[o.id],
       };
       const { error: updErr } = await admin.from("orders").update(patch).eq("id", o.id);
       if (updErr) {

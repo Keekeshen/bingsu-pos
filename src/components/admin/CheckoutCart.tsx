@@ -32,6 +32,8 @@ type PendingReceipt = {
   serviceCharge?: number;
   rounding?: number;
   notes?: string;
+  voucherDiscount?: number;
+  globalDiscount?: number;
 };
 
 type Props = {
@@ -179,6 +181,8 @@ export default function CheckoutCart({ items, subtotal, total, onUpdateQuantity,
       notes: remark.trim() || undefined,
       tierDiscount: tierDiscountAmt > 0 ? tierDiscountAmt : undefined,
       tierLabel: tierDiscountAmt > 0 ? `${customerTier?.name} (${tierDiscountPct}%)` : undefined,
+      voucherDiscount: voucherDiscount > 0 ? voucherDiscount : undefined,
+      globalDiscount: globalDiscountAmt > 0 ? globalDiscountAmt : undefined,
     });
     onClearCart();
     setCheckoutOpen(false);
@@ -479,6 +483,17 @@ export default function CheckoutCart({ items, subtotal, total, onUpdateQuantity,
           serviceCharge={pending.serviceCharge}
           rounding={pending.rounding}
           notes={pending.notes}
+          tableBreakdown={
+            (pending.voucherDiscount != null || pending.globalDiscount != null)
+              ? {
+                  voucherDiscount: pending.voucherDiscount ?? 0,
+                  globalDiscount: pending.globalDiscount ?? 0,
+                  serviceCharge: pending.serviceCharge ?? 0,
+                  rounding: pending.rounding ?? 0,
+                  payableTotal: pending.order.total_amount,
+                }
+              : undefined
+          }
         />
       )}
     </>

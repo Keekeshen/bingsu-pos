@@ -84,7 +84,7 @@ export default function TableOrderView({ tableNumber, onClose, onOrdersUpdated }
     paymentMethod: string;
     amountPaid: number;
     notes?: string;
-    tableBreakdown: { voucherDiscount: number; serviceCharge: number; rounding: number; payableTotal: number };
+    tableBreakdown: { voucherDiscount: number; globalDiscount?: number; serviceCharge: number; rounding: number; payableTotal: number };
   } | null>(null);
 
   const load = useCallback(async () => {
@@ -293,6 +293,7 @@ export default function TableOrderView({ tableNumber, onClose, onOrdersUpdated }
         notes: allNotes || undefined,
         tableBreakdown: {
           voucherDiscount: (data.voucher_discount ?? 0) as number,
+          globalDiscount: (data.global_discount ?? 0) as number,
           serviceCharge: (data.service_charge ?? 0) as number,
           rounding: (data.rounding_adjustment ?? 0) as number,
           payableTotal: apiTotal,

@@ -12,6 +12,7 @@ export async function POST() {
 
   const admin = createAdminClient();
 
+  // Get profile birthday
   const { data: profile } = await admin
     .from("profiles")
     .select("birthday")
@@ -22,7 +23,7 @@ export async function POST() {
     return NextResponse.json({ issued: false, reason: "no_birthday" });
   }
 
-  const today = todayMY();
+  const today = todayMY(); // "YYYY-MM-DD"
   const [todayYear, todayMonth, todayDay] = today.split("-").map(Number);
   const [, bMonth, bDay] = profile.birthday.split("-").map(Number);
 
@@ -30,6 +31,7 @@ export async function POST() {
     return NextResponse.json({ issued: false, reason: "not_birthday" });
   }
 
+  // Check if birthday voucher already issued this year
   const yearStart = `${todayYear}-01-01`;
   const yearEnd = `${todayYear}-12-31`;
   const { data: existing } = await admin
@@ -45,6 +47,7 @@ export async function POST() {
     return NextResponse.json({ issued: false, reason: "already_issued" });
   }
 
+  // Issue birthday voucher — expires at end of today (midnight KL)
   const expiresAt = `${today}T23:59:59+08:00`;
   const code = `BDAY-${user.id.slice(0, 6).toUpperCase()}-${Date.now().toString(36).toUpperCase()}`;
 

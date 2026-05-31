@@ -17,9 +17,7 @@ type Props = { data: TopProduct[] };
 
 const BAR_COLORS = ["#18181b", "#3f3f46", "#52525b", "#71717a", "#a1a1aa"];
 
-interface CTPayloadItem { value: number; name: string; fill?: string; payload: { name: string; total: number } }
-interface CTProps { active?: boolean; payload?: CTPayloadItem[]; }
-function CustomTooltip({ active, payload }: CTProps) {
+function CustomTooltip({ active, payload }: TooltipProps<number, string>) {
   if (!active || !payload?.length) return null;
   return (
     <div className="rounded-lg border border-zinc-200 bg-white px-3 py-2 shadow-md text-xs">

@@ -23,8 +23,7 @@ function formatDateLabel(dateStr: string) {
   return d.toLocaleDateString("en-MY", { month: "short", day: "numeric" });
 }
 
-interface CTProps { active?: boolean; payload?: Array<{ value: number; name: string }>; label?: string; }
-function CustomTooltip({ active, payload, label }: CTProps) {
+function CustomTooltip({ active, payload, label }: TooltipProps<number, string>) {
   if (!active || !payload?.length) return null;
   return (
     <div className="rounded-lg border border-zinc-200 bg-white px-3 py-2 shadow-md text-xs">

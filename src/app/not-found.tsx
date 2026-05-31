@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { FileQuestion } from "lucide-react";
-import { buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 
 export default function NotFound() {
   return (
@@ -18,8 +18,12 @@ export default function NotFound() {
       </div>
 
       <div className="flex flex-col gap-2 sm:flex-row">
-        <Link href="/dashboard" className={buttonVariants({ variant: "outline" })}>Go to Dashboard</Link>
-        <Link href="/admin/pos" className={buttonVariants({})}>Go to POS</Link>
+        <Button asChild variant="outline">
+          <Link href="/dashboard">Go to Dashboard</Link>
+        </Button>
+        <Button asChild>
+          <Link href="/admin/pos">Go to POS</Link>
+        </Button>
       </div>
     </div>
   );

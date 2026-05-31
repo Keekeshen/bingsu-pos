@@ -726,10 +726,10 @@ export default function TableOrderView({ tableNumber, onClose, onOrdersUpdated }
                     <button onClick={() => { setGlobalDiscountPct(0); setGlobalDiscountInput(""); }} className="text-xs text-zinc-400 hover:text-zinc-600">Clear</button>
                   )}
                 </div>
-                <div className="grid grid-cols-3 gap-1.5 mb-2">
+                <div className="grid grid-cols-3 gap-2 mb-2">
                   {[10, 15, 20, 25, 50, 100].map(p => (
                     <button key={p} onClick={() => { setGlobalDiscountPct(p); setGlobalDiscountInput(String(p)); }}
-                      className={cn("rounded-lg border-2 py-2 text-sm font-semibold transition-all",
+                      className={cn("rounded-xl border-2 py-4 text-base font-semibold transition-all",
                         globalDiscountPct === p ? "border-rose-600 bg-rose-600 text-white" : "border-zinc-200 text-zinc-600 hover:border-rose-300 hover:text-rose-600")}>
                       {p}%
                     </button>

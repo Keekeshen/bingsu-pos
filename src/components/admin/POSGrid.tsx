@@ -100,17 +100,17 @@ export default function POSGrid({ onAddItem }: Props) {
     <>
       <div className="flex flex-col h-full overflow-hidden">
         <div className="shrink-0 pb-3">
-        <Tabs value={activeCategory} onValueChange={setActiveCategory}>
-          <TabsList className="flex-wrap h-auto gap-2 bg-zinc-100 p-2">
-            {loading
-              ? Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-12 w-28 rounded-xl" />)
-              : categories.map((cat) => (
-                  <TabsTrigger key={cat} value={cat} className="h-12 px-5 text-base font-semibold rounded-xl">
-                    {cat}
-                  </TabsTrigger>
-                ))}
-          </TabsList>
-        </Tabs>
+          <Tabs value={activeCategory} onValueChange={setActiveCategory}>
+            <TabsList className="flex flex-nowrap overflow-x-auto h-auto gap-2 bg-zinc-100 p-2 [&::-webkit-scrollbar]:hidden">
+              {loading
+                ? Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-12 w-28 shrink-0 rounded-xl" />)
+                : categories.map((cat) => (
+                    <TabsTrigger key={cat} value={cat} className="h-12 px-5 shrink-0 text-base font-semibold rounded-xl">
+                      {cat}
+                    </TabsTrigger>
+                  ))}
+            </TabsList>
+          </Tabs>
         </div>
 
         <div className="flex-1 min-h-0 overflow-y-auto pb-4">

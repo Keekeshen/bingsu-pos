@@ -58,6 +58,7 @@ import {
 
 type Product = {
   id: string;
+  code: string | null;
   name: string;
   description: string | null;
   price: number;
@@ -69,6 +70,7 @@ type Product = {
 };
 
 type ProductForm = {
+  code: string;
   name: string;
   description: string;
   price: string;
@@ -82,6 +84,7 @@ type ProductForm = {
 };
 
 const EMPTY_FORM: ProductForm = {
+  code: "",
   name: "",
   description: "",
   price: "",
@@ -116,7 +119,7 @@ export default function ProductsPage() {
     const supabase = createClient();
     const { data } = await supabase
       .from("products")
-      .select("id, name, description, price, category, sort_order, is_available, pos_only, image_url")
+      .select("id, code, name, description, price, category, sort_order, is_available, pos_only, image_url")
       .order("sort_order", { ascending: true })
       .order("name", { ascending: true });
     setProducts(data ?? []);
@@ -209,8 +212,8 @@ export default function ProductsPage() {
         </div>
       ) : (
         <div className="overflow-hidden rounded-xl border border-zinc-200 bg-white">
-          <div className="grid grid-cols-[2rem_3.5rem_1fr_7rem_6rem_5rem_5rem_6rem] items-center gap-3 border-b border-zinc-100 bg-zinc-50 px-4 py-2 text-xs font-medium uppercase tracking-wide text-zinc-400">
-            <span /><span>Image</span><span>Name</span><span>Category</span>
+          <div className="grid grid-cols-[2rem_3.5rem_4rem_1fr_7rem_6rem_5rem_5rem_6rem] items-center gap-3 border-b border-zinc-100 bg-zinc-50 px-4 py-2 text-xs font-medium uppercase tracking-wide text-zinc-400">
+            <span /><span>Image</span><span>Code</span><span>Name</span><span>Category</span>
             <span className="text-right">Price</span><span className="text-center">Available</span><span className="text-center">POS Only</span><span className="text-right">Actions</span>
           </div>
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
@@ -234,7 +237,7 @@ function SortableRow({ product, onToggleAvailable, onTogglePosOnly, onEdit, onDe
   const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1, zIndex: isDragging ? 10 : undefined };
 
   return (
-    <div ref={setNodeRef} style={style} className="grid grid-cols-[2rem_3.5rem_1fr_7rem_6rem_5rem_5rem_6rem] items-center gap-3 border-b border-zinc-100 px-4 py-3 last:border-0 bg-white">
+    <div ref={setNodeRef} style={style} className="grid grid-cols-[2rem_3.5rem_4rem_1fr_7rem_6rem_5rem_5rem_6rem] items-center gap-3 border-b border-zinc-100 px-4 py-3 last:border-0 bg-white">
       <button {...attributes} {...listeners} className="flex cursor-grab items-center justify-center text-zinc-300 hover:text-zinc-500 active:cursor-grabbing focus:outline-none" aria-label="Drag to reorder">
         <GripVertical className="h-4 w-4" />
       </button>
@@ -244,6 +247,9 @@ function SortableRow({ product, onToggleAvailable, onTogglePosOnly, onEdit, onDe
         ) : (
           <ImageIcon className="h-4 w-4 text-zinc-300" />
         )}
+      </div>
+      <div className="font-mono text-sm font-bold text-zinc-700">
+        {product.code ?? <span className="text-zinc-300">—</span>}
       </div>
       <div className="min-w-0">
         <p className="truncate text-sm font-medium text-zinc-900">{product.name}
@@ -279,7 +285,7 @@ function ProductFormDialog({ open, editTarget, onClose, onSaved, nextSortOrder, 
       setCustomCat("");
       setShowCustom(false);
       if (editTarget) {
-        setForm({ name: editTarget.name, description: editTarget.description ?? "", price: String(editTarget.price), category: editTarget.category, sort_order: String(editTarget.sort_order), is_available: editTarget.is_available, pos_only: editTarget.pos_only ?? false, image_url: editTarget.image_url, imageFile: null, imagePreview: null });
+        setForm({ code: editTarget.code ?? "", name: editTarget.name, description: editTarget.description ?? "", price: String(editTarget.price), category: editTarget.category, sort_order: String(editTarget.sort_order), is_available: editTarget.is_available, pos_only: editTarget.pos_only ?? false, image_url: editTarget.image_url, imageFile: null, imagePreview: null });
       } else {
         setForm({ ...EMPTY_FORM, sort_order: String(nextSortOrder) });
       }
@@ -322,7 +328,7 @@ function ProductFormDialog({ open, editTarget, onClose, onSaved, nextSortOrder, 
       image_url = url;
     }
 
-    const payload = { name: form.name.trim(), description: form.description.trim() || null, price, category: form.category, sort_order, is_available: form.is_available, pos_only: form.pos_only, image_url };
+    const payload = { code: form.code.trim().toUpperCase() || null, name: form.name.trim(), description: form.description.trim() || null, price, category: form.category, sort_order, is_available: form.is_available, pos_only: form.pos_only, image_url };
 
     if (editTarget) {
       const { data, error } = await supabase.from("products").update(payload).eq("id", editTarget.id).select().single();
@@ -357,9 +363,17 @@ function ProductFormDialog({ open, editTarget, onClose, onSaved, nextSortOrder, 
             </div>
             <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
           </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="pName">Name</Label>
-            <Input id="pName" placeholder="Original Bingsu" value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} required />
+          <div className="grid grid-cols-[7rem_1fr] gap-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="pCode">Code <span className="font-normal text-zinc-400">(optional)</span></Label>
+              <Input id="pCode" placeholder="B1" value={form.code} maxLength={10}
+                onChange={(e) => setForm((f) => ({ ...f, code: e.target.value.toUpperCase() }))}
+                className="font-mono font-bold uppercase" />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="pName">Name</Label>
+              <Input id="pName" placeholder="Original Bingsu" value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} required />
+            </div>
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="pDesc">Description <span className="font-normal text-zinc-400">(optional)</span></Label>

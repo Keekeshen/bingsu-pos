@@ -6,7 +6,7 @@ export async function GET() {
     const admin = createAdminClient();
     const { data: products, error } = await admin
       .from("products")
-      .select("id, name, description, price, category, image_url")
+      .select("id, code, name, description, price, category, image_url")
       .eq("is_available", true)
       .neq("pos_only", true)
       .order("category")

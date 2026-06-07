@@ -24,6 +24,7 @@ const TOPPING_PRICE = 2;
 
 type Product = {
   id: string;
+  code: string | null;
   name: string;
   price: number;
   image_url: string | null;
@@ -49,17 +50,27 @@ export default function POSGrid({ onAddItem }: Props) {
       const supabase = createClient();
       const { data, error } = await supabase
         .from("products")
-        .select("id, name, price, image_url, category, is_available")
-        .eq("is_available", true)
-        .order("category")
-        .order("name");
-      if (!error && data) setProducts(data);
+        .select("id, code, name, price, image_url, category, is_available")
+        .eq("is_available", true);
+      if (!error && data) {
+        // Sort: products with a code first (by code), then by name for those without
+        const sorted = [...data].sort((a, b) => {
+          const ca = a.code ?? "";
+          const cb = b.code ?? "";
+          if (ca && cb) return ca.localeCompare(cb, undefined, { numeric: true, sensitivity: "base" });
+          if (ca) return -1;
+          if (cb) return 1;
+          return a.name.localeCompare(b.name);
+        });
+        setProducts(sorted);
+      }
       setLoading(false);
     }
     fetchProducts();
   }, []);
 
   const categories = [ALL_CATEGORY, ...Array.from(new Set(products.map((p) => p.category))).sort()];
+  // products are already sorted by code; just filter, don't re-sort
   const filtered = activeCategory === ALL_CATEGORY ? products : products.filter((p) => p.category === activeCategory);
 
   function openToppingModal(product: Product) {
@@ -232,6 +243,9 @@ function ProductCard({ product, onAdd }: { product: Product; onAdd: () => void; 
         )}
       </div>
       <div className="flex flex-col gap-0.5 p-2.5">
+        {product.code && (
+          <span className="text-[10px] font-bold font-mono text-zinc-400 leading-none mb-0.5">{product.code}</span>
+        )}
         <span className="line-clamp-2 text-xs font-medium leading-tight text-zinc-800">{product.name}</span>
         <span className="text-sm font-bold text-zinc-900">RM {product.price.toFixed(2)}</span>
       </div>

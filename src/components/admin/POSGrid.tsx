@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
 import type { CartItem } from "@/lib/hooks/useCart";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -99,18 +98,22 @@ export default function POSGrid({ onAddItem }: Props) {
   return (
     <>
       <div className="flex flex-col h-full overflow-hidden">
-        <div className="shrink-0 pb-3">
-          <Tabs value={activeCategory} onValueChange={setActiveCategory}>
-            <TabsList className="flex flex-nowrap overflow-x-auto h-auto gap-2 bg-zinc-100 p-2 [&::-webkit-scrollbar]:hidden">
-              {loading
-                ? Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-12 w-28 shrink-0 rounded-xl" />)
-                : categories.map((cat) => (
-                    <TabsTrigger key={cat} value={cat} className="h-12 px-5 shrink-0 text-base font-semibold rounded-xl">
-                      {cat}
-                    </TabsTrigger>
-                  ))}
-            </TabsList>
-          </Tabs>
+        <div className="shrink-0 pb-3 overflow-x-auto [&::-webkit-scrollbar]:hidden">
+          <div className="flex gap-2 bg-zinc-100 rounded-xl p-2 w-max min-w-full">
+            {loading
+              ? Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-12 w-28 shrink-0 rounded-xl" />)
+              : categories.map((cat) => (
+                  <button key={cat} onClick={() => setActiveCategory(cat)}
+                    className={cn(
+                      "h-12 px-5 shrink-0 rounded-xl text-base font-semibold whitespace-nowrap transition-all",
+                      activeCategory === cat
+                        ? "bg-white shadow text-zinc-900"
+                        : "text-zinc-500 hover:text-zinc-800"
+                    )}>
+                    {cat}
+                  </button>
+                ))}
+          </div>
         </div>
 
         <div className="flex-1 min-h-0 overflow-y-auto pb-4">

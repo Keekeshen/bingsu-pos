@@ -5,7 +5,6 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import RevenueLineChart, { type DailyRevenue } from "@/components/admin/RevenueLineChart";
-import TopProductsBarChart, { type TopProduct } from "@/components/admin/TopProductsBarChart";
 import ReportsFilter from "@/components/admin/ReportsFilter";
 import { TrendingUp, ShoppingBag, Users, Calendar, Tag, Banknote, QrCode, CreditCard } from "lucide-react";
 
@@ -86,6 +85,7 @@ export default async function ReportsPage(props: { searchParams: SearchParams })
     { data: periodOrdersRaw },
     { count: customerCount },
     { data: itemsRaw },
+    { data: allProductsRaw },
   ] = await Promise.all([
     supabase.from("orders").select("total_amount, discount_amount")
       .in("status", ["completed", "served"])
@@ -102,6 +102,10 @@ export default async function ReportsPage(props: { searchParams: SearchParams })
       .in("orders.status", ["completed", "served"])
       .gte("orders.created_at", iso(start))
       .lte("orders.created_at", iso(end)),
+    supabase.from("products")
+      .select("name, code, category")
+      .order("code", { ascending: true, nullsFirst: false })
+      .order("name", { ascending: true }),
   ]);
 
   const periodOrders = periodOrdersRaw ?? [];
@@ -186,14 +190,40 @@ export default async function ReportsPage(props: { searchParams: SearchParams })
     .filter(r => r.orders > 0)
     .sort((a, b) => b.key.localeCompare(a.key));
 
-  /* ─── top products ─── */
-  const productMap = new Map<string, number>();
+  /* ─── product sales (all products) ─── */
+  const salesMap = new Map<string, number>();
   for (const item of (itemsRaw ?? []) as Array<{ product_name: string; quantity: number }>) {
     const name = item.product_name ?? "Unknown";
-    productMap.set(name, (productMap.get(name) ?? 0) + (item.quantity ?? 0));
+    salesMap.set(name, (salesMap.get(name) ?? 0) + (item.quantity ?? 0));
   }
-  const topProducts: TopProduct[] = Array.from(productMap.entries())
-    .sort((a, b) => b[1] - a[1]).slice(0, 5).map(([name, quantity]) => ({ name, quantity }));
+
+  type ProductSaleRow = { name: string; code: string | null; category: string | null; quantity: number };
+  const productSalesMap = new Map<string, ProductSaleRow>();
+
+  for (const p of allProductsRaw ?? []) {
+    productSalesMap.set(p.name, {
+      name: p.name,
+      code: p.code ?? null,
+      category: p.category ?? null,
+      quantity: salesMap.get(p.name) ?? 0,
+    });
+  }
+  // Include sold items not in menu (e.g. topping variants)
+  for (const [name, quantity] of salesMap.entries()) {
+    if (!productSalesMap.has(name)) {
+      productSalesMap.set(name, { name, code: null, category: null, quantity });
+    }
+  }
+
+  const productSales: ProductSaleRow[] = Array.from(productSalesMap.values()).sort((a, b) => {
+    if (b.quantity !== a.quantity) return b.quantity - a.quantity;
+    const ca = a.code ?? "";
+    const cb = b.code ?? "";
+    if (ca && cb) return ca.localeCompare(cb, undefined, { numeric: true, sensitivity: "base" });
+    return a.name.localeCompare(b.name);
+  });
+  const totalUnitsSold = productSales.reduce((s, p) => s + p.quantity, 0);
+  const maxQty = productSales[0]?.quantity ?? 0;
 
   const periodLabel = isWeek ? "Week" : isYear ? "Year" : "Month";
 
@@ -219,30 +249,80 @@ export default async function ReportsPage(props: { searchParams: SearchParams })
       </div>
 
       {/* Charts */}
-      <div className="grid grid-cols-1 gap-4 xl:grid-cols-5">
-        <Card className="xl:col-span-3">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-semibold text-zinc-700">
-              {isYear ? "Monthly Revenue" : isWeek ? "Daily Revenue (This Week)" : "Daily Revenue"} — {label}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="pt-0">
-            <RevenueLineChart data={chartData} xFormat={isYear ? formatMonthShort : undefined} />
-          </CardContent>
-        </Card>
-        <Card className="xl:col-span-2">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-semibold text-zinc-700">Top 5 Products — {label}</CardTitle>
-          </CardHeader>
-          <CardContent className="pt-0">
-            {topProducts.length === 0 ? (
-              <div className="flex h-[260px] items-center justify-center text-sm text-zinc-400">No sales data</div>
-            ) : (
-              <TopProductsBarChart data={topProducts} />
-            )}
-          </CardContent>
-        </Card>
-      </div>
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-semibold text-zinc-700">
+            {isYear ? "Monthly Revenue" : isWeek ? "Daily Revenue (This Week)" : "Daily Revenue"} — {label}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="pt-0">
+          <RevenueLineChart data={chartData} xFormat={isYear ? formatMonthShort : undefined} />
+        </CardContent>
+      </Card>
+
+      {/* All product sales */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-semibold text-zinc-700">
+            Product Sales — {label}
+          </CardTitle>
+          <p className="text-xs text-zinc-400 mt-0.5">
+            All menu items sorted by quantity sold. Items with 0 sales are shown at the bottom.
+          </p>
+        </CardHeader>
+        <CardContent className="p-0">
+          {productSales.length === 0 ? (
+            <p className="px-6 py-10 text-center text-sm text-zinc-400">No products found</p>
+          ) : (
+            <div className="max-h-[520px] overflow-y-auto">
+              <Table>
+                <TableHeader className="sticky top-0 bg-white z-10">
+                  <TableRow className="text-xs text-zinc-500">
+                    <TableHead className="w-10">#</TableHead>
+                    <TableHead className="w-16">Code</TableHead>
+                    <TableHead>Product</TableHead>
+                    <TableHead>Category</TableHead>
+                    <TableHead className="text-right">Qty Sold</TableHead>
+                    <TableHead className="text-right w-24">Share</TableHead>
+                    <TableHead className="w-40">Sales</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {productSales.map((row, i) => {
+                    const share = totalUnitsSold > 0 ? (row.quantity / totalUnitsSold) * 100 : 0;
+                    const barPct = maxQty > 0 ? (row.quantity / maxQty) * 100 : 0;
+                    const isZero = row.quantity === 0;
+                    return (
+                      <TableRow key={row.name} className={`text-sm ${isZero ? "bg-zinc-50/80" : ""}`}>
+                        <TableCell className="text-zinc-400 tabular-nums">{i + 1}</TableCell>
+                        <TableCell className="font-mono text-xs font-bold text-zinc-500">
+                          {row.code ?? <span className="text-zinc-300">—</span>}
+                        </TableCell>
+                        <TableCell className={`font-medium ${isZero ? "text-zinc-400" : "text-zinc-800"}`}>{row.name}</TableCell>
+                        <TableCell className="capitalize text-zinc-500 text-xs">{row.category ?? "—"}</TableCell>
+                        <TableCell className={`text-right tabular-nums font-semibold ${isZero ? "text-zinc-300" : "text-zinc-900"}`}>
+                          {row.quantity}
+                        </TableCell>
+                        <TableCell className="text-right tabular-nums text-zinc-500 text-xs">
+                          {row.quantity > 0 ? `${share.toFixed(1)}%` : "—"}
+                        </TableCell>
+                        <TableCell>
+                          <div className="h-2 rounded-full bg-zinc-100 overflow-hidden">
+                            <div
+                              className={`h-full rounded-full ${isZero ? "bg-zinc-200" : row.quantity >= maxQty * 0.5 ? "bg-zinc-900" : row.quantity >= maxQty * 0.2 ? "bg-zinc-500" : "bg-zinc-300"}`}
+                              style={{ width: `${barPct}%` }}
+                            />
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Breakdown table */}
       <Card>

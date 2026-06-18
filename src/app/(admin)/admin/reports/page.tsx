@@ -6,6 +6,7 @@ import {
 } from "@/components/ui/table";
 import RevenueLineChart, { type DailyRevenue } from "@/components/admin/RevenueLineChart";
 import ReportsFilter from "@/components/admin/ReportsFilter";
+import { aggregateSplitSales } from "@/lib/sales-utils";
 import { TrendingUp, ShoppingBag, Users, Calendar, Tag, Banknote, QrCode, CreditCard } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -27,11 +28,6 @@ function formatDateShort(dateStr: string) {
   const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
   return `${d} ${months[parseInt(m) - 1]} ${y}`;
 }
-function formatMonthShort(dateStr: string) {
-  const [, m] = dateStr.split("-");
-  const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-  return months[parseInt(m) - 1];
-}
 
 type SearchParams = Promise<{ period?: string; y?: string; m?: string; w?: string }>;
 
@@ -50,19 +46,19 @@ function computeRange(period: string, year: number, month: number, weekOffset: n
     const sunday = new Date(monday);
     sunday.setDate(monday.getDate() + 6);
     sunday.setHours(23, 59, 59, 999);
-    return { start: monday, end: sunday, label: "Week", isYear: false, isWeek: true };
+    return { start: monday, end: sunday, label: "Week", isYear: false, isWeek: true, safeYear: now.getFullYear() };
   } else if (period === "year") {
     const start = new Date(safeYear, 0, 1, 0, 0, 0);
     const end = safeYear === currentYear
       ? new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59)
       : new Date(safeYear, 11, 31, 23, 59, 59);
-    return { start, end, label: String(safeYear), isYear: true, isWeek: false };
+    return { start, end, label: String(safeYear), isYear: true, isWeek: false, safeYear };
   } else {
     const safeMonth = safeYear === currentYear ? Math.min(month, currentMonth) : month;
     const start = new Date(safeYear, safeMonth - 1, 1, 0, 0, 0);
     const end = new Date(safeYear, safeMonth, 0, 23, 59, 59);
     const names = ["January","February","March","April","May","June","July","August","September","October","November","December"];
-    return { start, end, label: `${names[safeMonth - 1]} ${safeYear}`, isYear: false, isWeek: false };
+    return { start, end, label: `${names[safeMonth - 1]} ${safeYear}`, isYear: false, isWeek: false, safeYear };
   }
 }
 
@@ -75,7 +71,7 @@ export default async function ReportsPage(props: { searchParams: SearchParams })
   const month = parseInt(sp.m ?? String(now.getMonth() + 1));
   const weekOffset = parseInt(sp.w ?? "0");
 
-  const { start, end, label, isYear, isWeek } = computeRange(period, year, month, weekOffset);
+  const { start, end, label, isYear, isWeek, safeYear } = computeRange(period, year, month, weekOffset);
 
   const supabase = await createClient();
   const todayStart = (() => { const d = new Date(now); d.setHours(0,0,0,0); return d; })();
@@ -104,7 +100,6 @@ export default async function ReportsPage(props: { searchParams: SearchParams })
       .lte("orders.created_at", iso(end)),
     supabase.from("products")
       .select("name, code, category")
-      .order("code", { ascending: true, nullsFirst: false })
       .order("name", { ascending: true }),
   ]);
 
@@ -121,7 +116,7 @@ export default async function ReportsPage(props: { searchParams: SearchParams })
     // Monthly buckets
     const monthMap = new Map<string, number>();
     for (let m = 1; m <= 12; m++) {
-      const key = `${year}-${String(m).padStart(2, "0")}-01`;
+      const key = `${safeYear}-${String(m).padStart(2, "0")}-01`;
       monthMap.set(key, 0);
     }
     for (const o of periodOrders) {
@@ -151,9 +146,9 @@ export default async function ReportsPage(props: { searchParams: SearchParams })
 
   if (isYear) {
     for (let m = 1; m <= 12; m++) {
-      const key = `${year}-${String(m).padStart(2, "0")}`;
+      const key = `${safeYear}-${String(m).padStart(2, "0")}`;
       const names = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-      breakMap.set(key, { key, label: `${names[m-1]} ${year}`, cash: 0, qr: 0, card: 0, discount: 0, total: 0, orders: 0 });
+      breakMap.set(key, { key, label: `${names[m-1]} ${safeYear}`, cash: 0, qr: 0, card: 0, discount: 0, total: 0, orders: 0 });
     }
     for (const o of periodOrders) {
       const key = dateKey(o.created_at).slice(0, 7);
@@ -190,14 +185,13 @@ export default async function ReportsPage(props: { searchParams: SearchParams })
     .filter(r => r.orders > 0)
     .sort((a, b) => b.key.localeCompare(a.key));
 
-  /* ─── product sales (all products) ─── */
-  const salesMap = new Map<string, number>();
-  for (const item of (itemsRaw ?? []) as Array<{ product_name: string; quantity: number }>) {
-    const name = item.product_name ?? "Unknown";
-    salesMap.set(name, (salesMap.get(name) ?? 0) + (item.quantity ?? 0));
-  }
+  /* ─── product sales (all products, base + toppings split) ─── */
+  const { salesMap, toppingNames } = aggregateSplitSales(
+    (itemsRaw ?? []) as Array<{ product_name: string; quantity: number }>,
+  );
 
   type ProductSaleRow = { name: string; code: string | null; category: string | null; quantity: number };
+  const catalogNames = new Set((allProductsRaw ?? []).map((p) => p.name));
   const productSalesMap = new Map<string, ProductSaleRow>();
 
   for (const p of allProductsRaw ?? []) {
@@ -208,11 +202,18 @@ export default async function ReportsPage(props: { searchParams: SearchParams })
       quantity: salesMap.get(p.name) ?? 0,
     });
   }
-  // Include sold items not in menu (e.g. topping variants)
-  for (const [name, quantity] of salesMap.entries()) {
-    if (!productSalesMap.has(name)) {
-      productSalesMap.set(name, { name, code: null, category: null, quantity });
-    }
+
+  // Toppings sold with drinks but not a separate menu product (e.g. Mango Popping Ball)
+  for (const topping of toppingNames) {
+    if (catalogNames.has(topping)) continue;
+    const qty = salesMap.get(topping) ?? 0;
+    if (qty <= 0) continue;
+    productSalesMap.set(topping, {
+      name: topping,
+      code: null,
+      category: "extra topping",
+      quantity: qty,
+    });
   }
 
   const productSales: ProductSaleRow[] = Array.from(productSalesMap.values()).sort((a, b) => {
@@ -256,7 +257,7 @@ export default async function ReportsPage(props: { searchParams: SearchParams })
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-0">
-          <RevenueLineChart data={chartData} xFormat={isYear ? formatMonthShort : undefined} />
+          <RevenueLineChart data={chartData} labelMode={isYear ? "month" : "day"} />
         </CardContent>
       </Card>
 
@@ -267,7 +268,7 @@ export default async function ReportsPage(props: { searchParams: SearchParams })
             Product Sales — {label}
           </CardTitle>
           <p className="text-xs text-zinc-400 mt-0.5">
-            All menu items sorted by quantity sold. Items with 0 sales are shown at the bottom.
+            Drinks and toppings counted separately (e.g. Shiki Midori + Mango Popping Ball = 2 lines).
           </p>
         </CardHeader>
         <CardContent className="p-0">

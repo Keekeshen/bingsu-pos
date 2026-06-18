@@ -15,11 +15,17 @@ export type DailyRevenue = {
   revenue: number;
 };
 
-type Props = { data: DailyRevenue[]; xFormat?: (dateStr: string) => string };
+type Props = { data: DailyRevenue[]; labelMode?: "day" | "month" };
 
-function defaultDateLabel(dateStr: string) {
+function formatDayLabel(dateStr: string) {
   const d = new Date(`${dateStr}T00:00:00`);
   return d.toLocaleDateString("en-MY", { month: "short", day: "numeric" });
+}
+
+function formatMonthLabel(dateStr: string) {
+  const [, m] = dateStr.split("-");
+  const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  return months[parseInt(m, 10) - 1] ?? dateStr;
 }
 
 function makeTooltip(fmt: (s: string) => string) {
@@ -34,8 +40,8 @@ function makeTooltip(fmt: (s: string) => string) {
   };
 }
 
-export default function RevenueLineChart({ data, xFormat }: Props) {
-  const fmt = xFormat ?? defaultDateLabel;
+export default function RevenueLineChart({ data, labelMode = "day" }: Props) {
+  const fmt = labelMode === "month" ? formatMonthLabel : formatDayLabel;
   // For year view (12 points) show all; otherwise thin out
   const showAll = data.length <= 12;
   const tickIndices = showAll

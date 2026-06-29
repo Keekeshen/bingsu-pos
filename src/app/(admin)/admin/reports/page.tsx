@@ -5,8 +5,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import RevenueLineChart, { type DailyRevenue } from "@/components/admin/RevenueLineChart";
-import ReportsFilter from "@/components/admin/ReportsFilter";
-import ProductSalesTable from "@/components/admin/ProductSalesTable";
+import ReportsFilter, { ProductSalesTable } from "@/components/admin/ReportsFilter";
 import { aggregateSplitSales } from "@/lib/sales-utils";
 import { TrendingUp, ShoppingBag, Users, Calendar, Tag, Banknote, QrCode, CreditCard } from "lucide-react";
 

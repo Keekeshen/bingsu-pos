@@ -6,6 +6,7 @@ import {
 } from "@/components/ui/table";
 import RevenueLineChart, { type DailyRevenue } from "@/components/admin/RevenueLineChart";
 import ReportsFilter from "@/components/admin/ReportsFilter";
+import ProductSalesTable from "@/components/admin/ProductSalesTable";
 import { aggregateSplitSales } from "@/lib/sales-utils";
 import { TrendingUp, ShoppingBag, Users, Calendar, Tag, Banknote, QrCode, CreditCard } from "lucide-react";
 
@@ -216,15 +217,13 @@ export default async function ReportsPage(props: { searchParams: SearchParams })
     });
   }
 
-  const productSales: ProductSaleRow[] = Array.from(productSalesMap.values()).sort((a, b) => {
+  const productSales = Array.from(productSalesMap.values()).sort((a, b) => {
     if (b.quantity !== a.quantity) return b.quantity - a.quantity;
     const ca = a.code ?? "";
     const cb = b.code ?? "";
     if (ca && cb) return ca.localeCompare(cb, undefined, { numeric: true, sensitivity: "base" });
     return a.name.localeCompare(b.name);
   });
-  const totalUnitsSold = productSales.reduce((s, p) => s + p.quantity, 0);
-  const maxQty = productSales[0]?.quantity ?? 0;
 
   const periodLabel = isWeek ? "Week" : isYear ? "Year" : "Month";
 
@@ -272,56 +271,7 @@ export default async function ReportsPage(props: { searchParams: SearchParams })
           </p>
         </CardHeader>
         <CardContent className="p-0">
-          {productSales.length === 0 ? (
-            <p className="px-6 py-10 text-center text-sm text-zinc-400">No products found</p>
-          ) : (
-            <div className="max-h-[520px] overflow-y-auto">
-              <Table>
-                <TableHeader className="sticky top-0 bg-white z-10">
-                  <TableRow className="text-xs text-zinc-500">
-                    <TableHead className="w-10">#</TableHead>
-                    <TableHead className="w-16">Code</TableHead>
-                    <TableHead>Product</TableHead>
-                    <TableHead>Category</TableHead>
-                    <TableHead className="text-right">Qty Sold</TableHead>
-                    <TableHead className="text-right w-24">Share</TableHead>
-                    <TableHead className="w-40">Sales</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {productSales.map((row, i) => {
-                    const share = totalUnitsSold > 0 ? (row.quantity / totalUnitsSold) * 100 : 0;
-                    const barPct = maxQty > 0 ? (row.quantity / maxQty) * 100 : 0;
-                    const isZero = row.quantity === 0;
-                    return (
-                      <TableRow key={row.name} className={`text-sm ${isZero ? "bg-zinc-50/80" : ""}`}>
-                        <TableCell className="text-zinc-400 tabular-nums">{i + 1}</TableCell>
-                        <TableCell className="font-mono text-xs font-bold text-zinc-500">
-                          {row.code ?? <span className="text-zinc-300">—</span>}
-                        </TableCell>
-                        <TableCell className={`font-medium ${isZero ? "text-zinc-400" : "text-zinc-800"}`}>{row.name}</TableCell>
-                        <TableCell className="capitalize text-zinc-500 text-xs">{row.category ?? "—"}</TableCell>
-                        <TableCell className={`text-right tabular-nums font-semibold ${isZero ? "text-zinc-300" : "text-zinc-900"}`}>
-                          {row.quantity}
-                        </TableCell>
-                        <TableCell className="text-right tabular-nums text-zinc-500 text-xs">
-                          {row.quantity > 0 ? `${share.toFixed(1)}%` : "—"}
-                        </TableCell>
-                        <TableCell>
-                          <div className="h-2 rounded-full bg-zinc-100 overflow-hidden">
-                            <div
-                              className={`h-full rounded-full ${isZero ? "bg-zinc-200" : row.quantity >= maxQty * 0.5 ? "bg-zinc-900" : row.quantity >= maxQty * 0.2 ? "bg-zinc-500" : "bg-zinc-300"}`}
-                              style={{ width: `${barPct}%` }}
-                            />
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </div>
-          )}
+          <ProductSalesTable rows={productSales} />
         </CardContent>
       </Card>
 

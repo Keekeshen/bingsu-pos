@@ -40,6 +40,7 @@ type Props = {
   serviceCharge?: number;
   rounding?: number;
   notes?: string;
+  orderType?: string;
   tableBreakdown?: {
     voucherDiscount: number;
     globalDiscount?: number;
@@ -55,7 +56,7 @@ const PAGE_STYLE = `
   * { box-sizing: border-box; }
 `;
 
-export default function ReceiptPrint({ open, onClose, order, items, customerName, paymentMethod, amountPaid, tableNumber, tierDiscount, tierLabel, serviceCharge, rounding, notes, tableBreakdown }: Props) {
+export default function ReceiptPrint({ open, onClose, order, items, customerName, paymentMethod, amountPaid, tableNumber, tierDiscount, tierLabel, serviceCharge, rounding, notes, orderType, tableBreakdown }: Props) {
   const receiptRef = useRef<HTMLDivElement>(null);
   const { counter, kitchen } = usePrinter();
 
@@ -78,6 +79,7 @@ export default function ReceiptPrint({ open, onClose, order, items, customerName
       orderNumber: order.order_number,
       date: dateStr,
       tableNumber,
+      orderType,
       customerName,
       notes,
       items: items.map(i => ({ name: i.name, qty: i.quantity, unitPrice: i.unit_price, subtotal: i.subtotal, discountPct: i.discountPct })),
@@ -125,11 +127,13 @@ export default function ReceiptPrint({ open, onClose, order, items, customerName
             paymentMethod={paymentMethod}
             amountPaid={amountPaid}
             tableNumber={tableNumber}
+            orderType={orderType}
             tierDiscount={tierDiscount}
             tierLabel={tierLabel}
             serviceCharge={serviceCharge}
             rounding={rounding}
             notes={notes}
+            orderType={orderType}
             tableBreakdown={tableBreakdown}
           />
         </div>
@@ -164,6 +168,7 @@ type ContentProps = {
   paymentMethod?: string;
   amountPaid?: number;
   tableNumber?: string;
+  orderType?: string;
   tierDiscount?: number;
   tierLabel?: string;
   serviceCharge?: number;
@@ -173,7 +178,7 @@ type ContentProps = {
 };
 
 const ReceiptContent = forwardRef<HTMLDivElement, ContentProps>(
-  function ReceiptContent({ order, items, customerName, paymentMethod, amountPaid, tableNumber, tierDiscount, tierLabel, serviceCharge, rounding, notes, tableBreakdown }, ref) {
+  function ReceiptContent({ order, items, customerName, paymentMethod, amountPaid, tableNumber, orderType, tierDiscount, tierLabel, serviceCharge, rounding, notes, tableBreakdown }, ref) {
     const dateStr = new Date(order.created_at).toLocaleString("en-MY", {
       day: "2-digit", month: "2-digit", year: "numeric",
       hour: "2-digit", minute: "2-digit", hour12: false,
@@ -219,6 +224,7 @@ const ReceiptContent = forwardRef<HTMLDivElement, ContentProps>(
               <p><span className="text-zinc-500">Invoice no:</span> {order.order_number}</p>
               <p><span className="text-zinc-500">Date:</span> {dateStr}</p>
               <p><span className="text-zinc-500">Cashier:</span> Cashier</p>
+              {orderType && <p><span className="text-zinc-500">Type:</span> {orderType}</p>}
               {tableNumber && <p><span className="text-zinc-500">Table:</span> {tableNumber}</p>}
               {customerName && <p><span className="text-zinc-500">Customer:</span> {customerName}</p>}
             </div>

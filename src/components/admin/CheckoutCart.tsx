@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Minus, Plus, Trash2, UserSearch, X, Banknote, QrCode, CreditCard, Ticket, Percent, ArrowLeft, ShoppingBag } from "lucide-react";
 import { toast } from "sonner";
 import type { CartItem } from "@/lib/hooks/useCart";
@@ -15,6 +15,7 @@ import CustomerScanner, { type ScannedCustomer } from "@/components/admin/Custom
 import VoucherScanner from "@/components/admin/VoucherScanner";
 import { getTier } from "@/lib/tiers";
 import { TABLE_SERVICE_CHARGE_PCT, round5sen } from "@/lib/voucher-utils";
+import { type OrderMode, orderModeLabel, orderModeSource } from "@/lib/pos-order-mode";
 
 type Customer = { id: string; full_name: string; phone: string | null; loyalty_points: number };
 type VoucherData = { id: string; code: string; label: string; discount_type: string; discount_value: number; description: string | null; type: string };
@@ -34,6 +35,7 @@ type PendingReceipt = {
   notes?: string;
   voucherDiscount?: number;
   globalDiscount?: number;
+  orderTypeLabel?: string;
 };
 
 type Props = {
@@ -41,6 +43,7 @@ type Props = {
   subtotal: number;
   total: number;
   itemCount: number;
+  orderMode: OrderMode;
   onUpdateQuantity: (product_id: string, quantity: number) => void;
   onRemoveItem: (product_id: string) => void;
   onClearCart: () => void;
@@ -52,7 +55,7 @@ const PAYMENT_OPTIONS = [
   { id: "card" as const, label: "Card", icon: CreditCard },
 ];
 
-export default function CheckoutCart({ items, subtotal, total, onUpdateQuantity, onRemoveItem, onClearCart }: Props) {
+export default function CheckoutCart({ items, subtotal, total, orderMode, onUpdateQuantity, onRemoveItem, onClearCart }: Props) {
   const [phone, setPhone] = useState("");
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [lookingUp, setLookingUp] = useState(false);
@@ -70,6 +73,10 @@ export default function CheckoutCart({ items, subtotal, total, onUpdateQuantity,
   const [tableNumber, setTableNumber] = useState("");
   const [remark, setRemark] = useState("");
   const phoneRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (orderMode !== "dine_in") setTableNumber("");
+  }, [orderMode]);
 
   const customerTier = customer ? getTier(customer.loyalty_points) : null;
   const tierDiscountPct = customerTier?.orderDiscount ?? 0;
@@ -89,7 +96,10 @@ export default function CheckoutCart({ items, subtotal, total, onUpdateQuantity,
   const discountedTotal = Math.max(0, +(total - totalDiscount).toFixed(2));
   const globalDiscountAmt = globalDiscountPct > 0 ? +(discountedTotal * globalDiscountPct / 100).toFixed(2) : 0;
   const afterGlobalDiscount = Math.max(0, +(discountedTotal - globalDiscountAmt).toFixed(2));
-  const serviceChargeAmt = +(afterGlobalDiscount * TABLE_SERVICE_CHARGE_PCT / 100).toFixed(2);
+  const applyServiceCharge = orderMode === "dine_in";
+  const serviceChargeAmt = applyServiceCharge
+    ? +(afterGlobalDiscount * TABLE_SERVICE_CHARGE_PCT / 100).toFixed(2)
+    : 0;
   const preRoundTotal = +(afterGlobalDiscount + serviceChargeAmt).toFixed(2);
   const chargeTotal = +round5sen(preRoundTotal).toFixed(2);
   const roundingAmt = +(chargeTotal - preRoundTotal).toFixed(2);
@@ -149,8 +159,9 @@ export default function CheckoutCart({ items, subtotal, total, onUpdateQuantity,
         discount_amount: +(totalDiscount + globalDiscountAmt).toFixed(2),
         service_charge: serviceChargeAmt,
         rounding: roundingAmt,
-        table_number: tableNumber.trim() || null,
+        table_number: orderMode === "dine_in" ? (tableNumber.trim() || null) : null,
         notes: remark.trim() || null,
+        source: orderModeSource(orderMode),
       }),
     });
     setCharging(false);
@@ -175,14 +186,15 @@ export default function CheckoutCart({ items, subtotal, total, onUpdateQuantity,
       paymentMethod: paymentType === "cash" ? "Cash" : paymentType === "qr" ? "QR Code" : "Card",
       amountPaid: paid,
       change: paymentType === "cash" ? +(paid - chargeTotal).toFixed(2) : 0,
-      tableNumber: tableNumber.trim() || undefined,
-      serviceCharge: serviceChargeAmt,
+      tableNumber: orderMode === "dine_in" ? (tableNumber.trim() || undefined) : undefined,
+      serviceCharge: serviceChargeAmt > 0 ? serviceChargeAmt : undefined,
       rounding: roundingAmt !== 0 ? roundingAmt : undefined,
       notes: remark.trim() || undefined,
       tierDiscount: tierDiscountAmt > 0 ? tierDiscountAmt : undefined,
       tierLabel: tierDiscountAmt > 0 ? `${customerTier?.name} (${tierDiscountPct}%)` : undefined,
       voucherDiscount: voucherDiscount > 0 ? voucherDiscount : undefined,
       globalDiscount: globalDiscountAmt > 0 ? globalDiscountAmt : undefined,
+      orderTypeLabel: orderModeLabel(orderMode),
     });
     onClearCart();
     setCheckoutOpen(false);
@@ -196,6 +208,7 @@ export default function CheckoutCart({ items, subtotal, total, onUpdateQuantity,
     setVoucherCode("");
     setGlobalDiscountPct(0);
     setGlobalDiscountInput("");
+    setTableNumber("");
   }
 
   return (
@@ -242,11 +255,13 @@ export default function CheckoutCart({ items, subtotal, total, onUpdateQuantity,
         {/* Form + totals — scrollable */}
         <ScrollArea className="flex-1 min-h-0">
           <div className="px-0">
-            {/* Table Number */}
-            <div className="space-y-2 border-t border-zinc-200 px-4 py-3">
-              <p className="text-xs font-medium text-zinc-500">Table No. (optional)</p>
-              <Input placeholder="Enter table number" value={tableNumber} onChange={(e) => setTableNumber(e.target.value)} className="h-9 text-sm" />
-            </div>
+            {/* Table Number — dine in only */}
+            {orderMode === "dine_in" && (
+              <div className="space-y-2 border-t border-zinc-200 px-4 py-3">
+                <p className="text-xs font-medium text-zinc-500">Table No. (optional)</p>
+                <Input placeholder="Enter table number" value={tableNumber} onChange={(e) => setTableNumber(e.target.value)} className="h-9 text-sm" />
+              </div>
+            )}
 
             {/* Remark */}
             <div className="space-y-2 border-t border-zinc-200 px-4 py-3">
@@ -307,7 +322,9 @@ export default function CheckoutCart({ items, subtotal, total, onUpdateQuantity,
             <div className="border-t border-zinc-200 px-4 py-3 space-y-1 text-sm">
               <div className="flex justify-between text-zinc-400"><span>Subtotal</span><span>RM {subtotal.toFixed(2)}</span></div>
               {totalDiscount > 0 && <div className="flex justify-between text-orange-500 font-medium"><span>Discounts</span><span>-RM {totalDiscount.toFixed(2)}</span></div>}
-              <div className="flex justify-between text-zinc-400"><span>Service charge ({TABLE_SERVICE_CHARGE_PCT}%)</span><span>RM {serviceChargeAmt.toFixed(2)}</span></div>
+              {applyServiceCharge && (
+                <div className="flex justify-between text-zinc-400"><span>Service charge ({TABLE_SERVICE_CHARGE_PCT}%)</span><span>RM {serviceChargeAmt.toFixed(2)}</span></div>
+              )}
             </div>
           </div>
         </ScrollArea>
@@ -338,7 +355,14 @@ export default function CheckoutCart({ items, subtotal, total, onUpdateQuantity,
               Back to Cart
             </button>
             <span className="text-base font-bold text-zinc-900">Koori Dessert</span>
-            <div className="w-28" />
+            <span className={cn(
+              "rounded-lg px-3 py-1 text-xs font-semibold",
+              orderMode === "grab" ? "bg-orange-100 text-orange-700"
+                : orderMode === "takeaway" ? "bg-emerald-100 text-emerald-700"
+                : "bg-zinc-100 text-zinc-700",
+            )}>
+              {orderModeLabel(orderMode)}
+            </span>
           </div>
 
           <div className="flex flex-1 overflow-hidden">
@@ -382,7 +406,9 @@ export default function CheckoutCart({ items, subtotal, total, onUpdateQuantity,
                 {tierDiscountAmt > 0 && <div className="flex justify-between text-emerald-600 font-semibold"><span>{customerTier?.name} ({tierDiscountPct}%)</span><span>-RM {tierDiscountAmt.toFixed(2)}</span></div>}
                 {voucherDiscount > 0 && <div className="flex justify-between text-violet-600 font-semibold"><span>Voucher</span><span>-RM {voucherDiscount.toFixed(2)}</span></div>}
                 {globalDiscountAmt > 0 && <div className="flex justify-between text-rose-600 font-semibold"><span>Overall discount ({globalDiscountPct}%)</span><span>-RM {globalDiscountAmt.toFixed(2)}</span></div>}
-                <div className="flex justify-between text-zinc-500"><span>Service charge ({TABLE_SERVICE_CHARGE_PCT}%)</span><span className="font-medium">RM {serviceChargeAmt.toFixed(2)}</span></div>
+                {applyServiceCharge && (
+                  <div className="flex justify-between text-zinc-500"><span>Service charge ({TABLE_SERVICE_CHARGE_PCT}%)</span><span className="font-medium">RM {serviceChargeAmt.toFixed(2)}</span></div>
+                )}
                 {roundingAmt !== 0 && <div className="flex justify-between text-zinc-400 text-sm"><span>Bill rounding</span><span>{roundingAmt > 0 ? "+" : ""}RM {roundingAmt.toFixed(2)}</span></div>}
               </div>
 
@@ -483,6 +509,7 @@ export default function CheckoutCart({ items, subtotal, total, onUpdateQuantity,
           serviceCharge={pending.serviceCharge}
           rounding={pending.rounding}
           notes={pending.notes}
+          orderType={pending.orderTypeLabel}
           tableBreakdown={
             (pending.voucherDiscount != null || pending.globalDiscount != null)
               ? {

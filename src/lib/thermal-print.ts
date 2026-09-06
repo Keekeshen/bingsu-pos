@@ -53,6 +53,7 @@ export type ThermalReceiptData = {
   date: string;
   cashier?: string;
   tableNumber?: string;
+  orderType?: string;
   customerName?: string;
   notes?: string;
   items: { name: string; qty: number; unitPrice: number; subtotal: number; discountPct?: number }[];
@@ -88,6 +89,7 @@ export function buildReceiptBytes(d: ThermalReceiptData): Uint8Array {
   p.line("Invoice: " + d.orderNumber);
   p.line("Date   : " + d.date);
   p.line("Cashier: " + (d.cashier ?? "Cashier"));
+  if (d.orderType) p.line("Type   : " + d.orderType);
   if (d.tableNumber) p.line("Table  : " + d.tableNumber);
   if (d.customerName) p.line("Customer: " + d.customerName);
   p.line("ORDER  : " + seq);

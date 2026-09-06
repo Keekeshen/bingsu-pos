@@ -55,6 +55,7 @@ export default function SalesHistoryPage() {
   const [fromDate, setFromDate] = useState(() => toLocalDate(new Date()));
   const [toDate, setToDate] = useState(() => toLocalDate(new Date()));
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [savingPayment, setSavingPayment] = useState<string | null>(null);
   const [receipt, setReceipt] = useState<{ order: ReceiptOrder; items: ReceiptLineItem[]; paymentMethod?: string; tableNumber?: string; serviceCharge?: number; rounding?: number } | null>(null);
 
   const fetchOrders = useCallback(async () => {
@@ -96,18 +97,41 @@ export default function SalesHistoryPage() {
 
   useEffect(() => { fetchOrders(); }, [fetchOrders]);
 
+  async function changePaymentMethod(order: Order, method: "cash" | "qr" | "card") {
+    if (order.payment_method === method) return;
+    const previous = order.payment_method;
+
+    // Optimistic update
+    setOrders(prev => prev.map(o => o.id === order.id ? { ...o, payment_method: method } : o));
+    setSavingPayment(order.id);
+
+    const supabase = createClient();
+    const { error } = await supabase
+      .from("orders")
+      .update({ payment_method: method })
+      .eq("id", order.id);
+
+    setSavingPayment(null);
+
+    if (error) {
+      setOrders(prev => prev.map(o => o.id === order.id ? { ...o, payment_method: previous } : o));
+      toast.error("Failed to change payment method");
+      return;
+    }
+    toast.success(`Payment changed to ${PAYMENT_LABELS[method]}`);
+  }
+
   const SERVICE_CHARGE_PCT = 10;
 
   function openReceipt(order: Order) {
     const isTable = order.source === "table";
+    const noServiceCharge = order.source === "takeaway" || order.source === "grab";
     const discountAmt = order.discount_amount ?? 0;
-    // For POS: derive service charge = total - (subtotal - all_discounts).
-    // For table: use standard rate on original subtotal.
     const discountedSubtotal = Math.max(0, +(order.subtotal - discountAmt).toFixed(2));
-    const theoreticalServiceCharge = +(discountedSubtotal * SERVICE_CHARGE_PCT / 100).toFixed(2);
-    const serviceCharge = isTable
-      ? theoreticalServiceCharge
-      : theoreticalServiceCharge;
+    const theoreticalServiceCharge = noServiceCharge
+      ? 0
+      : +(discountedSubtotal * SERVICE_CHARGE_PCT / 100).toFixed(2);
+    const serviceCharge = isTable ? theoreticalServiceCharge : theoreticalServiceCharge;
     const preRoundTotal = +(discountedSubtotal + theoreticalServiceCharge).toFixed(2);
     const roundingVal = +(order.total_amount - preRoundTotal).toFixed(2);
     const rounding = Math.abs(roundingVal) <= 0.05 && roundingVal !== 0 ? roundingVal : undefined;
@@ -139,7 +163,7 @@ export default function SalesHistoryPage() {
       items,
       paymentMethod: order.payment_method ? (PAYMENT_LABELS[order.payment_method] ?? order.payment_method) : undefined,
       tableNumber: order.table_number ?? undefined,
-      serviceCharge,
+      serviceCharge: serviceCharge > 0 ? serviceCharge : undefined,
       ...(rounding !== undefined ? { rounding } : {}),
     });
   }
@@ -213,9 +237,17 @@ export default function SalesHistoryPage() {
                     <span className="flex items-center gap-1 rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700 shrink-0">
                       <LayoutGrid className="h-3 w-3" /> T{order.table_number}
                     </span>
+                  ) : order.source === "takeaway" ? (
+                    <span className="flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700 shrink-0">
+                      Takeaway
+                    </span>
+                  ) : order.source === "grab" ? (
+                    <span className="flex items-center gap-1 rounded-full bg-orange-100 px-2 py-0.5 text-xs font-medium text-orange-700 shrink-0">
+                      Grab Food
+                    </span>
                   ) : (
                     <span className="flex items-center gap-1 rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-600 shrink-0">
-                      <Monitor className="h-3 w-3" /> POS{order.table_number ? ` · T${order.table_number}` : ""}
+                      <Monitor className="h-3 w-3" /> Dine In{order.table_number ? ` · T${order.table_number}` : ""}
                     </span>
                   )}
                   {/* Pending serve badge */}
@@ -282,7 +314,10 @@ export default function SalesHistoryPage() {
                     {(() => {
                       const discountAmt = order.discount_amount ?? 0;
                       const discountedSub = Math.max(0, +(order.subtotal - discountAmt).toFixed(2));
-                      const svcCharge = +(discountedSub * SERVICE_CHARGE_PCT / 100).toFixed(2);
+                      const noServiceCharge = order.source === "takeaway" || order.source === "grab";
+                      const svcCharge = noServiceCharge
+                        ? 0
+                        : +(discountedSub * SERVICE_CHARGE_PCT / 100).toFixed(2);
                       const preRound = +(discountedSub + svcCharge).toFixed(2);
                       const roundingVal = +(order.total_amount - preRound).toFixed(2);
                       const rounding = Math.abs(roundingVal) <= 0.05 && roundingVal !== 0 ? roundingVal : 0;
@@ -304,10 +339,12 @@ export default function SalesHistoryPage() {
                               <span className="font-medium tabular-nums">-RM {discountAmt.toFixed(2)}</span>
                             </div>
                           )}
-                          <div className="flex justify-between text-zinc-500">
-                            <span>Service charge ({SERVICE_CHARGE_PCT}%)</span>
-                            <span className="tabular-nums">RM {svcCharge.toFixed(2)}</span>
-                          </div>
+                          {svcCharge > 0 && (
+                            <div className="flex justify-between text-zinc-500">
+                              <span>Service charge ({SERVICE_CHARGE_PCT}%)</span>
+                              <span className="tabular-nums">RM {svcCharge.toFixed(2)}</span>
+                            </div>
+                          )}
                           {rounding !== 0 && (
                             <div className="flex justify-between text-zinc-400">
                               <span>Bill rounding</span>
@@ -321,6 +358,35 @@ export default function SalesHistoryPage() {
                         </div>
                       );
                     })()}
+
+                    {/* Change payment method */}
+                    <div className="mb-3 rounded-lg border border-zinc-200 bg-white px-3 py-2.5">
+                      <div className="flex items-center justify-between mb-2">
+                        <p className="text-xs font-medium text-zinc-500">Payment method</p>
+                        {savingPayment === order.id && (
+                          <span className="text-xs text-zinc-400">Saving…</span>
+                        )}
+                      </div>
+                      <div className="grid grid-cols-3 gap-2">
+                        {(["cash", "qr", "card"] as const).map(method => (
+                          <button
+                            key={method}
+                            type="button"
+                            disabled={savingPayment === order.id}
+                            onClick={() => changePaymentMethod(order, method)}
+                            className={cn(
+                              "flex items-center justify-center gap-1.5 rounded-lg border-2 py-2 text-xs font-semibold transition-all disabled:opacity-50",
+                              order.payment_method === method
+                                ? "border-zinc-900 bg-zinc-900 text-white"
+                                : "border-zinc-200 bg-white text-zinc-600 hover:border-zinc-400",
+                            )}
+                          >
+                            {PAYMENT_ICONS[method]}
+                            {PAYMENT_LABELS[method]}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
 
                     <div className="flex items-center justify-between border-t border-zinc-200 pt-2">
                       <div className="text-xs text-zinc-400">

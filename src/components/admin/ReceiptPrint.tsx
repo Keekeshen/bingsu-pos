@@ -133,7 +133,6 @@ export default function ReceiptPrint({ open, onClose, order, items, customerName
             serviceCharge={serviceCharge}
             rounding={rounding}
             notes={notes}
-            orderType={orderType}
             tableBreakdown={tableBreakdown}
           />
         </div>

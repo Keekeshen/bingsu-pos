@@ -38,3 +38,19 @@ export function tableBillTotals(basketSubtotal: number, voucherDiscountRaw: numb
     rounding,
   };
 }
+
+export type OrderMode = "dine_in" | "takeaway" | "grab";
+
+export const POS_ORDER_MODES: { id: OrderMode; label: string; source: string }[] = [
+  { id: "dine_in", label: "Dine In", source: "pos" },
+  { id: "takeaway", label: "Takeaway", source: "takeaway" },
+  { id: "grab", label: "Grab Food", source: "grab" },
+];
+
+export function orderModeLabel(mode: OrderMode): string {
+  return POS_ORDER_MODES.find((m) => m.id === mode)?.label ?? "Dine In";
+}
+
+export function orderModeSource(mode: OrderMode): string {
+  return POS_ORDER_MODES.find((m) => m.id === mode)?.source ?? "pos";
+}

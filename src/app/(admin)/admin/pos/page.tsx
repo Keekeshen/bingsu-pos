@@ -8,7 +8,7 @@ import CheckoutCart from "@/components/admin/CheckoutCart";
 import TableGrid from "@/components/admin/TableGrid";
 import TableOrderView from "@/components/admin/TableOrderView";
 import { cn } from "@/lib/utils";
-import { type OrderMode, POS_ORDER_MODES } from "@/lib/pos-order-mode";
+import { type OrderMode, POS_ORDER_MODES } from "@/lib/voucher-utils";
 
 type Tab = "sell" | "tables";
 

@@ -14,8 +14,7 @@ import ReceiptPrint, { type ReceiptOrder, type ReceiptLineItem } from "@/compone
 import CustomerScanner, { type ScannedCustomer } from "@/components/admin/CustomerScanner";
 import VoucherScanner from "@/components/admin/VoucherScanner";
 import { getTier } from "@/lib/tiers";
-import { TABLE_SERVICE_CHARGE_PCT, round5sen } from "@/lib/voucher-utils";
-import { type OrderMode, orderModeLabel, orderModeSource } from "@/lib/pos-order-mode";
+import { TABLE_SERVICE_CHARGE_PCT, round5sen, type OrderMode, orderModeLabel, orderModeSource } from "@/lib/voucher-utils";
 
 type Customer = { id: string; full_name: string; phone: string | null; loyalty_points: number };
 type VoucherData = { id: string; code: string; label: string; discount_type: string; discount_value: number; description: string | null; type: string };
